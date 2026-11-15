@@ -48,7 +48,7 @@ jobs:
       - name: Publish the coverage summary
         run: cat artifacts/coverage/report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: artifacts/coverage/report
@@ -76,7 +76,7 @@ jobs:
       - run: npm test
       - run: npm run build
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: spa
           path: src/web/dist
@@ -113,7 +113,7 @@ jobs:
 
       - uses: ./.github/actions/setup-dotnet
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         with:
           name: spa
           path: src/web/dist
@@ -158,7 +158,7 @@ jobs:
       - run: npm run install-browsers
       - run: npm test
 
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
