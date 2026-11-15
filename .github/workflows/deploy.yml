@@ -1,0 +1,135 @@
+name: Deploy
+
+# Manual only until MVP 1 is done (ADR 0010, ADR 0011). At go-live this switches to every push to main.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  API_APP: api
+  MIGRATION_JOB: migrations
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 45
+    env:
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: src/web/package-lock.json
+
+      - name: Sign in to Azure (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Sign in to the container registry
+        run: |
+          registry=$(az acr list --resource-group "$AZURE_RESOURCE_GROUP" --query "[0].name" --output tsv)
+          if [[ -z "$registry" ]]; then
+            echo "::error::No container registry found in $AZURE_RESOURCE_GROUP."
+            exit 1
+          fi
+          az acr login --name "$registry"
+          echo "REGISTRY=$(az acr show --name "$registry" --query loginServer --output tsv)" >> "$GITHUB_ENV"
+
+      - name: Build and push the API image
+        run: >
+          dotnet publish src/HireLab.Api/HireLab.Api.csproj
+          --configuration Release
+          --runtime linux-x64
+          -t:PublishContainer
+          -p:ContainerRegistry="$REGISTRY"
+          -p:ContainerImageTags="$IMAGE_TAG"
+
+      # TODO HLB-25: confirm the migration worker's project path and image repository once it exists.
+      - name: Build and push the migration image
+        run: >
+          dotnet publish src/HireLab.MigrationService/HireLab.MigrationService.csproj
+          --configuration Release
+          --runtime linux-x64
+          -t:PublishContainer
+          -p:ContainerRegistry="$REGISTRY"
+          -p:ContainerRepository=hirelab-migrations
+          -p:ContainerImageTags="$IMAGE_TAG"
+
+      - name: Run the migration job and wait for it
+        run: |
+          az containerapp job update \
+            --name "$MIGRATION_JOB" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --image "$REGISTRY/hirelab-migrations:$IMAGE_TAG" \
+            --output none
+
+          execution=$(az containerapp job start \
+            --name "$MIGRATION_JOB" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query name --output tsv)
+          echo "Started migration job execution $execution"
+
+          deadline=$((SECONDS + 1800))
+          while (( SECONDS < deadline )); do
+            status=$(az containerapp job execution show \
+              --name "$MIGRATION_JOB" \
+              --resource-group "$AZURE_RESOURCE_GROUP" \
+              --job-execution-name "$execution" \
+              --query properties.status --output tsv)
+            case "$status" in
+              Succeeded) echo "Migrations applied."; exit 0 ;;
+              Failed|Stopped|Degraded)
+                echo "::error::Migration job execution $execution ended with status $status."
+                exit 1 ;;
+            esac
+            sleep 15
+          done
+          echo "::error::Migration job execution $execution did not finish in 30 minutes."
+          exit 1
+
+      - name: Deploy the API revision
+        run: |
+          az containerapp update \
+            --name "$API_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --image "$REGISTRY/hirelab-api:$IMAGE_TAG" \
+            --revision-suffix "${IMAGE_TAG:0:12}" \
+            --output none
+          echo "API_URL=https://$(az containerapp show \
+            --name "$API_APP" \
+            --resource-group "$AZURE_RESOURCE_GROUP" \
+            --query properties.configuration.ingress.fqdn --output tsv)" >> "$GITHUB_ENV"
+
+      - name: Smoke-check /health
+        run: |
+          for attempt in $(seq 1 20); do
+            status=$(curl --silent --output /dev/null --write-out '%{http_code}' --max-time 30 "$API_URL/health" || true)
+            if [[ "$status" == "200" ]]; then
+              echo "API is healthy (attempt $attempt)."
+              exit 0
+            fi
+            echo "Attempt $attempt: /health returned $status, retrying."
+            sleep 15
+          done
+          echo "::error::$API_URL/health did not return 200 after the deployment. The new revision is live but unhealthy; redeploy the previous commit to roll back."
+          exit 1
