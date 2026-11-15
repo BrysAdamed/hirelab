@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/HireLab.Api/HireLab.Api.csproj" />
+    <Project Path="src/HireLab.AppHost/HireLab.AppHost.csproj" />
+    <Project Path="src/HireLab.ServiceDefaults/HireLab.ServiceDefaults.csproj" />
+  </Folder>
+</Solution>
