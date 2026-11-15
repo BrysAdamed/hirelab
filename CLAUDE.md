@@ -18,6 +18,9 @@ Live technical interview platform: a coded task bank, interview sessions with a 
 - Vertical slices, minimal APIs, own handler abstraction, `Result` for expected failures, `ProblemDetails` on the wire ([ADR 0002](docs/adr/0002-backend-internal-style.md)).
 - Staff endpoints go under `/api/staff`, candidate endpoints under `/api/candidate`. The `candidate` app never imports `staff` code ([ADR 0003](docs/adr/0003-repository-and-frontend-layout.md)).
 - Self-contained: only public packages from nuget.org and npm.
+- One DbContext per module. Migrations are forward-only; a breaking change goes expand → deploy → contract ([ADR 0004](docs/adr/0004-database-and-ef-core.md)).
+- Ids are `Guid` v7 behind strongly typed ids. Timestamps are UTC `DateTimeOffset` from an injected `TimeProvider`.
+- Attachments go through the API, never SAS links ([ADR 0005](docs/adr/0005-attachment-storage.md)).
 
 ## Work tracking
 

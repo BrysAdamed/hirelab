@@ -9,3 +9,5 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0001](0001-modular-monolith.md) | Modular monolith with five modules | Accepted |
 | [0002](0002-backend-internal-style.md) | Backend internal style | Accepted |
 | [0003](0003-repository-and-frontend-layout.md) | Repository and frontend workspace layout | Accepted |
+| [0004](0004-database-and-ef-core.md) | Database: PostgreSQL and EF Core | Accepted |
+| [0005](0005-attachment-storage.md) | Attachment storage | Accepted |
