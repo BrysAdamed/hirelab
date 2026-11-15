@@ -13,10 +13,11 @@ A single `.cs` file sent before a screen share doesn't test much now that AI age
 - [Vision](docs/vision.md)
 - [Glossary](docs/glossary.md)
 - [Architecture decisions](docs/adr/README.md)
+- [Design system](docs/design-system.md)
 
-## Planned stack
+## Stack
 
-.NET with Aspire, Angular, PostgreSQL, SignalR, Azure (EU). Final choices are recorded as ADRs.
+.NET 10 with Aspire (modular monolith), Angular with Spartan UI and Tailwind, PostgreSQL, SignalR, Azure Container Apps in the EU. The reasoning is in the ADRs.
 
 ## License
 

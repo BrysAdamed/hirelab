@@ -21,3 +21,4 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0013](0013-task-module-contract.md) | Task module contract | Accepted (authoring and versions superseded by 0015) |
 | [0014](0014-testing-strategy.md) | Testing strategy | Accepted |
 | [0015](0015-task-authoring-in-the-app.md) | Task authoring in the app | Accepted |
+| [0016](0016-ui-stack.md) | UI stack | Accepted |

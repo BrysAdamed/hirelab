@@ -11,7 +11,8 @@ Live technical interview platform: a task bank authored in the app, interview se
 - Tasks are authored in the app; task *types* are code ([ADR 0015](docs/adr/0015-task-authoring-in-the-app.md)). Published task versions are immutable. Seed packages in `src/Tasks/` are showcase tasks only: never edit a published seed version (`tasks.lock.json` enforces it); add `v<N+1>` instead.
 - A new task type ships with three frontend entry points: `candidate`, `review` and `editor`.
 - The UI is in English only.
-- No PrimeNG (paid licence). The component library is chosen in HLB-1.
+- UI: Spartan UI (helm components live in the `ui` lib and are our code) with Tailwind v4 and design tokens only; no PrimeNG (paid licence). Follow `docs/design-system.md` ([ADR 0016](docs/adr/0016-ui-stack.md)).
+- Design is code-first in the `ui` lib, or explored as Claude artifacts. Never use Figma.
 
 ## Architecture rules
 
