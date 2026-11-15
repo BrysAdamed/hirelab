@@ -1,3 +1,4 @@
+using HireLab.AppHost;
 using HireLab.AppHost.Azure;
 
 var builder = DistributedApplication.CreateBuilder(args);
@@ -27,7 +28,15 @@ var api = builder.AddProject<Projects.HireLab_Api>("api")
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health");
 
-if (builder.ExecutionContext.IsPublishMode)
+if (builder.ExecutionContext.IsRunMode)
+{
+    var staff = builder.AddAngularDevServer("staff", port: 4200, api);
+
+    builder.AddAngularDevServer("candidate", port: 4201, api, basePath: "/s/")
+        .WithNpm(install: false)
+        .WaitForNpmInstallOf(staff);
+}
+else
 {
     // TODO HLB-25: keep the result and call PublishAsMigrationJob(azure) on the migration worker.
     builder.AddAzureProduction(api, postgres, dataProtectionKeys);

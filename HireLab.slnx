@@ -9,5 +9,10 @@
     <Project Path="src/HireLab.Api/HireLab.Api.csproj" />
     <Project Path="src/HireLab.AppHost/HireLab.AppHost.csproj" />
     <Project Path="src/HireLab.ServiceDefaults/HireLab.ServiceDefaults.csproj" />
+    <Project Path="src/HireLab.SharedKernel/HireLab.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HireLab.Api.Tests/HireLab.Api.Tests.csproj" />
+    <Project Path="tests/HireLab.SharedKernel.Tests/HireLab.SharedKernel.Tests.csproj" />
   </Folder>
 </Solution>
