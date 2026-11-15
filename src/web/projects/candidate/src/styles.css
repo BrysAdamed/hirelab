@@ -1,0 +1,14 @@
+@import 'tailwindcss' source(none);
+@import 'tw-animate-css';
+@import '../../ui/src/styles/theme.css';
+
+@source '.';
+@source '../../ui/src';
+@source '../../tasks/src';
+
+@layer base {
+  body {
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+  }
+}
