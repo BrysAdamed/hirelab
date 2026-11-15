@@ -1,0 +1,142 @@
+<div class="flex flex-col gap-3 p-3">
+  <div>
+    <h1 class="text-2xl font-semibold">Design system</h1>
+    <p class="text-muted-foreground">
+      Every base component in the four token sets. Dev-only; see
+      <code>docs/design-system.md</code>.
+    </p>
+  </div>
+
+  <div class="grid gap-3 xl:grid-cols-2">
+    @for (theme of themes; track theme) {
+      <section
+        [class]="theme"
+        class="bg-background text-foreground flex flex-col gap-4 rounded-lg border p-4"
+        [attr.aria-labelledby]="'theme-' + theme"
+      >
+        <h2 [id]="'theme-' + theme" class="font-mono text-lg font-semibold">{{ theme }}</h2>
+
+        <div class="flex flex-col gap-1">
+          <p>Body text on the page background.</p>
+          <p class="text-muted-foreground">Muted secondary text.</p>
+          <p>
+            <a href="#theme-{{ theme }}" class="text-accent-text underline underline-offset-4"
+              >An accent link</a
+            >
+            and inline code <code>v3</code> with a shortcut <kbd>Ctrl+K</kbd>.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          @for (swatch of swatches; track swatch.label) {
+            <span [class]="swatch.surface" class="rounded-md border px-2 py-1 font-mono text-xs">
+              {{ swatch.label }}
+            </span>
+          }
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h3 class="font-semibold">Button</h3>
+          <div class="flex flex-wrap items-center gap-2">
+            @for (variant of buttonVariants; track variant) {
+              <button hlmBtn type="button" [variant]="variant">{{ variant }}</button>
+            }
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button hlmBtn type="button" size="xs">Extra small</button>
+            <button hlmBtn type="button" size="sm">Small</button>
+            <button hlmBtn type="button">Default</button>
+            <button hlmBtn type="button" size="lg">Large</button>
+            <button hlmBtn type="button" size="icon" variant="outline" aria-label="Add">
+              <ng-icon name="lucidePlus" />
+            </button>
+            <button hlmBtn type="button" variant="destructive">
+              <ng-icon name="lucideTrash2" aria-hidden="true" />
+              Delete
+            </button>
+            <button hlmBtn type="button" disabled>Disabled</button>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h3 class="font-semibold">Input and label</h3>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="flex flex-col gap-1.5">
+              <label hlmLabel [for]="'title-' + theme">Position title</label>
+              <input hlmInput [id]="'title-' + theme" placeholder="Backend developer" />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label hlmLabel [for]="'disabled-' + theme">Disabled</label>
+              <input hlmInput [id]="'disabled-' + theme" value="Read only value" disabled />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h3 class="font-semibold">Badge</h3>
+          <div class="flex flex-wrap items-center gap-2">
+            <span hlmBadge>Default</span>
+            <span hlmBadge variant="secondary">Secondary</span>
+            <span hlmBadge variant="outline">Outline</span>
+            <span hlmBadge variant="destructive">
+              <ng-icon name="lucideTriangleAlert" aria-hidden="true" />
+              Failed
+            </span>
+            <span hlmBadge variant="outline">
+              <ng-icon name="lucideCircleDot" aria-hidden="true" class="text-success" />
+              Live
+            </span>
+            <span hlmBadge variant="secondary">
+              <ng-icon name="lucideCircleCheck" aria-hidden="true" />
+              Done
+            </span>
+            <span hlmBadge variant="outline" class="font-mono">v3</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h3 class="font-semibold">Card</h3>
+          <section hlmCard>
+            <div hlmCardHeader>
+              <h4 hlmCardTitle>Backend developer</h4>
+              <p hlmCardDescription>Team position with three planned sessions.</p>
+            </div>
+            <div hlmCardContent>
+              <p class="flex items-center gap-2">
+                <ng-icon name="lucideInfo" aria-hidden="true" class="text-accent-text" />
+                Cards use a hairline ring instead of a shadow.
+              </p>
+            </div>
+            <div hlmCardFooter class="gap-2">
+              <button hlmBtn type="button" variant="outline" size="sm">Cancel</button>
+              <button hlmBtn type="button" size="sm">Open position</button>
+            </div>
+          </section>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h3 class="font-semibold">Dialog</h3>
+          <hlm-dialog>
+            <button hlmDialogTrigger hlmBtn type="button" variant="outline">Open dialog</button>
+            <ng-template hlmDialogPortal [class]="theme">
+              <hlm-dialog-content>
+                <hlm-dialog-header>
+                  <h3 hlmDialogTitle>Close position</h3>
+                  <p hlmDialogDescription>
+                    Closing the position ends its planned sessions. This cannot be undone.
+                  </p>
+                </hlm-dialog-header>
+                <hlm-dialog-footer>
+                  <button hlmBtn hlmDialogClose type="button" variant="outline">Cancel</button>
+                  <button hlmBtn hlmDialogClose type="button" variant="destructive">
+                    Close position
+                  </button>
+                </hlm-dialog-footer>
+              </hlm-dialog-content>
+            </ng-template>
+          </hlm-dialog>
+        </div>
+      </section>
+    }
+  </div>
+</div>

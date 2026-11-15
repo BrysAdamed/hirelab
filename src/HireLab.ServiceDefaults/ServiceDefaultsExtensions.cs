@@ -1,3 +1,4 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Http;
@@ -26,6 +27,8 @@ public static class ServiceDefaultsExtensions
     /// <summary>Health checks with this tag also run on the liveness endpoint.</summary>
     public const string LiveTag = "live";
 
+    private const string ApplicationInsightsConnectionStringSetting = "APPLICATIONINSIGHTS_CONNECTION_STRING";
+
     private static readonly string[] _requestLoggingCategories =
     [
         "Microsoft.AspNetCore.Hosting.Diagnostics",
@@ -52,7 +55,8 @@ public static class ServiceDefaultsExtensions
     }
 
     /// <summary>
-    /// Configures logs, metrics and traces exported over OTLP. Request bodies and query strings are never recorded.
+    /// Configures logs, metrics and traces exported over OTLP, and to Application Insights (sampled) when its
+    /// connection string is set. Request bodies and query strings are never recorded.
     /// </summary>
     public static TBuilder ConfigureOpenTelemetry<TBuilder>(this TBuilder builder)
         where TBuilder : IHostApplicationBuilder
@@ -82,6 +86,11 @@ public static class ServiceDefaultsExtensions
         if (!string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]))
         {
             builder.Services.AddOpenTelemetry().UseOtlpExporter();
+        }
+
+        if (!string.IsNullOrWhiteSpace(builder.Configuration[ApplicationInsightsConnectionStringSetting]))
+        {
+            builder.Services.AddOpenTelemetry().UseAzureMonitor();
         }
 
         return builder;
