@@ -3,10 +3,12 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Azure.Storage.Blobs" />
     <PackageReference Include="Aspire.Npgsql" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\HireLab.ServiceDefaults\HireLab.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\HireLab.SharedKernel\HireLab.SharedKernel.csproj" />
   </ItemGroup>
 
 </Project>

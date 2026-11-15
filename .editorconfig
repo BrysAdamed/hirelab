@@ -142,3 +142,5 @@ dotnet_naming_rule.private_fields_underscore.severity = warning
 # Analyzer tuning
 dotnet_diagnostic.CA1707.severity = none
 dotnet_diagnostic.CA2007.severity = none
+dotnet_diagnostic.CA1711.severity = none
+dotnet_diagnostic.CA1716.severity = none
