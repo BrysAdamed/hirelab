@@ -20,7 +20,7 @@ The live part of a software engineer interview used to look like this: we email 
 ## What it does
 
 - **Job positions.** A manager creates a job position that holds its requirements, nice-to-haves and anything else a candidate or interviewer may need. Candidates are added to a position together with their CV and other attachments.
-- **Task bank.** Tasks are written in code. Each task has tags, a level (`Junior` / `Mid` / `Senior`), its own candidate UI, a reference answer and a rubric. Adding or changing a task means a code change and a deploy; there is no task editor in the app.
+- **Task bank.** Tasks are written in code. Each task has tags, a level (`Junior` / `Mid` / `Senior`), a reference answer, interviewer notes and a rubric. Its candidate and review UI come from its task type. Adding or changing a task means a code change and a deploy; there is no task editor in the app.
 - **Interview sessions.** From a candidate's profile, an interviewer creates a session and queues tasks. When the session goes Live, the interviewer copies a link and sends it to the candidate. The candidate sees only the current task. The interviewer marks a task done to move to the next one, and can add, remove or reorder the tasks that haven't started yet.
 - **Live results.** Everything the candidate produces is saved as it happens and appears in the interviewer's view: review comments, edited files, prompts sent to the AI assistant.
 - **Evaluation.** Interviewers score each task against its rubric and write notes. They compare the candidate's answer with the reference answer. The manager records the final decision.

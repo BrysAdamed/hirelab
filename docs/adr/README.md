@@ -18,3 +18,4 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0010](0010-hosting-and-environments.md) | Hosting and environments | Accepted |
 | [0011](0011-iac-and-ci-cd.md) | Infrastructure as code and CI/CD | Accepted |
 | [0012](0012-observability.md) | Observability | Accepted |
+| [0013](0013-task-module-contract.md) | Task module contract | Accepted |
