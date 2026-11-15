@@ -64,3 +64,6 @@ playwright/.cache/
 !.env.example
 *.pfx
 *.pem
+
+# Claude Code agent worktrees
+.claude/worktrees/
