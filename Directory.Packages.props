@@ -11,12 +11,27 @@
     <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.6.5" />
   </ItemGroup>
 
+  <ItemGroup Label="Aspire hosting: Azure">
+    <PackageVersion Include="Aspire.Hosting.Azure.AppContainers" Version="13.6.5" />
+    <PackageVersion Include="Aspire.Hosting.Azure.ApplicationInsights" Version="13.6.5" />
+    <PackageVersion Include="Aspire.Hosting.Azure.KeyVault" Version="13.6.5" />
+    <PackageVersion Include="Aspire.Hosting.Azure.OperationalInsights" Version="13.6.5" />
+    <PackageVersion Include="Aspire.Hosting.Azure.PostgreSQL" Version="13.6.5" />
+  </ItemGroup>
+
   <ItemGroup Label="Aspire client integrations">
+    <PackageVersion Include="Aspire.Azure.Npgsql" Version="13.6.5" />
     <PackageVersion Include="Aspire.Azure.Storage.Blobs" Version="13.6.5" />
     <PackageVersion Include="Aspire.Npgsql" Version="13.6.5" />
   </ItemGroup>
 
+  <ItemGroup Label="Data Protection in Azure">
+    <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" Version="1.5.5" />
+    <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.6.5" />
+  </ItemGroup>
+
   <ItemGroup Label="Service defaults">
+    <PackageVersion Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.6.0" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="11.0.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="11.0.0" />
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.21.0" />
