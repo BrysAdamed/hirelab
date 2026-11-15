@@ -17,4 +17,6 @@ var app = builder.Build();
 app.UseExceptionHandler();
 
 app.MapDefaultEndpoints();
+app.MapSpaHosting();
+
 await app.RunAsync();

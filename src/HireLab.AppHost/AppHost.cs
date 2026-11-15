@@ -1,3 +1,5 @@
+using HireLab.AppHost;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder.AddPostgres("postgres")
@@ -10,11 +12,17 @@ var storage = builder.AddAzureStorage("storage")
 
 var blobs = storage.AddBlobs("blobs");
 
-builder.AddProject<Projects.HireLab_Api>("api")
+var api = builder.AddProject<Projects.HireLab_Api>("api")
     .WithReference(database)
     .WaitFor(database)
     .WithReference(blobs)
     .WaitFor(blobs)
     .WithHttpHealthCheck("/health");
+
+var staff = builder.AddAngularDevServer("staff", port: 4200, api);
+
+builder.AddAngularDevServer("candidate", port: 4201, api, basePath: "/s/")
+    .WithNpm(install: false)
+    .WaitForNpmInstallOf(staff);
 
 await builder.Build().RunAsync();
