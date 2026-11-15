@@ -9,7 +9,7 @@ output="${1:-$root/artifacts/infra}"
 bicep() {
   if [[ -n "${BICEP:-}" ]]; then
     "$BICEP" "$@"
-  elif command -v bicep > /dev/null; then
+  elif type -P bicep > /dev/null; then
     command bicep "$@"
   elif command -v az > /dev/null; then
     local verb="$1" file="$2"

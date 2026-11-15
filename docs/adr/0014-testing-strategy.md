@@ -23,7 +23,7 @@ Handlers use EF Core directly ([0002](0002-backend-internal-style.md)), so mocki
 **Integration infrastructure.**
 - Testcontainers for PostgreSQL and Azurite, one set of containers per test assembly.
 - Respawn resets data between tests.
-- Aspire.Hosting.Testing is used only to start the app for E2E.
+- E2E starts the whole app by running the AppHost (`dotnet run`) from Playwright's `webServer`; Aspire.Hosting.Testing isn't used.
 
 **Auth sweep.** A test enumerates every mapped endpoint and asserts:
 - Anonymous requests get 401.

@@ -47,4 +47,16 @@ Tickets live in the ticketing app (MCP server `ticketing`), project key `HLB`. E
 
 ## Layout and commands
 
-The repo has no code yet. The stack is .NET (with Aspire) and Angular, on Azure in the EU; the details come from the HLB-1 ADRs and the HLB-2 walking skeleton. Once the skeleton exists, update this section with the layout and the build, run and test commands.
+- `src/HireLab.AppHost` (Aspire: local orchestration and the Azure resources), `src/HireLab.Api` (host; serves both SPAs), `src/HireLab.MigrationService` (migration worker), `src/HireLab.ServiceDefaults`, `src/HireLab.SharedKernel`.
+- `src/Modules/<Name>/HireLab.Modules.<Name>` and `.Contracts`: Identity, Positions, TaskBank, Sessions, Evaluation.
+- `src/web`: one Angular workspace with the `staff` and `candidate` apps and the `ui`, `core`, `tasks` and `api-client` libs.
+- `tests/`: .NET test projects, `HireLab.Testing` (shared integration host), `coverage.config`; `tests/e2e`: Playwright.
+- `infra/`: hand-written Bicep (budget, deployment identity). `eng/`: scripts. `docs/`: vision, glossary, ADRs, design system. `.github/workflows`: `ci.yml` (every PR) and `deploy.yml` (manual).
+
+Commands (from the repo root unless noted; Docker must be running):
+
+- Build: `dotnet build HireLab.slnx`. Run everything locally: `dotnet run --project src/HireLab.AppHost`.
+- Backend tests and E2E: see Testing above.
+- In `src/web`: `npm ci`, `npm run lint`, `npm test`, `npm run build`, `npm run check:contrast`, `npm run api:update` / `npm run api:check`.
+- Infrastructure: `eng/validate-infra.sh` (generates the Bicep from the AppHost, then builds and lints it and `infra/`; needs the Bicep CLI or `az`).
+- Container images (local Docker, no push): `dotnet publish src/HireLab.Api -c Release -r linux-x64 -t:PublishContainer` (builds the SPAs unless `-p:SkipSpaBuild=true`), and the same for `src/HireLab.MigrationService`.
