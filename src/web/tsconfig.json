@@ -17,7 +17,14 @@
       "@hirelab/core": ["./projects/core/src/index.ts"],
       "@hirelab/api-client/staff": ["./projects/api-client/src/staff/index.ts"],
       "@hirelab/api-client/candidate": ["./projects/api-client/src/candidate/index.ts"],
-      "@hirelab/tasks/*": ["./projects/tasks/src/*/index.ts"]
+      "@hirelab/tasks/*": ["./projects/tasks/src/*/index.ts"],
+      "@hirelab/ui/helm/button": ["./projects/ui/src/helm/button/src/index.ts"],
+      "@hirelab/ui/helm/utils": ["./projects/ui/src/helm/utils/src/index.ts"],
+      "@hirelab/ui/helm/input": ["./projects/ui/src/helm/input/src/index.ts"],
+      "@hirelab/ui/helm/label": ["./projects/ui/src/helm/label/src/index.ts"],
+      "@hirelab/ui/helm/card": ["./projects/ui/src/helm/card/src/index.ts"],
+      "@hirelab/ui/helm/badge": ["./projects/ui/src/helm/badge/src/index.ts"],
+      "@hirelab/ui/helm/dialog": ["./projects/ui/src/helm/dialog/src/index.ts"]
     }
   },
   "angularCompilerOptions": {
@@ -40,6 +47,9 @@
     },
     {
       "path": "./projects/candidate/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/ui/tsconfig.spec.json"
     }
   ]
 }
