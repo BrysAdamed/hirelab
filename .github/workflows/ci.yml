@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, 'HLB-31-*']
+    branches: [main]
 
 permissions:
   contents: read
