@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 
 namespace HireLab.Api.Tests;
@@ -27,6 +30,7 @@ public sealed class DataProtectionTests(HireLabApiFactory factory) : IClassFixtu
             builder.UseSetting(
                 "ConnectionStrings:data-protection-keys",
                 "Endpoint=https://hirelabexample.blob.core.windows.net;ContainerName=data-protection-keys");
+            builder.ConfigureTestServices(services => services.RemoveAll<IHostedService>());
         });
 
         // Act
