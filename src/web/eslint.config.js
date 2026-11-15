@@ -4,6 +4,11 @@ const { defineConfig } = require('eslint/config');
 const tseslint = require('typescript-eslint');
 const angular = require('angular-eslint');
 const boundaries = require('eslint-plugin-boundaries');
+const css = require('@eslint/css').default;
+const noRawColours = require('./eslint-rules/no-raw-colours');
+
+const hirelab = { rules: { 'no-raw-colours': noRawColours } };
+const tokenDefinitions = ['projects/ui/src/styles/**'];
 
 const element = (type, pattern) => ({ type, pattern, partialMatch: false });
 
@@ -46,6 +51,15 @@ module.exports = defineConfig([
           style: 'kebab-case',
         },
       ],
+    },
+  },
+  {
+    files: ['projects/ui/src/helm/**/*.ts'],
+    rules: {
+      '@angular-eslint/directive-selector': 'off',
+      '@angular-eslint/component-selector': 'off',
+      '@angular-eslint/no-input-rename': 'off',
+      '@typescript-eslint/consistent-type-definitions': 'off',
     },
   },
   {
@@ -98,5 +112,17 @@ module.exports = defineConfig([
     files: ['**/*.html'],
     extends: [angular.configs.templateRecommended, angular.configs.templateAccessibility],
     rules: {},
+  },
+  {
+    files: ['projects/**/*.css'],
+    plugins: { css },
+    language: 'css/css',
+    languageOptions: { tolerant: true },
+  },
+  {
+    files: ['projects/**/*.ts', 'projects/**/*.html', 'projects/**/*.css'],
+    ignores: tokenDefinitions,
+    plugins: { hirelab },
+    rules: { 'hirelab/no-raw-colours': 'error' },
   },
 ]);

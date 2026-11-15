@@ -29,7 +29,13 @@
                 "input": "projects/staff/public"
               }
             ],
-            "styles": ["projects/staff/src/styles.css"]
+            "styles": [
+              "@fontsource/inter/400.css",
+              "@fontsource/inter/500.css",
+              "@fontsource/inter/600.css",
+              "@fontsource/jetbrains-mono/400.css",
+              "projects/staff/src/styles.css"
+            ]
           },
           "configurations": {
             "production": {
@@ -45,7 +51,13 @@
                   "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "fileReplacements": [
+                {
+                  "replace": "projects/staff/src/app/design/design.routes.ts",
+                  "with": "projects/staff/src/app/design/design.routes.prod.ts"
+                }
+              ]
             },
             "development": {
               "optimization": false,
@@ -57,6 +69,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.mjs"
+          },
           "configurations": {
             "production": {
               "buildTarget": "staff:build:production"
@@ -94,7 +109,13 @@
                 "input": "projects/candidate/public"
               }
             ],
-            "styles": ["projects/candidate/src/styles.css"],
+            "styles": [
+              "@fontsource/inter/400.css",
+              "@fontsource/inter/500.css",
+              "@fontsource/inter/600.css",
+              "@fontsource/jetbrains-mono/400.css",
+              "projects/candidate/src/styles.css"
+            ],
             "baseHref": "/s/"
           },
           "configurations": {
@@ -123,6 +144,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.mjs"
+          },
           "configurations": {
             "production": {
               "buildTarget": "candidate:build:production"
@@ -146,6 +170,15 @@
       "schematics": {
         "@schematics/angular:component": {
           "changeDetection": "OnPush"
+        }
+      },
+      "architect": {
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "buildTarget": "staff:build:development",
+            "tsConfig": "projects/ui/tsconfig.spec.json"
+          }
         }
       }
     },
