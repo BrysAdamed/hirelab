@@ -18,5 +18,6 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0010](0010-hosting-and-environments.md) | Hosting and environments | Accepted |
 | [0011](0011-iac-and-ci-cd.md) | Infrastructure as code and CI/CD | Accepted |
 | [0012](0012-observability.md) | Observability | Accepted |
-| [0013](0013-task-module-contract.md) | Task module contract | Accepted |
+| [0013](0013-task-module-contract.md) | Task module contract | Accepted (authoring and versions superseded by 0015) |
 | [0014](0014-testing-strategy.md) | Testing strategy | Accepted |
+| [0015](0015-task-authoring-in-the-app.md) | Task authoring in the app | Accepted |

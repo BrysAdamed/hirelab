@@ -1,5 +1,7 @@
 # 0013. Task module contract
 
+> The **Authoring** and **Versions** sections are superseded by [0015](0015-task-authoring-in-the-app.md): tasks are authored in the app, and the folder format is now a seed import format.
+
 ## Context
 
 Tasks are code: adding or changing one means a commit and a deploy. There are three task types (code review, AI assistant, live coding), and more will come after MVP 1. A task must render in the `candidate` app for the candidate and in the `staff` app for the interviewer ([0003](0003-repository-and-frontend-layout.md)). Its responses are stored as `jsonb` ([0004](0004-database-and-ef-core.md)) and pushed live ([0006](0006-real-time-channel.md)). Old sessions must stay meaningful after a task changes, and a broken new version must be easy to take out of use without a deploy.
@@ -149,4 +151,4 @@ The **app shell** owns autosave, revisions, refetch on `ResponseUpdated`, reconn
 
 ## Status
 
-Accepted
+Accepted (the Authoring and Versions sections are superseded by 0015)

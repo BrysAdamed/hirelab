@@ -1,6 +1,6 @@
 # HireLab - notes for agents
 
-Live technical interview platform: a coded task bank, interview sessions with a task queue, and live results for interviewers. Before starting a ticket, read `docs/vision.md` and `docs/glossary.md`. Before changing anything structural, check `docs/adr/`.
+Live technical interview platform: a task bank authored in the app, interview sessions with a task queue, and live results for interviewers. Before starting a ticket, read `docs/vision.md` and `docs/glossary.md`. Before changing anything structural, check `docs/adr/`.
 
 ## Hard rules
 
@@ -8,7 +8,8 @@ Live technical interview platform: a coded task bank, interview sessions with a 
 - Planted "personal data" and "secrets" in AI-assistant tasks must be obviously fake (reserved domains such as `example.com`, test card numbers, made-up names).
 - Use glossary terms in code, API and UI. When you introduce a new term, add it to `docs/glossary.md`.
 - Every structural decision gets a new ADR in `docs/adr/` (next number) and a row in `docs/adr/README.md`.
-- Tasks are code. A change to a task's content means a new version folder; never edit a published version (`tasks.lock.json` enforces it, see [ADR 0013](docs/adr/0013-task-module-contract.md)).
+- Tasks are authored in the app; task *types* are code ([ADR 0015](docs/adr/0015-task-authoring-in-the-app.md)). Published task versions are immutable. Seed packages in `src/Tasks/` are showcase tasks only: never edit a published seed version (`tasks.lock.json` enforces it); add `v<N+1>` instead.
+- A new task type ships with three frontend entry points: `candidate`, `review` and `editor`.
 - The UI is in English only.
 - No PrimeNG (paid licence). The component library is chosen in HLB-1.
 

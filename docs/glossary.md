@@ -8,11 +8,16 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **Candidate** | A person applying to exactly one job position. The same person applying again is a new candidate. |
 | **Attachment** | A file on a candidate's profile. The CV is an attachment. |
 | **Anonymisation** | What closing a job position does to its candidates: contact details are replaced with "Candidate #N" and attachments are deleted. Notes, scores and task results stay. It is irreversible. |
-| **Task** | One interview exercise, defined as content in code. It has an id, versions, a task type, title, summary, tags, level, estimated minutes, content, reference answer, interviewer notes and rubric. Its UI comes from its task type. |
-| **Task version** | One immutable revision of a task (`v1`, `v2` …). A change to a published task means a new version. |
-| **Draft** | A task version that isn't published yet. Visible only in Development. |
-| **Active version** | The task version the task bank offers in production. By default the newest published one; the admin can switch it. |
-| **Task type** | The kind of task and the code that comes with it: content and response models, a candidate UI and a review UI. Code review, AI assistant, live coding. |
+| **Task** | One interview exercise, authored in the app. It has an owning team, a visibility, versions, a task type, title, summary, tags, level, estimated minutes, content, reference answer, interviewer notes and rubric. Its UI comes from its task type. |
+| **Task version** | One revision of a task (`v1`, `v2` …). Published versions are immutable; a change means a new version. |
+| **Draft** | The one unpublished version a task may have. Editable by the team; can be previewed, but queued only in Development. |
+| **Active version** | The task version the task bank offers. By default the newest published one; the manager can switch it. |
+| **Visibility** | Whether a task is seen by its owning team only (`Team`) or by every team (`Global`). Only the owning team edits it. |
+| **System task** | A showcase task imported from a seed package in the repo. Global, owned by no team, read-only. |
+| **Seed package** | A task version stored as a folder in `src/Tasks/` and imported into the database as a system task. |
+| **Duplicate** | A team's draft copy of another task. It remembers its source, which is then hidden from the team's bank. |
+| **Hidden task** | A Global task a team's manager has hidden from that team's bank. Reachable through "Show hidden". |
+| **Task type** | The kind of task and the code that comes with it: content and response models, a candidate UI, a review UI and an editor. Code review, AI assistant, live coding. |
 | **Task bank** | The catalogue of all tasks, filterable by tag and level. |
 | **Level** | A task's difficulty: `Junior`, `Mid` or `Senior`. |
 | **Tag** | A free label on a task, such as `csharp`, `cqrs`, `security` or `role:qa`. |
