@@ -12,7 +12,13 @@ const sharedLibs = ['ui', 'core', 'api-client-candidate', 'tasks-candidate'];
 
 module.exports = defineConfig([
   {
-    ignores: ['dist/**', 'out-tsc/**', '.angular/**', 'coverage/**'],
+    ignores: [
+      'dist/**',
+      'out-tsc/**',
+      '.angular/**',
+      'coverage/**',
+      'projects/api-client/src/*/schema.ts',
+    ],
   },
   {
     files: ['**/*.ts'],

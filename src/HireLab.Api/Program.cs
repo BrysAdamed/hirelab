@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using HireLab.Api;
 using HireLab.Api.Auth;
 using HireLab.Api.Infrastructure;
@@ -11,6 +12,8 @@ builder.AddServiceDefaults();
 builder.AddNpgsqlDataSource(ResourceNames.Database);
 builder.AddAzureBlobServiceClient(ResourceNames.Blobs, settings => settings.DisableHealthChecks = true);
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddStaffAndCandidateAuth();

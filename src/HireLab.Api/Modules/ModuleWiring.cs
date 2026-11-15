@@ -1,4 +1,5 @@
 using HireLab.Api.Auth;
+using HireLab.Api.OpenApi;
 using HireLab.SharedKernel.Modules;
 
 namespace HireLab.Api.Modules;
@@ -15,13 +16,18 @@ internal static class ModuleWiring
             module.AddServices(builder);
         }
 
-        builder.Services.AddOpenApi(StaffDocument, options =>
-            options.ShouldInclude = description => description.GroupName == StaffDocument);
-        builder.Services.AddOpenApi(CandidateDocument, options =>
-            options.ShouldInclude = description => description.GroupName == CandidateDocument);
+        builder.Services.AddGroupDocument(StaffDocument);
+        builder.Services.AddGroupDocument(CandidateDocument);
 
         return builder;
     }
+
+    private static void AddGroupDocument(this IServiceCollection services, string documentName) =>
+        services.AddOpenApi(documentName, options =>
+        {
+            options.ShouldInclude = description => description.GroupName == documentName;
+            options.AddDocumentTransformer<ProblemResponsesTransformer>();
+        });
 
     public static WebApplication MapModules(this WebApplication app, IReadOnlyList<IModule> modules)
     {
