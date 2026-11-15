@@ -64,7 +64,6 @@ jobs:
           -p:ContainerRegistry="$REGISTRY"
           -p:ContainerImageTags="$IMAGE_TAG"
 
-      # TODO HLB-25: confirm the migration worker's project path and image repository once it exists.
       - name: Build and push the migration image
         run: >
           dotnet publish src/HireLab.MigrationService/HireLab.MigrationService.csproj
@@ -72,7 +71,6 @@ jobs:
           --runtime linux-x64
           -t:PublishContainer
           -p:ContainerRegistry="$REGISTRY"
-          -p:ContainerRepository=hirelab-migrations
           -p:ContainerImageTags="$IMAGE_TAG"
 
       - name: Run the migration job and wait for it

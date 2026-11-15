@@ -20,9 +20,14 @@ var blobs = storage.AddBlobs("blobs");
 var dataProtectionKeys = storage.AddBlobContainer("data-protection-keys");
 storage.AddBlobContainer("attachments");
 
+var migrations = builder.AddProject<Projects.HireLab_MigrationService>("migrations")
+    .WithReference(database)
+    .WaitFor(database);
+
 var api = builder.AddProject<Projects.HireLab_Api>("api")
     .WithReference(database)
     .WaitFor(database)
+    .WaitForCompletion(migrations)
     .WithReference(blobs)
     .WaitFor(blobs)
     .WithExternalHttpEndpoints()
@@ -38,8 +43,8 @@ if (builder.ExecutionContext.IsRunMode)
 }
 else
 {
-    // TODO HLB-25: keep the result and call PublishAsMigrationJob(azure) on the migration worker.
-    builder.AddAzureProduction(api, postgres, dataProtectionKeys);
+    var azure = builder.AddAzureProduction(api, postgres, dataProtectionKeys);
+    migrations.PublishAsMigrationJob(azure);
 }
 
 await builder.Build().RunAsync();
