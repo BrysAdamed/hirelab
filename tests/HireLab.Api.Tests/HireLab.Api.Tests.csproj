@@ -11,6 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="Shouldly" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="TestWebRoot\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

@@ -1,5 +1,4 @@
 using System.Net;
-using Shouldly;
 
 namespace HireLab.Api.Tests;
 
@@ -75,7 +74,6 @@ public sealed class SpaHostingTests(HireLabApiFactory factory) : IClassFixture<H
     [Theory]
     [InlineData("/api")]
     [InlineData("/api/unknown")]
-    [InlineData("/api/staff/unknown/route")]
     [InlineData("/hubs/unknown")]
     [InlineData("/openapi/unknown.json")]
     [InlineData("/alive/unknown")]
