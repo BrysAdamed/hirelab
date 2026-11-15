@@ -12,3 +12,6 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0004](0004-database-and-ef-core.md) | Database: PostgreSQL and EF Core | Accepted |
 | [0005](0005-attachment-storage.md) | Attachment storage | Accepted |
 | [0006](0006-real-time-channel.md) | Real-time channel | Accepted |
+| [0007](0007-staff-authentication.md) | Staff authentication | Accepted |
+| [0008](0008-candidate-access.md) | Candidate access | Accepted |
+| [0009](0009-authorisation-model.md) | Authorisation model | Accepted |

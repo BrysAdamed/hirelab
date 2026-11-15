@@ -18,10 +18,11 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **Interview session** | One meeting with a candidate. It has a task queue and a state: `Planned` → `Live` → `Finished`. |
 | **Task queue** | The ordered tasks of a session. Tasks that haven't started can be added, removed or reordered while the session is Live. |
 | **Session task** | One task in a queue. It stores the task id, version and a snapshot of the content shown, plus its state: `Pending`, `Current` or `Done`. |
-| **Candidate link** | An unguessable URL that gives the candidate access to a session while it is Live. |
+| **Candidate link** | An unguessable URL that gives the candidate access to one session. Before Live it shows a waiting page; after Finished it stops working. The interviewer can regenerate it, which revokes the old one. |
 | **Response** | Everything a candidate produced for a session task: comments, files, prompts. It is saved continuously. |
 | **Evaluation** | One interviewer's rubric scores and notes for a candidate's session. Its author and the manager can see it. |
 | **Decision** | The manager's final hire / no-hire for a candidate, with a summary. |
 | **Admin / Manager / Interviewer** | User roles. See `docs/vision.md#roles`. |
 | **Team** | A manager and the interviewers assigned to them. |
 | **Invite link** | A one-time link with an expiry that creates a user account in a given role and team. |
+| **Reset link** | A one-time link with an expiry that lets a user set a new password. A manager or admin generates it and sends it by hand. |

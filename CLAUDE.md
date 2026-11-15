@@ -22,6 +22,8 @@ Live technical interview platform: a coded task bank, interview sessions with a 
 - Ids are `Guid` v7 behind strongly typed ids. Timestamps are UTC `DateTimeOffset` from an injected `TimeProvider`.
 - Attachments go through the API, never SAS links ([ADR 0005](docs/adr/0005-attachment-storage.md)).
 - SignalR hubs are push-only and send thin events (ids plus a revision); clients refetch over HTTP. Modules raise integration events and never reference SignalR ([ADR 0006](docs/adr/0006-real-time-channel.md)).
+- Auth is cookies for staff and candidates; no tokens in JavaScript or URLs ([ADR 0007](docs/adr/0007-staff-authentication.md), [ADR 0008](docs/adr/0008-candidate-access.md)). Candidate endpoints take the session from the cookie, never from the route.
+- Team-owned aggregates carry `TeamId` and are filtered by a global query filter. `IgnoreQueryFilters` is allowed only in the migration worker and system jobs ([ADR 0009](docs/adr/0009-authorisation-model.md)).
 
 ## Work tracking
 
