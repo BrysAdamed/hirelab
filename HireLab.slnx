@@ -37,6 +37,13 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/HireLab.Api.Tests/HireLab.Api.Tests.csproj" />
+    <Project Path="tests/HireLab.ArchitectureTests/HireLab.ArchitectureTests.csproj" />
+    <Project Path="tests/HireLab.Modules.Evaluation.Tests/HireLab.Modules.Evaluation.Tests.csproj" />
+    <Project Path="tests/HireLab.Modules.Identity.Tests/HireLab.Modules.Identity.Tests.csproj" />
+    <Project Path="tests/HireLab.Modules.Positions.Tests/HireLab.Modules.Positions.Tests.csproj" />
+    <Project Path="tests/HireLab.Modules.Sessions.Tests/HireLab.Modules.Sessions.Tests.csproj" />
+    <Project Path="tests/HireLab.Modules.TaskBank.Tests/HireLab.Modules.TaskBank.Tests.csproj" />
     <Project Path="tests/HireLab.SharedKernel.Tests/HireLab.SharedKernel.Tests.csproj" />
+    <Project Path="tests/HireLab.Testing/HireLab.Testing.csproj" />
   </Folder>
 </Solution>

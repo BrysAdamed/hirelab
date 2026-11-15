@@ -33,6 +33,12 @@
     <ProjectReference Include="..\Modules\Evaluation\HireLab.Modules.Evaluation\HireLab.Modules.Evaluation.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="HireLab.Api.Tests" />
+    <InternalsVisibleTo Include="HireLab.ArchitectureTests" />
+    <InternalsVisibleTo Include="HireLab.Testing" />
+  </ItemGroup>
+
   <Target Name="BuildSpas" Condition="'$(SkipSpaBuild)' != 'true'">
     <Exec Command="npm ci --no-audit --no-fund" WorkingDirectory="$(WebWorkspaceRoot)" />
     <Exec Command="npm run build" WorkingDirectory="$(WebWorkspaceRoot)" />

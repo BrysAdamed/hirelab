@@ -26,7 +26,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapDefaultEndpoints();
-app.MapModules(ModuleCatalog.All);
+app.MapModules();
 app.MapSpaHosting();
 
 await app.RunAsync();

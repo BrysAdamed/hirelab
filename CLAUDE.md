@@ -36,6 +36,9 @@ See [ADR 0014](docs/adr/0014-testing-strategy.md). xUnit v3, Shouldly, NSubstitu
 - Every feature ticket ships with integration tests for its endpoints (the happy path and each domain rule that can fail), against real PostgreSQL through Testcontainers. Don't mock the database.
 - Unit tests where logic is dense. A bug fix starts with a failing test.
 - Test data comes from hand-written builders with obviously fake values.
+- Integration tests derive from `IntegrationTest` in `tests/HireLab.Testing`, which runs the real API on Testcontainers PostgreSQL and Azurite (one set per test assembly) and resets the database with Respawn before each test. A test assembly registers the host with `[assembly: AssemblyFixture(...)]` and disables parallelisation.
+- Backend tests (needs Docker): `dotnet test --solution HireLab.slnx`. With Cobertura coverage: add `--coverage --coverage-output-format cobertura --coverage-settings tests/coverage.config --results-directory artifacts/coverage`.
+- E2E: `cd tests/e2e && npm ci && npm test` (see `tests/e2e/README.md`).
 
 ## Work tracking
 

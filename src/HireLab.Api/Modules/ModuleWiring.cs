@@ -13,6 +13,7 @@ internal static class ModuleWiring
         foreach (var module in modules)
         {
             module.AddServices(builder);
+            builder.Services.AddSingleton(module);
         }
 
         builder.Services.AddOpenApi(StaffDocument, options =>
@@ -23,8 +24,10 @@ internal static class ModuleWiring
         return builder;
     }
 
-    public static WebApplication MapModules(this WebApplication app, IReadOnlyList<IModule> modules)
+    public static WebApplication MapModules(this WebApplication app)
     {
+        var modules = app.Services.GetServices<IModule>();
+
         var staff = app.MapGroup("/api/staff")
             .RequireAuthorization(AuthPolicies.Staff)
             .WithGroupName(StaffDocument);

@@ -8,9 +8,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\HireLab.Api\HireLab.Api.csproj" />
+    <ProjectReference Include="..\HireLab.Testing\HireLab.Testing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="HireLab.Testing" />
     <Using Include="Shouldly" />
     <Using Include="Xunit" />
   </ItemGroup>

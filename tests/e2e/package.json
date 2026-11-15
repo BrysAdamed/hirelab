@@ -1,0 +1,17 @@
+{
+  "name": "hirelab-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "npm@11.19.1",
+  "scripts": {
+    "test": "playwright test",
+    "install-browsers": "playwright install --with-deps chromium",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^24.19.2",
+    "typescript": "~6.0.2"
+  }
+}
