@@ -11,3 +11,4 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0003](0003-repository-and-frontend-layout.md) | Repository and frontend workspace layout | Accepted |
 | [0004](0004-database-and-ef-core.md) | Database: PostgreSQL and EF Core | Accepted |
 | [0005](0005-attachment-storage.md) | Attachment storage | Accepted |
+| [0006](0006-real-time-channel.md) | Real-time channel | Accepted |
