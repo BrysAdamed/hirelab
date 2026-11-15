@@ -6,3 +6,6 @@ The first records come from epic HLB-1 (Architecture & foundations).
 
 | # | Title | Status |
 |---|---|---|
+| [0001](0001-modular-monolith.md) | Modular monolith with five modules | Accepted |
+| [0002](0002-backend-internal-style.md) | Backend internal style | Accepted |
+| [0003](0003-repository-and-frontend-layout.md) | Repository and frontend workspace layout | Accepted |

@@ -12,6 +12,13 @@ Live technical interview platform: a coded task bank, interview sessions with a 
 - The UI is in English only.
 - No PrimeNG (paid licence). The component library is chosen in HLB-1.
 
+## Architecture rules
+
+- Modular monolith ([ADR 0001](docs/adr/0001-modular-monolith.md)). A module references another module only through its `.Contracts` project; no cross-schema foreign keys or joins.
+- Vertical slices, minimal APIs, own handler abstraction, `Result` for expected failures, `ProblemDetails` on the wire ([ADR 0002](docs/adr/0002-backend-internal-style.md)).
+- Staff endpoints go under `/api/staff`, candidate endpoints under `/api/candidate`. The `candidate` app never imports `staff` code ([ADR 0003](docs/adr/0003-repository-and-frontend-layout.md)).
+- Self-contained: only public packages from nuget.org and npm.
+
 ## Work tracking
 
 Tickets live in the ticketing app (MCP server `ticketing`), project key `HLB`. Epics are HLB-1 to HLB-11. Branch names and commit messages start with the ticket key, e.g. `HLB-12 Add job position aggregate`.
