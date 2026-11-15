@@ -1,0 +1,55 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "paths": {
+      "@hirelab/ui": ["./projects/ui/src/index.ts"],
+      "@hirelab/core": ["./projects/core/src/index.ts"],
+      "@hirelab/api-client/staff": ["./projects/api-client/src/staff/index.ts"],
+      "@hirelab/api-client/candidate": ["./projects/api-client/src/candidate/index.ts"],
+      "@hirelab/tasks/*": ["./projects/tasks/src/*/index.ts"],
+      "@hirelab/ui/helm/button": ["./projects/ui/src/helm/button/src/index.ts"],
+      "@hirelab/ui/helm/utils": ["./projects/ui/src/helm/utils/src/index.ts"],
+      "@hirelab/ui/helm/input": ["./projects/ui/src/helm/input/src/index.ts"],
+      "@hirelab/ui/helm/label": ["./projects/ui/src/helm/label/src/index.ts"],
+      "@hirelab/ui/helm/card": ["./projects/ui/src/helm/card/src/index.ts"],
+      "@hirelab/ui/helm/badge": ["./projects/ui/src/helm/badge/src/index.ts"],
+      "@hirelab/ui/helm/dialog": ["./projects/ui/src/helm/dialog/src/index.ts"]
+    }
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true,
+    "typeCheckHostBindings": true
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./projects/staff/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/staff/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/candidate/tsconfig.app.json"
+    },
+    {
+      "path": "./projects/candidate/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/ui/tsconfig.spec.json"
+    }
+  ]
+}

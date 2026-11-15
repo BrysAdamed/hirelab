@@ -1,0 +1,49 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="global.json" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/HireLab.Api/HireLab.Api.csproj" />
+    <Project Path="src/HireLab.AppHost/HireLab.AppHost.csproj" />
+    <Project Path="src/HireLab.MigrationService/HireLab.MigrationService.csproj" />
+    <Project Path="src/HireLab.ServiceDefaults/HireLab.ServiceDefaults.csproj" />
+    <Project Path="src/HireLab.SharedKernel/HireLab.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <File Path="src/Modules/Directory.Build.props" />
+  </Folder>
+  <Folder Name="/src/Modules/Evaluation/">
+    <Project Path="src/Modules/Evaluation/HireLab.Modules.Evaluation.Contracts/HireLab.Modules.Evaluation.Contracts.csproj" />
+    <Project Path="src/Modules/Evaluation/HireLab.Modules.Evaluation/HireLab.Modules.Evaluation.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/">
+    <Project Path="src/Modules/Identity/HireLab.Modules.Identity.Contracts/HireLab.Modules.Identity.Contracts.csproj" />
+    <Project Path="src/Modules/Identity/HireLab.Modules.Identity/HireLab.Modules.Identity.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Positions/">
+    <Project Path="src/Modules/Positions/HireLab.Modules.Positions.Contracts/HireLab.Modules.Positions.Contracts.csproj" />
+    <Project Path="src/Modules/Positions/HireLab.Modules.Positions/HireLab.Modules.Positions.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Sessions/">
+    <Project Path="src/Modules/Sessions/HireLab.Modules.Sessions.Contracts/HireLab.Modules.Sessions.Contracts.csproj" />
+    <Project Path="src/Modules/Sessions/HireLab.Modules.Sessions/HireLab.Modules.Sessions.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/TaskBank/">
+    <Project Path="src/Modules/TaskBank/HireLab.Modules.TaskBank.Contracts/HireLab.Modules.TaskBank.Contracts.csproj" />
+    <Project Path="src/Modules/TaskBank/HireLab.Modules.TaskBank/HireLab.Modules.TaskBank.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HireLab.Api.Tests/HireLab.Api.Tests.csproj" />
+    <Project Path="tests/HireLab.ArchitectureTests/HireLab.ArchitectureTests.csproj" />
+    <Project Path="tests/HireLab.Modules.Evaluation.Tests/HireLab.Modules.Evaluation.Tests.csproj" />
+    <Project Path="tests/HireLab.Modules.Identity.Tests/HireLab.Modules.Identity.Tests.csproj" />
+    <Project Path="tests/HireLab.Modules.Positions.Tests/HireLab.Modules.Positions.Tests.csproj" />
+    <Project Path="tests/HireLab.Modules.Sessions.Tests/HireLab.Modules.Sessions.Tests.csproj" />
+    <Project Path="tests/HireLab.Modules.TaskBank.Tests/HireLab.Modules.TaskBank.Tests.csproj" />
+    <Project Path="tests/HireLab.SharedKernel.Tests/HireLab.SharedKernel.Tests.csproj" />
+    <Project Path="tests/HireLab.Testing/HireLab.Testing.csproj" />
+  </Folder>
+</Solution>

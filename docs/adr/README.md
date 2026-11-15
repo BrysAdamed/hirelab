@@ -22,3 +22,6 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0014](0014-testing-strategy.md) | Testing strategy | Accepted |
 | [0015](0015-task-authoring-in-the-app.md) | Task authoring in the app | Accepted |
 | [0016](0016-ui-stack.md) | UI stack | Accepted |
+| [0017](0017-azure-provisioning-and-rollout.md) | Azure provisioning and rollout | Accepted |
+| [0018](0018-strict-json-numbers.md) | Strict JSON number handling | Accepted |
+| [0019](0019-problem-details-in-openapi.md) | ProblemDetails in the OpenAPI documents | Accepted |

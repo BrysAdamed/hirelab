@@ -1,0 +1,74 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <PublishReadyToRun>true</PublishReadyToRun>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Container">
+    <ContainerRepository>hirelab-api</ContainerRepository>
+    <ContainerFamily>noble-chiseled</ContainerFamily>
+  </PropertyGroup>
+
+  <PropertyGroup Label="SPAs">
+    <WebWorkspaceRoot>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', '..', 'web'))</WebWorkspaceRoot>
+    <SkipSpaBuild Condition="'$(SkipSpaBuild)' == ''">false</SkipSpaBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Label="OpenAPI">
+    <OpenApiGenerateDocumentsOnBuild>false</OpenApiGenerateDocumentsOnBuild>
+    <OpenApiDocumentsDirectory>$(WebWorkspaceRoot)projects/api-client/openapi</OpenApiDocumentsDirectory>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Azure.Npgsql" />
+    <PackageReference Include="Aspire.Azure.Storage.Blobs" />
+    <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" />
+    <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HireLab.ServiceDefaults\HireLab.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\HireLab.SharedKernel\HireLab.SharedKernel.csproj" />
+    <ProjectReference Include="..\Modules\Identity\HireLab.Modules.Identity\HireLab.Modules.Identity.csproj" />
+    <ProjectReference Include="..\Modules\Positions\HireLab.Modules.Positions\HireLab.Modules.Positions.csproj" />
+    <ProjectReference Include="..\Modules\TaskBank\HireLab.Modules.TaskBank\HireLab.Modules.TaskBank.csproj" />
+    <ProjectReference Include="..\Modules\Sessions\HireLab.Modules.Sessions\HireLab.Modules.Sessions.csproj" />
+    <ProjectReference Include="..\Modules\Evaluation\HireLab.Modules.Evaluation\HireLab.Modules.Evaluation.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="HireLab.Api.Tests" />
+    <InternalsVisibleTo Include="HireLab.ArchitectureTests" />
+    <InternalsVisibleTo Include="HireLab.Testing" />
+  </ItemGroup>
+
+  <Target Name="BuildSpas" Condition="'$(SkipSpaBuild)' != 'true'">
+    <Exec Command="npm ci --no-audit --no-fund" WorkingDirectory="$(WebWorkspaceRoot)" />
+    <Exec Command="npm run build" WorkingDirectory="$(WebWorkspaceRoot)" />
+  </Target>
+
+  <Target Name="PublishSpas" DependsOnTargets="BuildSpas" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <StaffSpaFile Include="$(WebWorkspaceRoot)dist/staff/browser/**" />
+      <CandidateSpaFile Include="$(WebWorkspaceRoot)dist/candidate/browser/**" />
+      <ResolvedFileToPublish Include="@(StaffSpaFile)" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>wwwroot/staff/%(StaffSpaFile.RecursiveDir)%(StaffSpaFile.Filename)%(StaffSpaFile.Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+      <ResolvedFileToPublish Include="@(CandidateSpaFile)" Exclude="@(ResolvedFileToPublish)">
+        <RelativePath>wwwroot/candidate/%(CandidateSpaFile.RecursiveDir)%(CandidateSpaFile.Filename)%(CandidateSpaFile.Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+    <Error Condition="'@(StaffSpaFile)' == '' Or '@(CandidateSpaFile)' == ''" Text="The built SPAs were not found in $(WebWorkspaceRoot)dist. Run 'npm run build' in src/web or publish without SkipSpaBuild=true." />
+  </Target>
+
+</Project>

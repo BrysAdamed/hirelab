@@ -1,0 +1,24 @@
+<Project Sdk="Aspire.AppHost.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
+    <UserSecretsId>6bef39f8-0263-472d-ac27-047bffcbfb6f</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.Azure.AppContainers" />
+    <PackageReference Include="Aspire.Hosting.Azure.ApplicationInsights" />
+    <PackageReference Include="Aspire.Hosting.Azure.KeyVault" />
+    <PackageReference Include="Aspire.Hosting.Azure.OperationalInsights" />
+    <PackageReference Include="Aspire.Hosting.Azure.PostgreSQL" />
+    <PackageReference Include="Aspire.Hosting.Azure.Storage" />
+    <PackageReference Include="Aspire.Hosting.JavaScript" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\HireLab.Api\HireLab.Api.csproj" />
+    <ProjectReference Include="..\HireLab.MigrationService\HireLab.MigrationService.csproj" />
+  </ItemGroup>
+
+</Project>

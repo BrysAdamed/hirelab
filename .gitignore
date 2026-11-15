@@ -1,3 +1,69 @@
-
 # Local tooling
 .serena/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vs/
+.idea/
+*.user
+*.suo
+*.userprefs
+*.DotSettings.user
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# .NET build output
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+artifacts/
+*.binlog
+*.nupkg
+*.snupkg
+
+# .NET tests and coverage
+[Tt]est[Rr]esult*/
+coverage/
+coverage*.json
+coverage*.xml
+coverage*.info
+*.trx
+
+# Aspire and Azure Developer CLI
+.aspire/
+.azure/
+
+# Node and Angular
+node_modules/
+dist/
+out-tsc/
+.angular/
+.nx/
+.npm/
+npm-debug.log*
+yarn-error.log*
+.sass-cache/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+*.pfx
+*.pem
+
+# Claude Code agent worktrees
+.claude/worktrees/
