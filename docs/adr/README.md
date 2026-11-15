@@ -19,3 +19,4 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0011](0011-iac-and-ci-cd.md) | Infrastructure as code and CI/CD | Accepted |
 | [0012](0012-observability.md) | Observability | Accepted |
 | [0013](0013-task-module-contract.md) | Task module contract | Accepted |
+| [0014](0014-testing-strategy.md) | Testing strategy | Accepted |

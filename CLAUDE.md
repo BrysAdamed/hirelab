@@ -27,6 +27,14 @@ Live technical interview platform: a coded task bank, interview sessions with a 
 - No Azure deployment until MVP 1 is done; everything runs locally through Aspire ([ADR 0010](docs/adr/0010-hosting-and-environments.md)). Infrastructure is declared in the AppHost ([ADR 0011](docs/adr/0011-iac-and-ci-cd.md)).
 - No personal data in logs or traces; use ids ([ADR 0012](docs/adr/0012-observability.md)).
 
+## Testing
+
+See [ADR 0014](docs/adr/0014-testing-strategy.md). xUnit v3, Shouldly, NSubstitute; Vitest and Playwright on the frontend.
+
+- Every feature ticket ships with integration tests for its endpoints (the happy path and each domain rule that can fail), against real PostgreSQL through Testcontainers. Don't mock the database.
+- Unit tests where logic is dense. A bug fix starts with a failing test.
+- Test data comes from hand-written builders with obviously fake values.
+
 ## Work tracking
 
 Tickets live in the ticketing app (MCP server `ticketing`), project key `HLB`. Epics are HLB-1 to HLB-11. Branch names and commit messages start with the ticket key, e.g. `HLB-12 Add job position aggregate`.
