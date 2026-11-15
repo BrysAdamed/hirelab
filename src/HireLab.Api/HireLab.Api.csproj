@@ -15,12 +15,21 @@
     <SkipSpaBuild Condition="'$(SkipSpaBuild)' == ''">false</SkipSpaBuild>
   </PropertyGroup>
 
+  <PropertyGroup Label="OpenAPI">
+    <OpenApiGenerateDocumentsOnBuild>false</OpenApiGenerateDocumentsOnBuild>
+    <OpenApiDocumentsDirectory>$(WebWorkspaceRoot)projects/api-client/openapi</OpenApiDocumentsDirectory>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Aspire.Azure.Npgsql" />
     <PackageReference Include="Aspire.Azure.Storage.Blobs" />
     <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" />
     <PackageReference Include="Azure.Extensions.AspNetCore.DataProtection.Keys" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>

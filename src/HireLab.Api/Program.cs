@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using HireLab.Api;
 using HireLab.Api.Auth;
 using HireLab.Api.Infrastructure;
@@ -13,6 +14,8 @@ builder.AddAzureBlobServiceClient(ResourceNames.Blobs, settings => settings.Disa
 
 builder.AddHireLabDataProtection();
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddStaffAndCandidateAuth();

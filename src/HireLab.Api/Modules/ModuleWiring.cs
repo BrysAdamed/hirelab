@@ -1,4 +1,5 @@
 using HireLab.Api.Auth;
+using HireLab.Api.OpenApi;
 using HireLab.SharedKernel.Modules;
 
 namespace HireLab.Api.Modules;
@@ -16,10 +17,8 @@ internal static class ModuleWiring
             builder.Services.AddSingleton(module);
         }
 
-        builder.Services.AddOpenApi(StaffDocument, options =>
-            options.ShouldInclude = description => description.GroupName == StaffDocument);
-        builder.Services.AddOpenApi(CandidateDocument, options =>
-            options.ShouldInclude = description => description.GroupName == CandidateDocument);
+        builder.Services.AddGroupDocument(StaffDocument);
+        builder.Services.AddGroupDocument(CandidateDocument);
 
         return builder;
     }
@@ -52,6 +51,13 @@ internal static class ModuleWiring
 
         return app;
     }
+
+    private static void AddGroupDocument(this IServiceCollection services, string documentName) =>
+        services.AddOpenApi(documentName, options =>
+        {
+            options.ShouldInclude = description => description.GroupName == documentName;
+            options.AddDocumentTransformer<ProblemResponsesTransformer>();
+        });
 
     private static void MapUnknownRouteFallback(RouteGroupBuilder group) =>
         group.Map("/{**path}", () => TypedResults.Problem(statusCode: StatusCodes.Status404NotFound))

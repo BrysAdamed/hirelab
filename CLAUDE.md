@@ -19,6 +19,7 @@ Live technical interview platform: a task bank authored in the app, interview se
 - Modular monolith ([ADR 0001](docs/adr/0001-modular-monolith.md)). A module references another module only through its `.Contracts` project; no cross-schema foreign keys or joins.
 - Vertical slices, minimal APIs, own handler abstraction, `Result` for expected failures, `ProblemDetails` on the wire ([ADR 0002](docs/adr/0002-backend-internal-style.md)).
 - Staff endpoints go under `/api/staff`, candidate endpoints under `/api/candidate`. The `candidate` app never imports `staff` code ([ADR 0003](docs/adr/0003-repository-and-frontend-layout.md)).
+- The frontend calls the API only through the generated `@hirelab/api-client/staff` and `@hirelab/api-client/candidate` (never hand-written types). After changing an endpoint, run `npm run api:update` in `src/web` and commit the regenerated documents and client; `npm run api:check` (CI) fails on drift.
 - Self-contained: only public packages from nuget.org and npm.
 - One DbContext per module. Migrations are forward-only; a breaking change goes expand → deploy → contract ([ADR 0004](docs/adr/0004-database-and-ef-core.md)).
 - Ids are `Guid` v7 behind strongly typed ids. Timestamps are UTC `DateTimeOffset` from an injected `TimeProvider`.
