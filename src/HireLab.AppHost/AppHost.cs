@@ -10,9 +10,14 @@ var storage = builder.AddAzureStorage("storage")
 
 var blobs = storage.AddBlobs("blobs");
 
+var migrations = builder.AddProject<Projects.HireLab_MigrationService>("migrations")
+    .WithReference(database)
+    .WaitFor(database);
+
 builder.AddProject<Projects.HireLab_Api>("api")
     .WithReference(database)
     .WaitFor(database)
+    .WaitForCompletion(migrations)
     .WithReference(blobs)
     .WaitFor(blobs)
     .WithHttpHealthCheck("/health");

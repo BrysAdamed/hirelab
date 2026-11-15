@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HireLab.Api\HireLab.Api.csproj" />
+    <ProjectReference Include="..\HireLab.MigrationService\HireLab.MigrationService.csproj" />
   </ItemGroup>
 
 </Project>

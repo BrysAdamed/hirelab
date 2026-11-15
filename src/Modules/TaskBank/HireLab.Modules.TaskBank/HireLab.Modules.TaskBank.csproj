@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\HireLab.SharedKernel\HireLab.SharedKernel.csproj" />
+    <ProjectReference Include="..\HireLab.Modules.TaskBank.Contracts\HireLab.Modules.TaskBank.Contracts.csproj" />
+  </ItemGroup>
+
+</Project>
