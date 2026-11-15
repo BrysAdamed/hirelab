@@ -15,3 +15,6 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0007](0007-staff-authentication.md) | Staff authentication | Accepted |
 | [0008](0008-candidate-access.md) | Candidate access | Accepted |
 | [0009](0009-authorisation-model.md) | Authorisation model | Accepted |
+| [0010](0010-hosting-and-environments.md) | Hosting and environments | Accepted |
+| [0011](0011-iac-and-ci-cd.md) | Infrastructure as code and CI/CD | Accepted |
+| [0012](0012-observability.md) | Observability | Accepted |

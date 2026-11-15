@@ -43,6 +43,11 @@ The interview call itself still happens on Teams, and the candidate shares their
 | Interviewer | Belongs to one manager. Adds candidates, runs sessions and evaluates on that manager's positions. Sees their own notes and the whole team's task results. |
 | Candidate | No account. Opens a session link that works while the session is Live. |
 
+## Releases
+
+- **MVP 1**: everything described above, which is epics HLB-1 to HLB-11. It ends with the first deployment to Azure; until then HireLab runs only locally.
+- **Later versions**: new task types, and anything else from the out-of-scope list we decide to revisit.
+
 ## Out of scope
 
 - A task editor in the app
