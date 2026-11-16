@@ -14,7 +14,7 @@ Tasks and their versions live in the `taskbank` schema. Task *types* stay code.
 
 ### Seed packages
 
-The folder format from 0013 (`src/Tasks/<task-id>/v<N>/` with `task.json` and content files) becomes an **import format** for showcase tasks.
+The folder format from 0013 (`src/Tasks/<task-id>/v<N>/` with `task.json` and content files) becomes an **import format** for showcase tasks. [0030](0030-seed-task-packages.md) defines the final format, the import and the lock.
 - The migration worker imports the packages as **system tasks**: Global, owned by no team, read-only.
 - The import is idempotent by (slug, version). It never overwrites an existing version, and it fails if an existing version's content hash differs.
 - `tasks.lock.json` still guards the seed packages in CI.

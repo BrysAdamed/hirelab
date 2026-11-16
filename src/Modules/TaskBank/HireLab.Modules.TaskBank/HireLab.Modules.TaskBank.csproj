@@ -6,7 +6,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\HireLab.SharedKernel\HireLab.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\..\TaskTypes\HireLab.TaskTypes.Abstractions\HireLab.TaskTypes.Abstractions.csproj" />
     <ProjectReference Include="..\HireLab.Modules.TaskBank.Contracts\HireLab.Modules.TaskBank.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="HireLab.Tasks.Tests" />
   </ItemGroup>
 
 </Project>

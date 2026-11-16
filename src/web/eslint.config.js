@@ -13,7 +13,7 @@ const tokenDefinitions = ['projects/ui/src/styles/**'];
 const element = (type, pattern) => ({ type, pattern, partialMatch: false });
 
 const staffOnlyLibs = ['api-client-staff', 'tasks-staff'];
-const sharedLibs = ['ui', 'core', 'api-client-candidate', 'tasks-candidate'];
+const sharedLibs = ['ui', 'core', 'api-client-candidate', 'tasks-framework', 'tasks-candidate'];
 
 module.exports = defineConfig([
   {
@@ -73,6 +73,10 @@ module.exports = defineConfig([
         element('app-candidate', 'projects/candidate'),
         element('api-client-staff', 'projects/api-client/src/staff'),
         element('api-client-candidate', 'projects/api-client/src/candidate'),
+        element('tasks-framework', 'projects/tasks/src/framework'),
+        element('tasks-candidate', 'projects/tasks/src/candidate'),
+        element('tasks-staff', 'projects/tasks/src/review'),
+        element('tasks-staff', 'projects/tasks/src/editor'),
         element('tasks-candidate', 'projects/tasks/src/*/candidate'),
         element('tasks-staff', 'projects/tasks/src/*/review'),
         element('tasks-staff', 'projects/tasks/src/*/editor'),

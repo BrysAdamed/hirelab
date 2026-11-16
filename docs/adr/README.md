@@ -18,7 +18,7 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0010](0010-hosting-and-environments.md) | Hosting and environments | Accepted |
 | [0011](0011-iac-and-ci-cd.md) | Infrastructure as code and CI/CD | Accepted |
 | [0012](0012-observability.md) | Observability | Accepted |
-| [0013](0013-task-module-contract.md) | Task module contract | Accepted (authoring and versions superseded by 0015) |
+| [0013](0013-task-module-contract.md) | Task module contract | Accepted (authoring and versions superseded by 0015, backend contract by 0028) |
 | [0014](0014-testing-strategy.md) | Testing strategy | Accepted |
 | [0015](0015-task-authoring-in-the-app.md) | Task authoring in the app | Accepted |
 | [0016](0016-ui-stack.md) | UI stack | Accepted |
@@ -33,3 +33,6 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0025](0025-staff-directory.md) | Staff directory | Accepted |
 | [0026](0026-closing-positions-and-anonymisation.md) | Closing positions and anonymisation | Accepted |
 | [0027](0027-orphan-attachment-sweep.md) | Orphan attachment sweep | Accepted |
+| [0028](0028-task-type-plug-in-contract.md) | Task type plug-in contract | Accepted |
+| [0029](0029-task-storage.md) | Task storage | Accepted |
+| [0030](0030-seed-task-packages.md) | Seed task packages | Accepted |

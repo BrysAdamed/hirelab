@@ -28,6 +28,14 @@ export type AddedCandidate = components['schemas']['AddedCandidateResponse'];
 export type CandidateDetails = components['schemas']['AddCandidateRequest'];
 export type Attachment = components['schemas']['AttachmentResponse'];
 export type UploadedAttachment = components['schemas']['UploadedAttachmentResponse'];
+export type TaskSummary = components['schemas']['TaskSummaryResponse'];
+export type BankTask = components['schemas']['TaskResponse'];
+export type TaskLevel = components['schemas']['TaskLevel'];
+export type BankVisibility = components['schemas']['BankVisibility'];
+export type Rubric = components['schemas']['Rubric'];
+export type RubricCriterion = components['schemas']['RubricCriterion'];
+export type CheckCriterion = components['schemas']['RubricCriterionCheckCriterion'];
+export type ScaleCriterion = components['schemas']['RubricCriterionScaleCriterion'];
 
 /** The message of a failed API call: the ProblemDetails detail, or a generic fallback. */
 export function problemMessage(

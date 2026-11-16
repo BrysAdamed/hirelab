@@ -574,6 +574,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists the task bank: the active version of every task the caller can see, by title. A task has every given tag, one of the given levels, the given task type, and the search text in its title or summary. */
+        get: operations["ListTasks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/tasks/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists the distinct tags of the tasks in the caller's task bank, alphabetically. */
+        get: operations["ListTaskTags"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/tasks/types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists the keys of the task types that tasks in the caller's task bank have, alphabetically. */
+        get: operations["ListTaskTypes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/tasks/{taskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets a task in the caller's task bank with its active version: metadata, reference answer, interviewer notes, rubric and content. */
+        get: operations["GetTask"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -607,6 +675,8 @@ export interface components {
             uploadedById: string;
             uploadedByName: null | string;
         };
+        /** @enum {unknown} */
+        BankVisibility: "Team" | "Global" | "System";
         CandidateResponse: {
             /** Format: uuid */
             id: string;
@@ -636,6 +706,11 @@ export interface components {
             currentPassword: string;
             newPassword: string;
         };
+        /**
+         * @description The answer to a CheckCriterion.
+         * @enum {unknown}
+         */
+        CheckAnswer: "yes" | "no";
         CloseJobPositionRequest: {
             /** Format: uint32 */
             version: number;
@@ -760,6 +835,7 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
+        JsonElement: unknown;
         LoginRequest: {
             email: string;
             password: string;
@@ -813,6 +889,40 @@ export interface components {
             token: string;
             password: string;
         };
+        /** @description The scoring criteria of a task version (ADR 0013). Staff only: it never reaches the candidate API. */
+        Rubric: {
+            criteria: components["schemas"]["RubricCriterion"][];
+        };
+        /** @description One rubric item, identified within its rubric by a kebab-case string RubricCriterion.Id. Serialised with a `type` discriminator. */
+        RubricCriterion: components["schemas"]["RubricCriterionScaleCriterion"] | components["schemas"]["RubricCriterionCheckCriterion"];
+        /** @description A Yes / No criterion with an expected answer. A failed critical check is highlighted above the score. */
+        RubricCriterionCheckCriterion: {
+            /** @enum {string} */
+            type?: "check";
+            expected: components["schemas"]["CheckAnswer"];
+            /** @default false */
+            critical: boolean;
+            id: string;
+            title: string;
+            description: string;
+        };
+        /** @description A criterion scored 0–4 and weighted in the overall score, with an optional description per level. */
+        RubricCriterionScaleCriterion: {
+            /** @enum {string} */
+            type?: "scale";
+            /** Format: int32 */
+            weight: number;
+            levels?: null | components["schemas"]["ScaleLevel"][];
+            id: string;
+            title: string;
+            description: string;
+        };
+        /** @description What one score of a ScaleCriterion means. */
+        ScaleLevel: {
+            /** Format: int32 */
+            score: number;
+            description: string;
+        };
         /**
          * @description The fixed role of a staff user (ADR 0009, ADR 0020). Sent over the wire by name.
          * @enum {unknown}
@@ -820,6 +930,41 @@ export interface components {
         StaffRole: "Admin" | "Manager" | "Interviewer";
         /** Format: binary */
         Stream: Blob;
+        /** @enum {unknown} */
+        TaskLevel: "Junior" | "Mid" | "Senior";
+        TaskResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            versionNumber: number;
+            taskType: string;
+            title: string;
+            summary: string;
+            level: components["schemas"]["TaskLevel"];
+            /** Format: int32 */
+            estimatedMinutes: number;
+            tags: string[];
+            visibility: components["schemas"]["BankVisibility"];
+            referenceAnswer: string;
+            interviewerNotes: null | string;
+            rubric: components["schemas"]["Rubric"];
+            candidateContent: components["schemas"]["JsonElement"];
+            staffContent: components["schemas"]["JsonElement"];
+        };
+        TaskSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            versionNumber: number;
+            taskType: string;
+            title: string;
+            summary: string;
+            level: components["schemas"]["TaskLevel"];
+            /** Format: int32 */
+            estimatedMinutes: number;
+            tags: string[];
+            visibility: components["schemas"]["BankVisibility"];
+        };
         TeamResponse: {
             /** Format: uuid */
             id: string;
@@ -2153,6 +2298,129 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListTasks: {
+        parameters: {
+            query?: {
+                tag?: string[];
+                level?: components["schemas"]["TaskLevel"][];
+                taskType?: string;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskSummaryResponse"][];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListTaskTags: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListTaskTypes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                taskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaskResponse"];
+                };
             };
             /** @description The request failed. The body describes the problem. */
             default: {

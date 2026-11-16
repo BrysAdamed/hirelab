@@ -2,6 +2,8 @@ using HireLab.Api.Auth;
 using HireLab.Api.Infrastructure;
 using HireLab.Api.OpenApi;
 using HireLab.SharedKernel.Modules;
+using HireLab.TaskTypes.Abstractions;
+using HireLab.TaskTypes.Catalog;
 
 namespace HireLab.Api.Modules;
 
@@ -18,6 +20,7 @@ internal static class ModuleWiring
             builder.Services.AddSingleton(module);
         }
 
+        builder.Services.AddTaskTypes();
         builder.Services.AddDbContextModelWarmup();
         builder.Services.AddGroupDocument(StaffDocument);
         builder.Services.AddGroupDocument(CandidateDocument);
@@ -44,6 +47,8 @@ internal static class ModuleWiring
             module.MapStaffEndpoints(staff);
             module.MapCandidateEndpoints(candidate);
         }
+
+        candidate.MapTaskTypeCandidateEndpoints();
 
         MapUnknownRouteFallback(staff);
         MapUnknownRouteFallback(candidate);
