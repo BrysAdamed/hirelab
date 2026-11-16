@@ -33,6 +33,11 @@ var api = builder.AddProject<Projects.HireLab_Api>("api", launchProfileName: "ht
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health");
 
+if (builder.Configuration["HIRELAB_E2E_AUTH_PERMIT_LIMIT"] is { Length: > 0 } e2ePermitLimit)
+{
+    api.WithEnvironment("RateLimiting__AuthenticationPermitLimit", e2ePermitLimit);
+}
+
 if (builder.ExecutionContext.IsRunMode)
 {
     var staff = builder.AddAngularDevServer("staff", port: 4200, api);

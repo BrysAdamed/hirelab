@@ -160,12 +160,13 @@ export class InvitesSection implements OnInit {
     ]);
     if (invites.ok) {
       this.invites.set(invites.value);
+    } else {
+      this.error.set(invites.message);
     }
     if (teams.ok) {
       this.teams.set(teams.value);
-    }
-    if (!invites.ok || !teams.ok) {
-      this.error.set(invites.ok ? (teams.ok ? null : teams.message) : invites.message);
+    } else {
+      this.error.set(teams.message);
     }
   }
 }

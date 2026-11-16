@@ -10,12 +10,22 @@ namespace HireLab.Api.Auth;
 internal static class RateLimitingSetup
 {
     public const int AuthenticationPermitLimit = 10;
+
+    /// <summary>
+    /// Overrides <see cref="AuthenticationPermitLimit"/>. Only the E2E suite sets it: all its browsers reach the API
+    /// through the dev server proxy from one address.
+    /// </summary>
+    public const string AuthenticationPermitLimitKey = "RateLimiting:AuthenticationPermitLimit";
+
     public static readonly TimeSpan AuthenticationWindow = TimeSpan.FromMinutes(1);
 
     private const string UnknownClient = "unknown";
 
-    public static IServiceCollection AddApiRateLimiting(this IServiceCollection services) =>
-        services.AddRateLimiter(options =>
+    public static IServiceCollection AddApiRateLimiting(this IServiceCollection services, IConfiguration configuration)
+    {
+        var permitLimit = configuration.GetValue(AuthenticationPermitLimitKey, AuthenticationPermitLimit);
+
+        return services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.OnRejected = WriteProblemAsync;
@@ -23,11 +33,12 @@ internal static class RateLimitingSetup
                 context.Connection.RemoteIpAddress?.ToString() ?? UnknownClient,
                 _ => new FixedWindowRateLimiterOptions
                 {
-                    PermitLimit = AuthenticationPermitLimit,
+                    PermitLimit = permitLimit,
                     Window = AuthenticationWindow,
                     QueueLimit = 0,
                 }));
         });
+    }
 
     private static async ValueTask WriteProblemAsync(OnRejectedContext context, CancellationToken cancellationToken)
     {

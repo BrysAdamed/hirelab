@@ -24,4 +24,5 @@ Playwright starts the AppHost with `dotnet run --project ../../src/HireLab.AppHo
 
 - On Linux and macOS, Playwright stops the AppHost with `SIGINT`, so Aspire removes its containers. On Windows it can only kill the process tree, which leaves the AppHost's PostgreSQL and Azurite containers running; the next AppHost start removes them.
 - Staff tests log in as the development seed users (`src/Modules/Identity/HireLab.Modules.Identity/Seed/development-seed.json`), which `staff-users.ts` reads. Tests that need other users create them.
+- Every browser reaches the API through the dev server proxy, so the API sees one client address and the login rate limit (10 a minute) would be shared by the whole suite. The suite's AppHost gets `HIRELAB_E2E_AUTH_PERMIT_LIMIT=1000`, which it passes to the API as `RateLimiting:AuthenticationPermitLimit`. A reused AppHost you started yourself keeps the normal limit, so parallel runs against it can hit 429s.
 - The AppHost keeps PostgreSQL data in a named volume, so data survives between runs. Tests must create the data they need and not rely on an empty database.

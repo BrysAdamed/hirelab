@@ -25,6 +25,7 @@ export default defineConfig({
     stderr: 'pipe',
     env: {
       ASPIRE_ALLOW_UNSECURED_TRANSPORT: 'true',
+      HIRELAB_E2E_AUTH_PERMIT_LIMIT: '1000',
     },
   },
 });

@@ -21,7 +21,7 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddStaffAndCandidateAuth();
 builder.Services.AddApiAntiforgery();
-builder.Services.AddApiRateLimiting();
+builder.Services.AddApiRateLimiting(builder.Configuration);
 builder.Services.AddCurrentUser();
 
 builder.AddModules(ModuleCatalog.All);
