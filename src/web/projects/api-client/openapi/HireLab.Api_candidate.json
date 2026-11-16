@@ -93,6 +93,47 @@
           }
         }
       }
+    },
+    "/api/candidate/session/response": {
+      "put": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Saves the candidate's whole response to the current task, named in the body, based on the revision they last saw, and returns the new revision. Refused for an older revision (409 Response.StaleRevision), a task that isn't Current (409 InterviewSession.TaskNotCurrent), a session that isn't Live (409 InterviewSession.NotLive), and a response the task type rejects or that is larger than 1 MB (400).",
+        "operationId": "SaveResponse",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveResponseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -101,7 +142,9 @@
         "required": [
           "id",
           "taskType",
-          "content"
+          "content",
+          "response",
+          "revision"
         ],
         "type": "object",
         "properties": {
@@ -114,6 +157,20 @@
           },
           "content": {
             "$ref": "#/components/schemas/JsonElement"
+          },
+          "response": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -191,6 +248,39 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "SaveResponseRequest": {
+        "required": [
+          "sessionTaskId",
+          "response",
+          "revision"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionTaskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "response": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "SavedResponse": {
+        "required": [
+          "revision"
+        ],
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       }

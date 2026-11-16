@@ -55,6 +55,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/candidate/session/response": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Saves the candidate's whole response to the current task, named in the body, based on the revision they last saw, and returns the new revision. Refused for an older revision (409 Response.StaleRevision), a task that isn't Current (409 InterviewSession.TaskNotCurrent), a session that isn't Live (409 InterviewSession.NotLive), and a response the task type rejects or that is larger than 1 MB (400). */
+        put: operations["SaveResponse"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -64,6 +81,9 @@ export interface components {
             id: string;
             taskType: string;
             content: components["schemas"]["JsonElement"];
+            response: null | components["schemas"]["JsonElement"];
+            /** Format: int32 */
+            revision: number;
         };
         ExchangeCandidateLinkRequest: {
             token: string;
@@ -82,6 +102,17 @@ export interface components {
             status?: null | number;
             detail?: null | string;
             instance?: null | string;
+        };
+        SaveResponseRequest: {
+            /** Format: uuid */
+            sessionTaskId: string;
+            response: components["schemas"]["JsonElement"];
+            /** Format: int32 */
+            revision: number;
+        };
+        SavedResponse: {
+            /** Format: int32 */
+            revision: number;
         };
     };
     responses: never;
@@ -166,6 +197,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SaveResponse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveResponseRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedResponse"];
                 };
             };
             /** @description The request failed. The body describes the problem. */

@@ -71,6 +71,10 @@ describe('SessionPage', () => {
       ...task,
       referenceAnswer: `Echo **${task.title}**.`,
       interviewerNotes: 'Ask about _imaginary_ echoes.',
+      candidateContent: { phrase: 'Fake phrase' },
+      staffContent: {},
+      response: null,
+      responseRevision: 0,
     };
   }
 

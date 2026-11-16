@@ -39,9 +39,9 @@ import { SessionsService } from './sessions.service';
 import { TaskPicker } from './task-picker';
 
 /**
- * A session: its schedule, its candidate link, its task queue and the selected task's staff material. The interviewer
- * creates or regenerates the candidate link, goes Live, marks the Current task done and finishes the session here;
- * tasks that haven't started can be changed until it finishes.
+ * A session: its schedule, its candidate link, its task queue and the selected task's response and staff material.
+ * The interviewer creates or regenerates the candidate link, goes Live, marks the Current task done and finishes the
+ * session here; tasks that haven't started can be changed until it finishes.
  */
 @Component({
   selector: 'hl-session-page',
@@ -416,6 +416,7 @@ import { TaskPicker } from './task-picker';
             [sessionId]="session.id"
             [sessionTaskId]="sessionTaskId"
             [queueRevision]="session.queueRevision"
+            [sessionLive]="live()"
             [sessionFinished]="finished()"
           />
         }

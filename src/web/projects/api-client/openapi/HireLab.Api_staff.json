@@ -2288,7 +2288,7 @@
         "tags": [
           "Sessions"
         ],
-        "summary": "Gets a task of a session's queue with the reference answer and interviewer notes of the version it pins.",
+        "summary": "Gets a task of a session's queue with the content, reference answer and interviewer notes of the version it pins, and the candidate's response with its revision.",
         "operationId": "GetSessionTask",
         "parameters": [
           {
@@ -3706,7 +3706,11 @@
           "title",
           "summary",
           "referenceAnswer",
-          "interviewerNotes"
+          "interviewerNotes",
+          "candidateContent",
+          "staffContent",
+          "response",
+          "responseRevision"
         ],
         "type": "object",
         "properties": {
@@ -3742,6 +3746,26 @@
               "null",
               "string"
             ]
+          },
+          "candidateContent": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "staffContent": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "response": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            ]
+          },
+          "responseRevision": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

@@ -2,9 +2,9 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  DOCUMENT,
   computed,
   inject,
-  linkedSignal,
   signal,
 } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -12,6 +12,8 @@ import {
   lucideCircleAlert,
   lucideCircleCheck,
   lucideClock,
+  lucideCloudAlert,
+  lucideCloudCheck,
   lucideLink2Off,
   lucideLoaderCircle,
   lucideRotateCw,
@@ -21,20 +23,25 @@ import { CandidateTaskOutlet, type CandidateTaskOutletState } from '@hirelab/tas
 import type { CurrentTask } from '../api/candidate-api';
 import { InterviewService, type InterviewResult } from './interview.service';
 import { InterviewUpdates } from './interview-updates';
+import { ResponseAutosave } from './response-autosave';
 
 /**
  * The candidate's interview (ADR 0008): a waiting page until the session goes Live, then only the current task,
  * rendered by its task type's `candidate` component, and a closing screen after the last one. When the session has
- * finished, or the link no longer works, it says so. It follows the session through {@link InterviewUpdates}.
+ * finished, or the link no longer works, it says so. It follows the session through {@link InterviewUpdates} and
+ * autosaves the response through {@link ResponseAutosave} (ADR 0031).
  */
 @Component({
   selector: 'hl-interview-page',
   imports: [NgIcon, HlmButton, CandidateTaskOutlet],
   providers: [
+    ResponseAutosave,
     provideIcons({
       lucideCircleAlert,
       lucideCircleCheck,
       lucideClock,
+      lucideCloudAlert,
+      lucideCloudCheck,
       lucideLink2Off,
       lucideLoaderCircle,
       lucideRotateCw,
@@ -97,11 +104,54 @@ import { InterviewUpdates } from './interview-updates';
                   </p>
                 }
               }
-              <div [class.hidden]="taskState() !== 'ready'">
+              <div class="flex flex-col gap-2" [class.hidden]="taskState() !== 'ready'">
+                <p
+                  role="status"
+                  class="flex min-h-5 items-center justify-end gap-1.5 text-sm text-muted-foreground"
+                >
+                  @switch (saveStatus()) {
+                    @case ('saving') {
+                      <ng-icon
+                        name="lucideLoaderCircle"
+                        size="16"
+                        class="motion-safe:animate-spin"
+                        aria-hidden="true"
+                      />
+                      Saving…
+                    }
+                    @case ('saved') {
+                      <ng-icon name="lucideCloudCheck" size="16" aria-hidden="true" />
+                      Saved
+                    }
+                    @case ('stale') {
+                      <ng-icon name="lucideCloudCheck" size="16" aria-hidden="true" />
+                      Updated in another tab
+                    }
+                    @case ('failed') {
+                      <ng-icon
+                        name="lucideCloudAlert"
+                        size="16"
+                        class="text-destructive"
+                        aria-hidden="true"
+                      />
+                      Not saved yet. Trying again…
+                    }
+                    @case ('rejected') {
+                      <ng-icon
+                        name="lucideCloudAlert"
+                        size="16"
+                        class="text-destructive"
+                        aria-hidden="true"
+                      />
+                      Your answer can’t be saved. It may be too long.
+                    }
+                  }
+                </p>
                 <hl-candidate-task-outlet
                   [taskType]="task.taskType"
                   [content]="task.content"
-                  [(response)]="response"
+                  [response]="response()"
+                  (responseChange)="edit($event)"
                   (stateChange)="taskState.set($event)"
                 />
               </div>
@@ -177,7 +227,9 @@ import { InterviewUpdates } from './interview-updates';
 export class InterviewPage {
   private readonly interviews = inject(InterviewService);
   private readonly updates = inject(InterviewUpdates);
+  private readonly autosave = inject(ResponseAutosave);
   private stopWatching: (() => void) | null = null;
+  private trackedTaskId: string | null = null;
 
   protected readonly result = signal<InterviewResult | null>(null);
   protected readonly task = computed<CurrentTask | null>(
@@ -188,13 +240,24 @@ export class InterviewPage {
     { equal: (previous, next) => previous?.id === next?.id },
   );
   protected readonly taskState = signal<CandidateTaskOutletState>('loading');
-  protected readonly response = linkedSignal<CurrentTask | null, unknown>({
-    source: this.task,
-    computation: () => null,
-  });
+  /** The response the candidate is editing: the saved one when the task opens, then their changes. */
+  protected readonly response = signal<unknown>(null);
+  protected readonly saveStatus = this.autosave.status;
 
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.stopWatching?.());
+    const document = inject(DOCUMENT);
+    const flushWhenHidden = () => {
+      if (document.visibilityState === 'hidden') {
+        void this.autosave.flush();
+      }
+    };
+    document.addEventListener('visibilitychange', flushWhenHidden);
+    inject(DestroyRef).onDestroy(() => {
+      document.removeEventListener('visibilitychange', flushWhenHidden);
+      this.stopWatching?.();
+      void this.autosave.flush();
+    });
+    this.autosave.onRefused((refusal) => void this.refresh(refusal === 'stale'));
     void this.open();
   }
 
@@ -203,22 +266,51 @@ export class InterviewPage {
     void this.refresh();
   }
 
+  protected edit(response: unknown): void {
+    this.response.set(response);
+    this.autosave.change(response);
+  }
+
   private async open(): Promise<void> {
     this.show(await this.interviews.open());
   }
 
-  private async refresh(): Promise<void> {
-    this.show(await this.interviews.refresh());
+  private async refresh(takeSavedResponse = false): Promise<void> {
+    this.show(await this.interviews.refresh(), takeSavedResponse);
   }
 
-  private show(result: InterviewResult): void {
+  /**
+   * Shows the interview. A new current task starts from its saved response. The same task takes the saved response
+   * only after a save was refused as stale, or when another tab saved a newer one and nothing here is unsaved.
+   */
+  private show(result: InterviewResult, takeSavedResponse = false): void {
     this.result.set(result);
+    if (result.ok) {
+      this.follow(result.interview.currentTask ?? null, takeSavedResponse);
+    }
     const following = result.ok || result.reason === 'failed';
     if (following && !this.stopWatching) {
       this.stopWatching = this.updates.watch(() => void this.refresh());
     } else if (!following) {
       this.stopWatching?.();
       this.stopWatching = null;
+      this.autosave.stop();
+    }
+  }
+
+  private follow(task: CurrentTask | null, takeSavedResponse: boolean): void {
+    if (!task) {
+      this.trackedTaskId = null;
+      this.autosave.track(null, 0);
+      return;
+    }
+
+    const newTask = task.id !== this.trackedTaskId;
+    const newerElsewhere = !this.autosave.dirty && task.revision > this.autosave.revision;
+    if (newTask || takeSavedResponse || newerElsewhere) {
+      this.trackedTaskId = task.id;
+      this.response.set(task.response ?? null);
+      this.autosave.track(task.id, task.revision, newTask ? 'idle' : this.autosave.status());
     }
   }
 }
