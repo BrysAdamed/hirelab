@@ -1,5 +1,6 @@
 using System.Text.Json;
 using HireLab.Api.Tests.Auth;
+using HireLab.Testing.TaskTypes;
 
 namespace HireLab.Api.Tests.OpenApi;
 
@@ -13,6 +14,7 @@ public sealed class CandidateOpenApiContractTests(ApiTestHost host) : Integratio
         "interviewernote",
         "rubric",
         "staffonly",
+        "staffcontent",
     ];
 
     [Fact]
@@ -23,6 +25,7 @@ public sealed class CandidateOpenApiContractTests(ApiTestHost host) : Integratio
 
         // Assert
         paths.ShouldContain(AuthProbeModule.CandidatePath);
+        paths.ShouldContain(TestEchoTaskType.EchoPath);
         paths.ShouldAllBe(path => path.StartsWith(GroupEndpoint.CandidateGroup + "/", StringComparison.Ordinal));
     }
 
@@ -58,7 +61,7 @@ public sealed class CandidateOpenApiContractTests(ApiTestHost host) : Integratio
         var fields = StaffOnlyFieldsOf(await GetDocumentAsync("candidate"));
 
         // Assert
-        fields.ShouldBeEmpty("The candidate API must never return reference answers, interviewer notes or rubrics (ADR 0013)");
+        fields.ShouldBeEmpty("The candidate API must never return reference answers, interviewer notes, rubrics or staff content (ADR 0013, ADR 0028)");
     }
 
     [Fact]
@@ -76,7 +79,8 @@ public sealed class CandidateOpenApiContractTests(ApiTestHost host) : Integratio
                         "type": "object",
                         "properties": { "reference_answer": { "type": "string" } }
                       },
-                      "interviewerNotes": { "type": "array", "items": { "type": "string" } }
+                      "interviewerNotes": { "type": "array", "items": { "type": "string" } },
+                      "staffContent": { "type": "object" }
                     }
                   }
                 }
@@ -88,7 +92,7 @@ public sealed class CandidateOpenApiContractTests(ApiTestHost host) : Integratio
         var fields = StaffOnlyFieldsOf(document.RootElement);
 
         // Assert
-        fields.ShouldBe(["reference_answer", "interviewerNotes"], ignoreOrder: true);
+        fields.ShouldBe(["reference_answer", "interviewerNotes", "staffContent"], ignoreOrder: true);
     }
 
     private async Task<JsonElement> GetDocumentAsync(string documentName)
