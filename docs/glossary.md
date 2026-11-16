@@ -6,9 +6,12 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 |---|---|
 | **Job position** | An opening the team is hiring for: a title and the Markdown sections description, requirements (required), nice-to-haves and interviewer notes. Its state is `Open` or `Closed`; a closed position is read-only. The manager creates, edits and deletes positions (delete only while open and without candidates); interviewers read them. In code: `JobPosition`. |
 | **Version** | The number an editable aggregate is read with (PostgreSQL `xmin`). An edit sends it back; if someone else saved in between, the edit is refused with "changed by someone else, reload". |
-| **Candidate** | A person applying to exactly one job position. The same person applying again is a new candidate. |
+| **Candidate** | A person applying to exactly one job position. The same person applying again is a new candidate. Has a full name, an optional email and phone, up to 3 profile links and a number. The manager and interviewers of the team add and edit candidates while the position is open. Their personal data lives only in Positions; other modules hold the candidate id (ADR 0023). In code: `Candidate`. |
+| **Candidate number** | A candidate's place in their position's sequence (1, 2, 3 …), given when they are added and never changed or reused. |
+| **Candidate #N** | How an anonymised candidate is shown, N being their candidate number. Otherwise a candidate is shown by full name. In code: `Candidate.DisplayName`. |
 | **Attachment** | A file on a candidate's profile. The CV is an attachment. |
-| **Anonymisation** | What closing a job position does to its candidates: contact details are replaced with "Candidate #N" and attachments are deleted. Notes, scores and task results stay. It is irreversible. |
+| **Anonymisation** | Removing a candidate's personal data: contact details are cleared, attachments are deleted and the candidate is shown as "Candidate #N" everywhere. Who did it and when is recorded (`AnonymisedBy`/`AnonymisedAt`). Closing a job position anonymises all its candidates. Notes, scores and task results stay. It is irreversible. |
+| **Anonymise candidate** | Anonymising a single candidate while their position stays open. |
 | **Task** | One interview exercise, authored in the app. It has an owning team, a visibility, versions, a task type, title, summary, tags, level, estimated minutes, content, reference answer, interviewer notes and rubric. Its UI comes from its task type. |
 | **Task version** | One revision of a task (`v1`, `v2` …). Published versions are immutable; a change means a new version. |
 | **Draft** | The one unpublished version a task may have. Editable by the team; can be previewed, but queued only in Development. |

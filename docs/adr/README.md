@@ -28,3 +28,4 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0020](0020-teams-and-user-lifecycle.md) | Teams and user lifecycle | Accepted |
 | [0021](0021-one-time-links.md) | One-time links | Accepted |
 | [0022](0022-first-admin-bootstrap.md) | First admin bootstrap | Accepted |
+| [0023](0023-candidate-personal-data-stays-in-positions.md) | Candidate personal data stays in Positions | Accepted |
