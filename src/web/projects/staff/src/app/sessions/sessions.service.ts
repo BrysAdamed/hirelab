@@ -4,6 +4,7 @@ import {
   type CandidateSession,
   type CreatedSession,
   type InterviewSession,
+  type IssuedCandidateLink,
   type SessionTaskDetail,
   STAFF_API,
   type TeamSession,
@@ -29,7 +30,10 @@ export class SessionsService {
   }
 
   /** Plans a session for the candidate; it gets the candidate's next session number. */
-  async create(candidateId: string, scheduledAt: string | null): Promise<ApiResult<CreatedSession>> {
+  async create(
+    candidateId: string,
+    scheduledAt: string | null,
+  ): Promise<ApiResult<CreatedSession>> {
     const { data, error } = await this.api.POST('/api/staff/candidates/{candidateId}/sessions', {
       params: { path: { candidateId } },
       body: { scheduledAt },
@@ -78,9 +82,12 @@ export class SessionsService {
 
   /** A queued task with the reference answer and interviewer notes of the version it pins. */
   async getTask(sessionId: string, sessionTaskId: string): Promise<ApiResult<SessionTaskDetail>> {
-    const { data, error } = await this.api.GET('/api/staff/sessions/{sessionId}/tasks/{sessionTaskId}', {
-      params: { path: { sessionId, sessionTaskId } },
-    });
+    const { data, error } = await this.api.GET(
+      '/api/staff/sessions/{sessionId}/tasks/{sessionTaskId}',
+      {
+        params: { path: { sessionId, sessionTaskId } },
+      },
+    );
     return data ? { ok: true, value: data } : apiFailure(error);
   }
 
@@ -107,6 +114,17 @@ export class SessionsService {
       params: { path: { sessionId } },
     });
     return response.ok ? { ok: true, value: undefined } : apiFailure(error);
+  }
+
+  /**
+   * Creates the session's candidate link, or regenerates it, which stops the old link and the candidate's current
+   * access. The link's path is returned only here.
+   */
+  async issueCandidateLink(sessionId: string): Promise<ApiResult<IssuedCandidateLink>> {
+    const { data, error } = await this.api.POST('/api/staff/sessions/{sessionId}/candidate-link', {
+      params: { path: { sessionId } },
+    });
+    return data ? { ok: true, value: data } : apiFailure(error);
   }
 
   /** Puts the queue in the order of `sessionTaskIds`, which must list every task in it. */

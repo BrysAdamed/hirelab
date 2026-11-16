@@ -2147,6 +2147,48 @@
         }
       }
     },
+    "/api/staff/sessions/{sessionId}/candidate-link": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Creates the session's candidate link, or regenerates it, which revokes the old link and the candidate cookies issued from it. Returns the link's path once: it can't be shown again. Refused for a finished session (409 InterviewSession.Finished), a closed position (409 InterviewSession.PositionClosed) and an anonymised candidate (409 InterviewSession.CandidateAnonymised).",
+        "operationId": "IssueCandidateLink",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedCandidateLinkResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/staff/sessions/{sessionId}/tasks": {
       "post": {
         "tags": [
@@ -3063,6 +3105,22 @@
           }
         }
       },
+      "IssuedCandidateLinkResponse": {
+        "required": [
+          "linkPath",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "linkPath": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "IssuedInviteResponse": {
         "required": [
           "invite",
@@ -3575,6 +3633,7 @@
           "createdByName",
           "createdAt",
           "queueRevision",
+          "candidateLinkCreatedAt",
           "tasks"
         ],
         "type": "object",
@@ -3621,6 +3680,13 @@
           "queueRevision": {
             "type": "integer",
             "format": "int32"
+          },
+          "candidateLinkCreatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           },
           "tasks": {
             "type": "array",

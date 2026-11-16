@@ -1,22 +1,8 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  effect,
-  inject,
-  input,
-  inputBinding,
-  outputBinding,
-  signal,
-  untracked,
-  viewChild,
-  ViewContainerRef,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, linkedSignal, signal } from '@angular/core';
 import { NgIcon, provideIcons } from '@ng-icons/core';
 import { lucideCircleAlert, lucideEyeOff, lucideRotateCcw } from '@ng-icons/lucide';
 import { HlmButton } from '@hirelab/ui/helm/button';
-import { CANDIDATE_TASK_TYPES } from '@hirelab/tasks/candidate';
-
-type PreviewState = 'loading' | 'ready' | 'unavailable' | 'failed';
+import { CandidateTaskOutlet, type CandidateTaskOutletState } from '@hirelab/tasks/candidate';
 
 /**
  * Shows staff what the candidate sees: renders the `candidate` component of `taskType` (from `CANDIDATE_TASK_TYPES`)
@@ -26,7 +12,7 @@ type PreviewState = 'loading' | 'ready' | 'unavailable' | 'failed';
  */
 @Component({
   selector: 'hl-task-preview',
-  imports: [NgIcon, HlmButton],
+  imports: [NgIcon, HlmButton, CandidateTaskOutlet],
   providers: [provideIcons({ lucideCircleAlert, lucideEyeOff, lucideRotateCcw })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -64,74 +50,29 @@ type PreviewState = 'loading' | 'ready' | 'unavailable' | 'failed';
     }
 
     <div class="mt-2" [class.hidden]="state() !== 'ready'">
-      <ng-container #outlet />
+      <hl-candidate-task-outlet
+        [taskType]="taskType()"
+        [content]="content()"
+        [(response)]="response"
+        (stateChange)="state.set($event)"
+      />
     </div>
   `,
 })
 export class TaskPreview {
-  private readonly registry = inject(CANDIDATE_TASK_TYPES);
-  private readonly outlet = viewChild.required('outlet', { read: ViewContainerRef });
-  private readonly generation = signal(0);
-  private readonly response = signal<unknown>(null);
-
   /** The task type key whose `candidate` component renders the preview. */
   readonly taskType = input.required<string>();
   /** The candidate part of the content, as the candidate API would send it. */
   readonly content = input.required<unknown>();
 
-  protected readonly state = signal<PreviewState>('loading');
-
-  constructor() {
-    effect((onCleanup) => {
-      const taskType = this.taskType();
-      const outlet = this.outlet();
-      this.generation();
-      let current = true;
-      onCleanup(() => {
-        current = false;
-        outlet.clear();
-      });
-      untracked(() => void this.render(taskType, outlet, () => current));
-    });
-  }
+  protected readonly state = signal<CandidateTaskOutletState>('loading');
+  protected readonly response = linkedSignal<unknown>(() => {
+    this.taskType();
+    this.content();
+    return null;
+  });
 
   protected reset(): void {
-    this.generation.update((generation) => generation + 1);
-  }
-
-  private async render(
-    taskType: string,
-    outlet: ViewContainerRef,
-    isCurrent: () => boolean,
-  ): Promise<void> {
     this.response.set(null);
-    const entry = this.registry.find(taskType);
-    if (!entry) {
-      this.state.set('unavailable');
-      return;
-    }
-
-    this.state.set('loading');
-    let component;
-    try {
-      component = await entry.loadComponent();
-    } catch {
-      if (isCurrent()) {
-        this.state.set('failed');
-      }
-      return;
-    }
-
-    if (!isCurrent()) {
-      return;
-    }
-    outlet.createComponent(component, {
-      bindings: [
-        inputBinding('content', this.content),
-        inputBinding('response', this.response),
-        outputBinding('responseChange', (response: unknown) => this.response.set(response)),
-      ],
-    });
-    this.state.set('ready');
   }
 }
