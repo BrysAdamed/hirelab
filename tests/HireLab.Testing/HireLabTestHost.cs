@@ -88,8 +88,8 @@ public partial class HireLabTestHost : IAsyncLifetime
     }
 
     /// <summary>
-    /// Creates a client for the API over HTTPS that doesn't follow redirects or keep cookies, sending only the given
-    /// cookies.
+    /// Creates a client for the API over HTTPS with its own client IP address that doesn't follow redirects or keep
+    /// cookies, sending only the given cookies.
     /// </summary>
     public HttpClient CreateClient(IEnumerable<SetCookieHeaderValue>? cookies = null)
     {
@@ -100,6 +100,8 @@ public partial class HireLabTestHost : IAsyncLifetime
             HandleCookies = false,
         });
 
+        client.DefaultRequestHeaders.Add(TestClientAddress.HeaderName, TestClientAddress.Next());
+
         var cookieHeader = string.Join("; ", (cookies ?? []).Select(cookie => $"{cookie.Name}={cookie.Value}"));
         if (cookieHeader.Length > 0)
         {
@@ -108,6 +110,20 @@ public partial class HireLabTestHost : IAsyncLifetime
 
         return client;
     }
+
+    /// <summary>
+    /// Creates a <see cref="BrowserSession"/> that starts with <paramref name="cookies"/> (for example a signed-in staff
+    /// user's) and holds an antiforgery token for that user, so it can call unsafe endpoints.
+    /// </summary>
+    public async Task<BrowserSession> CreateBrowserAsync(IEnumerable<SetCookieHeaderValue>? cookies = null)
+    {
+        var browser = CreateBrowser(cookies);
+        await browser.RefreshAntiforgeryTokenAsync();
+        return browser;
+    }
+
+    /// <summary>Creates a <see cref="BrowserSession"/> that starts with <paramref name="cookies"/> and no antiforgery token.</summary>
+    public BrowserSession CreateBrowser(IEnumerable<SetCookieHeaderValue>? cookies = null) => new(CreateClient(), cookies ?? []);
 
     /// <summary>Signs in with the candidate cookie scheme through a test-only endpoint and returns the issued cookies.</summary>
     public Task<IReadOnlyList<SetCookieHeaderValue>> SignInAsCandidateAsync() => SignInAsync(TestSignIn.CandidateUri);
@@ -200,6 +216,7 @@ public partial class HireLabTestHost : IAsyncLifetime
             builder.ConfigureTestServices(services =>
             {
                 services.Replace(ServiceDescriptor.Singleton<TimeProvider>(host.Time));
+                services.AddSingleton<IStartupFilter, TestClientAddress>();
                 services.AddSingleton<IStartupFilter, TestSignIn>();
             });
 

@@ -1,6 +1,9 @@
+using System.Text.Json.Serialization;
+
 namespace HireLab.SharedKernel.Users;
 
-/// <summary>The fixed role of a staff user (ADR 0009, ADR 0020).</summary>
+/// <summary>The fixed role of a staff user (ADR 0009, ADR 0020). Sent over the wire by name.</summary>
+[JsonConverter(typeof(JsonStringEnumConverter<StaffRole>))]
 public enum StaffRole
 {
     /// <summary>Manages users and teams only. Has no team and sees no candidate data. There is exactly one.</summary>

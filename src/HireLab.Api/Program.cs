@@ -20,6 +20,8 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddStaffAndCandidateAuth();
+builder.Services.AddApiAntiforgery();
+builder.Services.AddApiRateLimiting();
 builder.Services.AddCurrentUser();
 
 builder.AddModules(ModuleCatalog.All);
@@ -29,6 +31,7 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapDefaultEndpoints();
 app.MapModules();

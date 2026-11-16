@@ -32,4 +32,7 @@ public abstract class IntegrationTest(HireLabTestHost host) : IAsyncLifetime
         ArgumentNullException.ThrowIfNull(staff);
         return Host.CreateClient(staff.Cookies);
     }
+
+    /// <summary>Creates a browser-like session, signed in as <paramref name="staff"/> or anonymous, with an antiforgery token.</summary>
+    protected Task<BrowserSession> CreateBrowserAsync(SignedInStaff? staff = null) => Host.CreateBrowserAsync(staff?.Cookies);
 }

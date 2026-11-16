@@ -1,9 +1,11 @@
+using HireLab.Modules.Identity.Auth;
 using HireLab.Modules.Identity.Authentication;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.Modules.Identity.Seed;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Modules;
 using HireLab.SharedKernel.Persistence;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -22,6 +24,9 @@ public sealed class IdentityModule : IModule, IModuleMigrator
         builder.Services.AddHandlers<IdentityModuleDbContext>(typeof(IdentityModule).Assembly);
         builder.Services.AddStaffIdentityCore().AddStaffSignIn();
     }
+
+    /// <inheritdoc />
+    public void MapStaffEndpoints(IEndpointRouteBuilder staff) => staff.MapAuthEndpoints();
 
     /// <inheritdoc />
     public void AddMigrationServices(IServiceCollection services)

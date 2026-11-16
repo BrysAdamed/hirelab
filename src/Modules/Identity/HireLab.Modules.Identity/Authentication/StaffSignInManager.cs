@@ -31,7 +31,11 @@ internal sealed class StaffSignInManager : SignInManager<User>
         return user.IsActive && await base.CanSignInAsync(user);
     }
 
-    public override Task SignOutAsync() => Context.SignOutAsync(AuthenticationScheme);
+    public override async Task SignOutAsync()
+    {
+        await Context.SignOutAsync(AuthenticationScheme);
+        Context.User = new ClaimsPrincipal(new ClaimsIdentity());
+    }
 
     public override async Task<User?> ValidateSecurityStampAsync(ClaimsPrincipal? principal) =>
         await base.ValidateSecurityStampAsync(principal) is { IsActive: true } user ? user : null;

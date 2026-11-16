@@ -29,10 +29,12 @@ internal static class ModuleWiring
 
         var staff = app.MapGroup("/api/staff")
             .RequireAuthorization(AuthPolicies.Staff)
+            .RequireAntiforgeryOnUnsafeMethods()
             .WithGroupName(StaffDocument);
 
         var candidate = app.MapGroup("/api/candidate")
             .RequireAuthorization(AuthPolicies.Candidate)
+            .RequireAntiforgeryOnUnsafeMethods()
             .WithGroupName(CandidateDocument);
 
         foreach (var module in modules)

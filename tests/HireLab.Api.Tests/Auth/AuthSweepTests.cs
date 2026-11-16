@@ -7,6 +7,12 @@ public sealed class AuthSweepTests(ApiTestHost host) : IntegrationTest(host)
 {
     private static readonly HttpStatusCode[] _rejected = [HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden];
 
+    private static readonly string[] _anonymousEndpoints =
+    [
+        "GET /api/staff/auth/antiforgery",
+        "POST /api/staff/auth/login",
+    ];
+
     [Theory]
     [InlineData(GroupEndpoint.StaffGroup, AuthProbeModule.StaffPath)]
     [InlineData(GroupEndpoint.CandidateGroup, AuthProbeModule.CandidatePath)]
@@ -33,6 +39,19 @@ public sealed class AuthSweepTests(ApiTestHost host) : IntegrationTest(host)
         // Assert
         staffResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
         candidateResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public void Only_the_known_endpoints_allow_anonymous_requests()
+    {
+        // Act
+        var anonymous = GroupEndpoint.InGroup(Host.Services, GroupEndpoint.StaffGroup)
+            .Concat(GroupEndpoint.InGroup(Host.Services, GroupEndpoint.CandidateGroup))
+            .Where(endpoint => endpoint.AllowsAnonymous)
+            .Select(endpoint => endpoint.ToString());
+
+        // Assert
+        anonymous.ShouldBe(_anonymousEndpoints, ignoreOrder: true);
     }
 
     [Theory]
@@ -91,7 +110,7 @@ public sealed class AuthSweepTests(ApiTestHost host) : IntegrationTest(host)
 
     private async Task<IReadOnlyList<SweepResponse>> SendToEveryEndpointAsync(HttpClient client, string group)
     {
-        var endpoints = GroupEndpoint.InGroup(Host.Services, group);
+        var endpoints = GroupEndpoint.InGroup(Host.Services, group).Where(endpoint => !endpoint.AllowsAnonymous).ToList();
         endpoints.ShouldNotBeEmpty();
 
         var responses = new List<SweepResponse>();

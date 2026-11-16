@@ -16,7 +16,7 @@ internal static class AngularDevServerExtensions
         var devServer = builder.AddJavaScriptApp(project, WebWorkspacePath, $"start:{project}")
             .WithHttpEndpoint(port: port, env: "PORT")
             .WithUrlForEndpoint("http", url => url.Url = basePath)
-            .WithEnvironment("API_URL", api.GetEndpoint("http"))
+            .WithEnvironment("API_URL", api.GetEndpoint("https"))
             .WaitFor(api);
 
         var endpoint = devServer.GetEndpoint("http");
