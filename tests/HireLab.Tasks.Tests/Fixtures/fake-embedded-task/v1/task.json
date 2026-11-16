@@ -1,0 +1,15 @@
+{
+  "taskType": "test-echo",
+  "title": "Fake Embedded Task",
+  "summary": "A made-up task embedded as a resource.",
+  "level": "Junior",
+  "estimatedMinutes": 5,
+  "referenceAnswer": { "$file": "reference-answer.md" },
+  "rubric": {
+    "criteria": [
+      { "type": "scale", "id": "fake-quality", "title": "Fake quality", "description": "How convincingly fake it is.", "weight": 1 }
+    ]
+  },
+  "candidateContent": { "phrase": { "$file": "content/phrase.txt" } },
+  "staffContent": { "matchCriterionId": "fake-echo" }
+}
