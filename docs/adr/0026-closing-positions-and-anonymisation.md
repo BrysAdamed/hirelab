@@ -12,7 +12,7 @@ A manager closes a job position when hiring ends, and may anonymise a single can
 
 **One transaction, locked first.** Closing starts a transaction with `SELECT … FOR NO KEY UPDATE` on the position row; anonymising takes `FOR NO KEY UPDATE` on the candidate row and `FOR SHARE` on its position. Both conflict with the `FOR SHARE` locks an upload holds, so an in-flight upload commits first, and only then are the candidates and their attachment rows read, which includes the new row; a later upload waits and is then refused. The same transaction updates the position or candidate rows and deletes the attachment rows. `NO KEY UPDATE` keeps foreign-key checks (adding a candidate, inserting an attachment) from blocking on the lock.
 
-**Stale-click protection.** Both endpoints take the `version` the client read; a position or candidate changed since is refused with `Concurrency.ChangedMeanwhile`. Adding a candidate changes the position's version, so a close never anonymises fewer candidates than the manager saw without saying so.
+**Stale-click protection.** Both endpoints take the `version` the client read; a position or candidate changed since is refused with `Concurrency.ChangedMeanwhile`. Adding a candidate changes the position's version, so a close never anonymises a candidate the manager hadn't seen.
 
 **Blobs after commit.** Once the transaction commits, each deleted attachment's blob is deleted best effort through `AttachmentBlobCleanup`, which logs failures by id only ([0012](0012-observability.md)). A blob that survives is an orphan for the sweep ([0027](0027-orphan-attachment-sweep.md)).
 
