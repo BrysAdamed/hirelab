@@ -4,7 +4,7 @@ using HireLab.ServiceDefaults;
 var builder = Host.CreateApplicationBuilder(CommandLine.ToConfigurationArgs(args));
 
 builder.AddServiceDefaults();
-builder.AddAzureNpgsqlDataSource(ResourceNames.Database);
+builder.AddHireLabDatabase(ResourceNames.Database);
 
 foreach (var migrator in ModuleMigrators.All)
 {

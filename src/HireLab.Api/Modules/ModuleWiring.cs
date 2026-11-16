@@ -1,4 +1,5 @@
 using HireLab.Api.Auth;
+using HireLab.Api.Infrastructure;
 using HireLab.Api.OpenApi;
 using HireLab.SharedKernel.Modules;
 
@@ -17,6 +18,7 @@ internal static class ModuleWiring
             builder.Services.AddSingleton(module);
         }
 
+        builder.Services.AddDbContextModelWarmup();
         builder.Services.AddGroupDocument(StaffDocument);
         builder.Services.AddGroupDocument(CandidateDocument);
 
