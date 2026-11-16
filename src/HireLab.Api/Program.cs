@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.AddAzureNpgsqlDataSource(ResourceNames.Database);
+builder.AddHireLabDatabase(ResourceNames.Database);
 builder.AddAzureBlobServiceClient(ResourceNames.Blobs, settings => settings.DisableHealthChecks = true);
 
 builder.AddHireLabDataProtection();
