@@ -1,3 +1,4 @@
+using HireLab.Modules.Positions.Contracts;
 using HireLab.SharedKernel.Results;
 using HireLab.SharedKernel.Users;
 
@@ -34,6 +35,12 @@ internal sealed class JobPosition : ITeamOwned
     /// <summary>The audit timestamp (ADR 0004), set when the position is first saved.</summary>
     public DateTimeOffset CreatedAt { get; private set; }
 
+    /// <summary>
+    /// The number the latest candidate got. Adding a candidate raises it, which changes the position's version: two
+    /// concurrent adds, or an add racing a close, cannot both be saved.
+    /// </summary>
+    public int LastCandidateNumber { get; private set; }
+
     public uint Version { get; private set; }
 
     public bool IsClosed => State == JobPositionState.Closed;
@@ -66,7 +73,29 @@ internal sealed class JobPosition : ITeamOwned
         return Result.Success();
     }
 
-    public Result EnsureCanBeDeleted() => IsClosed ? JobPositionErrors.Closed : Result.Success();
+    /// <summary>Adds a candidate with the position's next number. Only while the position is open.</summary>
+    public Result<Candidate> AddCandidate(CandidateDetails details, UserId addedBy)
+    {
+        ArgumentNullException.ThrowIfNull(details);
+
+        if (IsClosed)
+        {
+            return JobPositionErrors.Closed;
+        }
+
+        LastCandidateNumber++;
+        return Candidate.Create(this, LastCandidateNumber, details, addedBy);
+    }
+
+    public Result EnsureCanBeDeleted(bool hasCandidates)
+    {
+        if (IsClosed)
+        {
+            return JobPositionErrors.Closed;
+        }
+
+        return hasCandidates ? JobPositionErrors.HasCandidates : Result.Success();
+    }
 
     private void Apply(JobPositionDetails details)
     {

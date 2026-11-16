@@ -1,3 +1,4 @@
+using HireLab.Modules.Positions.Contracts;
 using HireLab.Modules.Positions.Domain;
 using HireLab.Modules.Positions.Persistence;
 using HireLab.SharedKernel.Handlers;

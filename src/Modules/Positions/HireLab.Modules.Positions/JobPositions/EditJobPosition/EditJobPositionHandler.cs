@@ -1,3 +1,4 @@
+using HireLab.Modules.Positions.Contracts;
 using FluentValidation;
 using HireLab.Modules.Positions.Domain;
 using HireLab.Modules.Positions.Persistence;

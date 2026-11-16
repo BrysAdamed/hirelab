@@ -1,5 +1,7 @@
 using System.Net;
+using HireLab.Modules.Positions.Contracts;
 using HireLab.Modules.Positions.Domain;
+using HireLab.Modules.Positions.Tests.Candidates;
 using HireLab.SharedKernel.Users;
 using HireLab.Testing.Staff;
 
@@ -292,6 +294,23 @@ public sealed class JobPositionTests(HireLabTestHost host) : IntegrationTest(hos
         // Assert
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "JobPosition.Closed");
         (await manager.PositionsAsync(JobPositionApi.PositionsIn(JobPositionState.Closed))).ShouldHaveSingleItem();
+    }
+
+    [Fact]
+    public async Task A_position_with_candidates_cannot_be_deleted()
+    {
+        // Arrange
+        var managerStaff = await SignInAsAsync(StaffRole.Manager);
+        var positionId = await Host.CreateJobPositionAsync(managerStaff.User.TeamId!.Value);
+        await Host.AddCandidateAsync(positionId);
+        using var manager = await CreateBrowserAsync(managerStaff);
+
+        // Act
+        using var response = await manager.DeleteAsync(JobPositionApi.Position(positionId));
+
+        // Assert
+        await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "JobPosition.HasCandidates");
+        (await manager.PositionAsync(positionId)).State.ShouldBe(JobPositionState.Open);
     }
 
     [Fact]

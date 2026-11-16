@@ -23,6 +23,80 @@ namespace HireLab.Modules.Positions.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("HireLab.Modules.Positions.Domain.Candidate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("AnonymisedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("anonymised_at");
+
+                    b.Property<Guid?>("AnonymisedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("anonymised_by");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("email");
+
+                    b.Property<string>("FullName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("full_name");
+
+                    b.Property<Guid>("JobPositionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("job_position_id");
+
+                    b.PrimitiveCollection<string[]>("Links")
+                        .IsRequired()
+                        .HasColumnType("text[]")
+                        .HasColumnName("links");
+
+                    b.Property<int>("Number")
+                        .HasColumnType("integer")
+                        .HasColumnName("number");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("phone");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("team_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_candidates");
+
+                    b.HasIndex("JobPositionId", "Number")
+                        .IsUnique()
+                        .HasDatabaseName("ix_candidates_job_position_id_number");
+
+                    b.ToTable("candidates", "positions");
+                });
+
             modelBuilder.Entity("HireLab.Modules.Positions.Domain.JobPosition", b =>
                 {
                     b.Property<Guid>("Id")
@@ -44,6 +118,10 @@ namespace HireLab.Modules.Positions.Persistence.Migrations
                     b.Property<string>("InterviewerNotes")
                         .HasColumnType("text")
                         .HasColumnName("interviewer_notes");
+
+                    b.Property<int>("LastCandidateNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("last_candidate_number");
 
                     b.Property<string>("NiceToHaves")
                         .HasColumnType("text")
@@ -87,6 +165,16 @@ namespace HireLab.Modules.Positions.Persistence.Migrations
                         .HasDatabaseName("ix_job_positions_team_id_state");
 
                     b.ToTable("job_positions", "positions");
+                });
+
+            modelBuilder.Entity("HireLab.Modules.Positions.Domain.Candidate", b =>
+                {
+                    b.HasOne("HireLab.Modules.Positions.Domain.JobPosition", null)
+                        .WithMany()
+                        .HasForeignKey("JobPositionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_candidates_job_positions_job_position_id");
                 });
 #pragma warning restore 612, 618
         }

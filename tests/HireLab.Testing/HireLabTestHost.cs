@@ -1,7 +1,6 @@
 using HireLab.Api;
 using HireLab.Api.Modules;
 using HireLab.Modules.Identity.Domain;
-using HireLab.Modules.Identity.Persistence;
 using HireLab.Testing.Staff;
 using HireLab.SharedKernel.Modules;
 using Microsoft.AspNetCore.Hosting;
@@ -240,7 +239,7 @@ public partial class HireLabTestHost : IAsyncLifetime
                 services.AddSingleton<IStartupFilter, TestSignIn>();
                 services.AddSingleton(host.PasswordHashes);
                 services.Replace(ServiceDescriptor.Scoped<IPasswordHasher<User>, ProbingPasswordHasher>());
-                services.ConfigureDbContext<IdentityModuleDbContext>(options => options.AddInterceptors(host.ConcurrentChange));
+                ConcurrentChange.AddToEveryDbContext(services, host.ConcurrentChange);
             });
 
             host.ConfigureWebHost(builder);

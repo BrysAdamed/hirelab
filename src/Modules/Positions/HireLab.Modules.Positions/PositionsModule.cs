@@ -1,3 +1,5 @@
+using HireLab.Modules.Positions.Candidates;
+using HireLab.Modules.Positions.Contracts;
 using HireLab.Modules.Positions.JobPositions;
 using HireLab.Modules.Positions.Persistence;
 using HireLab.SharedKernel.Handlers;
@@ -20,10 +22,15 @@ public sealed class PositionsModule : IModule, IModuleMigrator
 
         builder.Services.AddModuleDbContext<PositionsDbContext>();
         builder.Services.AddHandlers<PositionsDbContext>(typeof(PositionsModule).Assembly);
+        builder.Services.AddScoped<ICandidateDirectory, CandidateDirectory>();
     }
 
     /// <inheritdoc />
-    public void MapStaffEndpoints(IEndpointRouteBuilder staff) => staff.MapJobPositionEndpoints();
+    public void MapStaffEndpoints(IEndpointRouteBuilder staff)
+    {
+        staff.MapJobPositionEndpoints();
+        staff.MapCandidateEndpoints();
+    }
 
     /// <inheritdoc />
     public void AddMigrationServices(IServiceCollection services) =>

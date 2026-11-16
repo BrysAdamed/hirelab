@@ -1,4 +1,4 @@
-using HireLab.Modules.Positions.Domain;
+using HireLab.Modules.Positions.Contracts;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Http;
 using HireLab.SharedKernel.Results;

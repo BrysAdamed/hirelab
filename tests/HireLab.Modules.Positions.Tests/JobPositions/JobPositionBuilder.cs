@@ -1,3 +1,4 @@
+using HireLab.Modules.Positions.Contracts;
 using HireLab.Modules.Positions.Domain;
 using HireLab.Modules.Positions.Persistence;
 using HireLab.SharedKernel.Users;
@@ -54,12 +55,20 @@ internal static class JobPositionBuilderExtensions
 
         if (builder.IsClosed)
         {
-            // TODO HLB-43: close the position through the domain once closing exists.
-            await dbContext.Database.ExecuteSqlAsync(
-                $"UPDATE positions.job_positions SET state = 'Closed' WHERE id = {position.Id.Value}",
-                cancellationToken);
+            await host.ClosePositionAsync(position.Id);
         }
 
         return position.Id;
+    }
+
+    public static async Task ClosePositionAsync(this HireLabTestHost host, JobPositionId positionId)
+    {
+        await using var scope = host.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<PositionsDbContext>();
+
+        // TODO HLB-43: close the position through the domain once closing exists.
+        await dbContext.Database.ExecuteSqlAsync(
+            $"UPDATE positions.job_positions SET state = 'Closed' WHERE id = {positionId.Value}",
+            TestContext.Current.CancellationToken);
     }
 }

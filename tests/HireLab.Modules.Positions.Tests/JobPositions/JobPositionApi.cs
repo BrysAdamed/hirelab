@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using HireLab.Modules.Positions.Contracts;
 using HireLab.Modules.Positions.Domain;
 
 namespace HireLab.Modules.Positions.Tests.JobPositions;

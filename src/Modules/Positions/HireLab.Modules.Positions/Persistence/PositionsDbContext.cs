@@ -1,3 +1,4 @@
+using HireLab.Modules.Positions.Contracts;
 using HireLab.Modules.Positions.Domain;
 using HireLab.SharedKernel.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -11,14 +12,19 @@ internal sealed class PositionsDbContext(DbContextOptions<PositionsDbContext> op
 
     public DbSet<JobPosition> JobPositions => Set<JobPosition>();
 
+    public DbSet<Candidate> Candidates => Set<Candidate>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.AddSharedKernelIdConversions();
         configurationBuilder.Properties<JobPositionId>().HaveConversion<JobPositionIdConverter>();
+        configurationBuilder.Properties<CandidateId>().HaveConversion<CandidateIdConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(PositionsDbContext).Assembly);
 
     private sealed class JobPositionIdConverter() : ValueConverter<JobPositionId, Guid>(id => id.Value, value => new JobPositionId(value));
+
+    private sealed class CandidateIdConverter() : ValueConverter<CandidateId, Guid>(id => id.Value, value => new CandidateId(value));
 }
