@@ -15,6 +15,9 @@ describe('PositionFormPage', () => {
     interviewerNotes: null,
     state: 'Open',
     createdAt: '2026-01-05T09:00:00Z',
+    closedAt: null,
+    closedById: null,
+    closedByName: null,
     version: 7,
   };
   const path = `/api/staff/positions/${position.id}`;

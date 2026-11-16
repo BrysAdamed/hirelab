@@ -21,13 +21,23 @@ import {
 import { HlmButton } from '@hirelab/ui/helm/button';
 import { HlmCardImports } from '@hirelab/ui/helm/card';
 import type { Candidate } from '../api/staff-api';
+import { AuthService } from '../auth/auth.service';
+import { AnonymiseCandidateAction } from './anonymise-candidate-action';
 import { CandidateAttachments } from './candidate-attachments';
 import { CandidatesService } from './candidates.service';
 
 /** A candidate's profile: their position, contact details and attachments. */
 @Component({
   selector: 'hl-candidate-profile-page',
-  imports: [DatePipe, RouterLink, NgIcon, HlmButton, HlmCardImports, CandidateAttachments],
+  imports: [
+    DatePipe,
+    RouterLink,
+    NgIcon,
+    HlmButton,
+    HlmCardImports,
+    AnonymiseCandidateAction,
+    CandidateAttachments,
+  ],
   providers: [
     provideIcons({
       lucideArrowLeft,
@@ -74,17 +84,37 @@ import { CandidatesService } from './candidates.service';
           </p>
         </div>
         @if (canEdit()) {
-          <a hlmBtn variant="outline" size="sm" [routerLink]="['/candidates', candidate.id, 'edit']">
-            <ng-icon name="lucidePencil" aria-hidden="true" />
-            Edit
-          </a>
+          <div class="flex gap-2">
+            <a
+              hlmBtn
+              variant="outline"
+              size="sm"
+              [routerLink]="['/candidates', candidate.id, 'edit']"
+            >
+              <ng-icon name="lucidePencil" aria-hidden="true" />
+              Edit
+            </a>
+            @if (canAnonymise()) {
+              <hl-anonymise-candidate-action
+                [candidate]="candidate"
+                (anonymised)="load(candidate.id)"
+                (failed)="error.set($event)"
+              />
+            }
+          </div>
         }
       </div>
 
       @if (candidate.isAnonymised) {
         <p class="mt-3 flex items-center gap-2 rounded-md border p-2 text-muted-foreground">
           <ng-icon name="lucideUserX" size="16" aria-hidden="true" />
-          This candidate has been anonymised. Their contact details were removed.
+          @if (candidate.anonymisedAt) {
+            Anonymised on {{ candidate.anonymisedAt | date: 'mediumDate' }} by
+            {{ candidate.anonymisedByName ?? 'a former user' }}. Their contact details and
+            attachments were removed.
+          } @else {
+            This candidate has been anonymised. Their contact details were removed.
+          }
         </p>
       } @else if (candidate.positionState === 'Closed') {
         <p class="mt-3 flex items-center gap-2 rounded-md border p-2 text-muted-foreground">
@@ -150,12 +180,14 @@ import { CandidatesService } from './candidates.service';
         class="mt-3 block"
         [candidateId]="candidate.id"
         [canChange]="canEdit()"
+        [candidateVersion]="candidate.version"
       />
     }
   `,
 })
 export class CandidateProfilePage {
   private readonly candidatesService = inject(CandidatesService);
+  private readonly auth = inject(AuthService);
 
   /** The `:candidateId` route parameter. */
   readonly candidateId = input.required<string>();
@@ -166,12 +198,15 @@ export class CandidateProfilePage {
     const candidate = this.candidate();
     return candidate?.positionState === 'Open' && !candidate.isAnonymised;
   });
+  protected readonly canAnonymise = computed(
+    () => this.canEdit() && this.auth.user()?.role === 'Manager',
+  );
 
   constructor() {
     effect(() => void this.load(this.candidateId()));
   }
 
-  private async load(candidateId: string): Promise<void> {
+  protected async load(candidateId: string): Promise<void> {
     const result = await this.candidatesService.get(candidateId);
     if (result.ok) {
       this.error.set(null);

@@ -19,6 +19,9 @@ describe('CandidateFormPage', () => {
     phone: null,
     links: ['https://profiles.example.com/jane'],
     isAnonymised: false,
+    anonymisedAt: null,
+    anonymisedById: null,
+    anonymisedByName: null,
     createdAt: '2026-01-06T09:00:00Z',
     version: 5,
   };

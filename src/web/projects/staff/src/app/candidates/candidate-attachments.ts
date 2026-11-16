@@ -158,6 +158,8 @@ export class CandidateAttachments {
   readonly candidateId = input.required<string>();
   /** Whether files may be uploaded and deleted: the position is open and the candidate isn't anonymised. */
   readonly canChange = input(false);
+  /** The candidate's version: the files are read again when it changes, for example after anonymisation deleted them. */
+  readonly candidateVersion = input(0);
 
   protected readonly maxFiles = maxAttachmentsPerCandidate;
   protected readonly acceptedTypes = acceptedAttachmentTypes;
@@ -170,8 +172,13 @@ export class CandidateAttachments {
 
   protected readonly size = formatFileSize;
 
+  private readonly source = computed(() => ({
+    candidateId: this.candidateId(),
+    version: this.candidateVersion(),
+  }));
+
   constructor() {
-    effect(() => void this.load(this.candidateId()));
+    effect(() => void this.load(this.source().candidateId));
   }
 
   protected async upload(event: Event): Promise<void> {

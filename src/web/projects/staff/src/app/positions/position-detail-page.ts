@@ -17,6 +17,7 @@ import { MarkdownViewer } from '@hirelab/ui/markdown';
 import type { JobPosition } from '../api/staff-api';
 import { AuthService } from '../auth/auth.service';
 import { PositionCandidates } from '../candidates/position-candidates';
+import { ClosePositionAction } from './close-position-action';
 import { DeletePositionAction } from './delete-position-action';
 import { PositionStateBadge } from './position-state-badge';
 import { PositionsService } from './positions.service';
@@ -36,6 +37,7 @@ interface Section {
     HlmButton,
     HlmCardImports,
     MarkdownViewer,
+    ClosePositionAction,
     DeletePositionAction,
     PositionCandidates,
     PositionStateBadge,
@@ -80,6 +82,11 @@ interface Section {
               (deleted)="deleted()"
               (failed)="error.set($event)"
             />
+            <hl-close-position-action
+              [position]="position"
+              (closed)="load(position.id)"
+              (failed)="error.set($event)"
+            />
           </div>
         }
       </div>
@@ -87,7 +94,12 @@ interface Section {
       @if (position.state === 'Closed') {
         <p class="mt-3 flex items-center gap-2 rounded-md border p-2 text-muted-foreground">
           <ng-icon name="lucideLock" size="16" aria-hidden="true" />
-          This position is closed and read-only.
+          @if (position.closedAt) {
+            Closed on {{ position.closedAt | date: 'mediumDate' }} by
+            {{ position.closedByName ?? 'a former user' }}. The position is read-only.
+          } @else {
+            This position is closed and read-only.
+          }
         </p>
       }
 
@@ -145,7 +157,7 @@ export class PositionDetailPage {
     await this.router.navigateByUrl('/positions');
   }
 
-  private async load(positionId: string): Promise<void> {
+  protected async load(positionId: string): Promise<void> {
     const result = await this.positionsService.get(positionId);
     if (result.ok) {
       this.error.set(null);

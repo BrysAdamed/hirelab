@@ -49,6 +49,18 @@ export class PositionsService {
     return response.ok ? { ok: true, value: undefined } : apiFailure(error);
   }
 
+  /**
+   * Closes the position for good and anonymises its candidates, based on the `version` the position was read with.
+   * Fails with `changedMeanwhileCode` when someone changed it since, for example by adding a candidate.
+   */
+  async close(positionId: string, version: number): Promise<ApiResult<void>> {
+    const { error, response } = await this.api.POST('/api/staff/positions/{positionId}/close', {
+      params: { path: { positionId } },
+      body: { version },
+    });
+    return response.ok ? { ok: true, value: undefined } : apiFailure(error);
+  }
+
   async delete(positionId: string): Promise<ApiResult<void>> {
     const { error, response } = await this.api.DELETE('/api/staff/positions/{positionId}', {
       params: { path: { positionId } },

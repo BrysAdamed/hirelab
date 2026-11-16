@@ -16,7 +16,18 @@ describe('PositionDetailPage', () => {
     interviewerNotes: null,
     state: 'Open',
     createdAt: '2026-01-05T09:00:00Z',
+    closedAt: null,
+    closedById: null,
+    closedByName: null,
     version: 7,
+  };
+  const closed: JobPosition = {
+    ...position,
+    state: 'Closed',
+    closedAt: '2026-01-09T09:00:00Z',
+    closedById: '0190a5c4-7e3d-7b8a-9f21-3c4d5e6f7a8b',
+    closedByName: 'Fake Manager',
+    version: 8,
   };
   const path = `/api/staff/positions/${position.id}`;
 
@@ -98,14 +109,51 @@ describe('PositionDetailPage', () => {
     expect(screen.queryByRole('link', { name: 'Add candidate' })).toBeNull();
   });
 
-  it('offers no changes to interviewers or on a closed position', async () => {
+  it('offers no changes on a closed position and says who closed it', async () => {
     // Act
-    await renderPage({ ...position, state: 'Closed' });
+    await renderPage(closed);
 
     // Assert
-    expect(await screen.findByText('This position is closed and read-only.')).toBeTruthy();
+    expect(await screen.findByText(/Closed on Jan 9, 2026 by Fake Manager/)).toBeTruthy();
     expect(screen.queryByRole('link', { name: 'Edit' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Close position' })).toBeNull();
+  });
+
+  it('closes the position after a confirmation that explains what is deleted', async () => {
+    // Arrange
+    await renderPage(position);
+    fake.on('POST', `${path}/close`, noContent);
+    fake.on('GET', path, () => json(200, closed));
+
+    // Act
+    fireEvent.click(await screen.findByRole('button', { name: 'Close position' }));
+    expect(await screen.findByText(/attachments are deleted/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Close and anonymise' }));
+
+    // Assert
+    expect(await screen.findByText(/Closed on Jan 9, 2026 by Fake Manager/)).toBeTruthy();
+    const request = fake.requests.find((sent) => sent.method === 'POST');
+    expect(await request?.json()).toEqual({ version: 7 });
+  });
+
+  it('shows why a close was refused', async () => {
+    // Arrange
+    await renderPage(position);
+    fake.on('POST', `${path}/close`, () =>
+      json(409, {
+        status: 409,
+        detail: 'Some of this position’s interview sessions aren’t finished yet.',
+        code: 'JobPosition.UnfinishedSessions',
+      }),
+    );
+
+    // Act
+    fireEvent.click(await screen.findByRole('button', { name: 'Close position' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Close and anonymise' }));
+
+    // Assert
+    expect((await screen.findByRole('alert')).textContent).toContain('aren’t finished yet');
   });
 
   it('hides the manager actions from interviewers', async () => {
@@ -115,6 +163,7 @@ describe('PositionDetailPage', () => {
     // Assert
     await screen.findByRole('heading', { name: 'Fake Backend Developer' });
     expect(screen.queryByRole('link', { name: 'Edit' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Close position' })).toBeNull();
   });
 
   it('deletes the position after confirmation and goes back to the list', async () => {

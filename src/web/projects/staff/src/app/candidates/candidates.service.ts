@@ -52,4 +52,16 @@ export class CandidatesService {
     });
     return response.ok ? { ok: true, value: undefined } : apiFailure(error);
   }
+
+  /**
+   * Anonymises the candidate for good, based on the `version` they were read with. Fails with `changedMeanwhileCode`
+   * when someone else saved them since.
+   */
+  async anonymise(candidateId: string, version: number): Promise<ApiResult<void>> {
+    const { error, response } = await this.api.POST('/api/staff/candidates/{candidateId}/anonymise', {
+      params: { path: { candidateId } },
+      body: { version },
+    });
+    return response.ok ? { ok: true, value: undefined } : apiFailure(error);
+  }
 }
