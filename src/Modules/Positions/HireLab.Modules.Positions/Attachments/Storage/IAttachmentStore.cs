@@ -18,9 +18,15 @@ internal interface IAttachmentStore
     /// <summary>Deletes the content of an attachment. Deleting a blob that doesn't exist succeeds.</summary>
     Task DeleteAsync(CandidateId candidateId, AttachmentId attachmentId, CancellationToken cancellationToken);
 
-    /// <summary>Every stored blob with its last-modified time. Blobs whose name isn't an attachment blob name are skipped.</summary>
-    IAsyncEnumerable<StoredAttachment> ListAsync(CancellationToken cancellationToken);
+    /// <summary>
+    /// Every stored blob with its last-modified time, a page of at most <paramref name="pageSize"/> blobs at a time.
+    /// Blobs whose name isn't an attachment blob name are only counted.
+    /// </summary>
+    IAsyncEnumerable<StoredAttachmentPage> ListPagesAsync(int pageSize, CancellationToken cancellationToken);
 }
 
 /// <summary>A stored attachment blob.</summary>
 internal sealed record StoredAttachment(CandidateId CandidateId, AttachmentId AttachmentId, DateTimeOffset LastModified);
+
+/// <summary>One page of the blob listing: the attachment blobs, and how many blobs had a name that isn't an attachment blob name.</summary>
+internal sealed record StoredAttachmentPage(IReadOnlyList<StoredAttachment> Attachments, int UnrecognisedBlobs);

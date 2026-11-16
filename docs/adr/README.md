@@ -32,3 +32,4 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0024](0024-attachment-aggregate-and-upload-consistency.md) | Attachment aggregate and upload consistency | Accepted |
 | [0025](0025-staff-directory.md) | Staff directory | Accepted |
 | [0026](0026-closing-positions-and-anonymisation.md) | Closing positions and anonymisation | Accepted |
+| [0027](0027-orphan-attachment-sweep.md) | Orphan attachment sweep | Accepted |

@@ -42,14 +42,20 @@ internal sealed class BlobAttachmentStore(BlobServiceClient blobServiceClient) :
     public Task DeleteAsync(CandidateId candidateId, AttachmentId attachmentId, CancellationToken cancellationToken) =>
         Blob(candidateId, attachmentId).DeleteIfExistsAsync(cancellationToken: cancellationToken);
 
-    public async IAsyncEnumerable<StoredAttachment> ListAsync([EnumeratorCancellation] CancellationToken cancellationToken)
+    public async IAsyncEnumerable<StoredAttachmentPage> ListPagesAsync(int pageSize, [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        await foreach (var blob in _container.GetBlobsAsync(cancellationToken: cancellationToken))
+        await foreach (var page in _container.GetBlobsAsync(cancellationToken: cancellationToken).AsPages(pageSizeHint: pageSize))
         {
-            if (TryParse(blob.Name, out var candidateId, out var attachmentId) && blob.Properties.LastModified is { } lastModified)
+            var attachments = new List<StoredAttachment>(page.Values.Count);
+            foreach (var blob in page.Values)
             {
-                yield return new StoredAttachment(candidateId, attachmentId, lastModified);
+                if (TryParse(blob.Name, out var candidateId, out var attachmentId) && blob.Properties.LastModified is { } lastModified)
+                {
+                    attachments.Add(new StoredAttachment(candidateId, attachmentId, lastModified));
+                }
             }
+
+            yield return new StoredAttachmentPage(attachments, page.Values.Count - attachments.Count);
         }
     }
 
@@ -63,6 +69,7 @@ internal sealed class BlobAttachmentStore(BlobServiceClient blobServiceClient) :
         attachmentId = default;
         return parts.Length == 2
             && CandidateId.TryParse(parts[0], null, out candidateId)
-            && AttachmentId.TryParse(parts[1], null, out attachmentId);
+            && AttachmentId.TryParse(parts[1], null, out attachmentId)
+            && Attachment.BlobNameFor(candidateId, attachmentId) == blobName;
     }
 }

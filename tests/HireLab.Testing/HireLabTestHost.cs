@@ -25,7 +25,8 @@ namespace HireLab.Testing;
 /// <summary>
 /// The shared integration host of a test assembly (ADR 0014): PostgreSQL and Azurite in Testcontainers, every
 /// module migrated through its <see cref="IModuleMigrator"/>, and the real API in a
-/// <see cref="WebApplicationFactory{TEntryPoint}"/> with a <see cref="FakeTimeProvider"/>.
+/// <see cref="WebApplicationFactory{TEntryPoint}"/> with a <see cref="FakeTimeProvider"/>. The orphan attachment sweep is
+/// switched off, so it never deletes blobs behind a test's back; its tests run the sweeper directly.
 /// Register it once per assembly with <c>[assembly: AssemblyFixture(typeof(HireLabTestHost))]</c>, disable test
 /// parallelisation, and derive test classes from <see cref="IntegrationTest"/>.
 /// </summary>
@@ -250,6 +251,7 @@ public partial class HireLabTestHost : IAsyncLifetime
         {
             builder.UseSetting($"ConnectionStrings:{ResourceNames.Database}", host.DatabaseConnectionString);
             builder.UseSetting($"ConnectionStrings:{ResourceNames.Blobs}", host._azurite.GetConnectionString());
+            builder.UseSetting(PositionsModule.OrphanAttachmentSweepEnabledSetting, "false");
 
             builder.ConfigureTestServices(services =>
             {

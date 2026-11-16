@@ -1,4 +1,5 @@
 using System.Reflection;
+using HireLab.SharedKernel.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 
@@ -21,7 +22,7 @@ public sealed class QueryFilterBypassTests
 
         // Assert
         assemblies.ShouldContain(path => Path.GetFileNameWithoutExtension(path) == MigrationWorkerAssembly);
-        violations.ShouldBeEmpty("IgnoreQueryFilters is allowed only in the migration worker and system jobs, which are hosted services (ADR 0009)");
+        violations.ShouldBeEmpty("IgnoreQueryFilters is allowed only in the migration worker and system jobs, which are hosted services or marked ISystemJob (ADR 0009)");
     }
 
     [Fact]
@@ -33,7 +34,9 @@ public sealed class QueryFilterBypassTests
         // Assert
         violations.ShouldNotBeEmpty();
         violations.ShouldAllBe(violation => violation.Type == typeof(QueryFilterBypassSample).FullName);
-        QueryFilterBypassScanner.FindIn(_testAssemblyPath).ShouldContain(bypass => bypass.Type == typeof(QueryFilterBypassSystemJob).FullName);
+        var bypasses = QueryFilterBypassScanner.FindIn(_testAssemblyPath);
+        bypasses.ShouldContain(bypass => bypass.Type == typeof(QueryFilterBypassSystemJob).FullName);
+        bypasses.ShouldContain(bypass => bypass.Type == typeof(QueryFilterBypassMarkedSystemJob).FullName);
     }
 
     [Fact]
@@ -62,7 +65,8 @@ public sealed class QueryFilterBypassTests
     }
 
     private static bool IsSystemJob(QueryFilterBypass bypass) =>
-        Assembly.Load(bypass.Assembly).GetType(bypass.Type)?.IsAssignableTo(typeof(IHostedService)) == true;
+        Assembly.Load(bypass.Assembly).GetType(bypass.Type) is { } type
+        && (type.IsAssignableTo(typeof(IHostedService)) || type.IsAssignableTo(typeof(ISystemJob)));
 }
 
 internal static class QueryFilterBypassSample
@@ -79,4 +83,9 @@ internal static class QueryFilterBypassSample
 internal sealed class QueryFilterBypassSystemJob(IQueryable<object> query) : BackgroundService
 {
     protected override Task ExecuteAsync(CancellationToken stoppingToken) => query.IgnoreQueryFilters().ToListAsync(stoppingToken);
+}
+
+internal sealed class QueryFilterBypassMarkedSystemJob(IQueryable<object> query) : ISystemJob
+{
+    public Task<List<object>> RunAsync(CancellationToken cancellationToken) => query.IgnoreQueryFilters().ToListAsync(cancellationToken);
 }

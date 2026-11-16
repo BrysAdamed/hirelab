@@ -14,7 +14,7 @@ A manager closes a job position when hiring ends, and may anonymise a single can
 
 **Stale-click protection.** Both endpoints take the `version` the client read; a position or candidate changed since is refused with `Concurrency.ChangedMeanwhile`. Adding a candidate changes the position's version, so a close never anonymises fewer candidates than the manager saw without saying so.
 
-**Blobs after commit.** Once the transaction commits, each deleted attachment's blob is deleted best effort through `AttachmentBlobCleanup`, which logs failures by id only ([0012](0012-observability.md)). A blob that survives is an orphan for the sweep (HLB-44).
+**Blobs after commit.** Once the transaction commits, each deleted attachment's blob is deleted best effort through `AttachmentBlobCleanup`, which logs failures by id only ([0012](0012-observability.md)). A blob that survives is an orphan for the sweep ([0027](0027-orphan-attachment-sweep.md)).
 
 **Manager only.** `POST /api/staff/positions/{id}/close` and `POST /api/staff/candidates/{id}/anonymise` are on the manager policy ([0009](0009-authorisation-model.md)); interviewers and the admin get `403`, another team's position or candidate is `404`.
 

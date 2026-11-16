@@ -36,3 +36,16 @@ Locally, against a database without an admin: `dotnet run --project src/HireLab.
 | `AdminBootstrap:DisplayName` | No (default `Administrator`) | |
 
 The job refuses to start outside Development when a required setting is missing or invalid, and says which one.
+
+## Settings of the API
+
+The orphan attachment sweep deletes attachment blobs that have no attachment row ([ADR 0027](adr/0027-orphan-attachment-sweep.md)). Every setting is optional; the API refuses to start when one is invalid, and says which one.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `OrphanAttachmentSweep:Enabled` | `true` | `false` switches the sweep off. |
+| `OrphanAttachmentSweep:Interval` | `01:00:00` | Time between sweeps, at least one minute. The first sweep runs a minute after the API starts. |
+| `OrphanAttachmentSweep:GracePeriod` | `01:00:00` | How old a blob without a row must be before it is deleted, at least five minutes. Keeps uploads in progress. |
+| `OrphanAttachmentSweep:PageSize` | `500` | Blobs listed and checked against the database at a time, 1 to 5000. |
+
+Each sweep logs a summary (`Orphan attachment sweep checked ...`). A warning about blobs whose name isn't an attachment blob name means something other than HireLab wrote to the `attachments` container; those blobs are kept and must be removed by hand.
