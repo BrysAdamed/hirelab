@@ -49,12 +49,12 @@ test('a manager resets an interviewer’s password and the interviewer logs in w
   const resetLink = page.getByLabel('Reset link');
   await expect(resetLink).toHaveValue(/\/reset#.+/);
   const link = await resetLink.inputValue();
-  await page.getByRole('button', { name: 'Close' }).click();
+  await page.getByRole('button', { name: 'Done' }).click();
   await logOut(page, manager.displayName);
 
   await page.goto(link);
   await expect(page.getByText(`${interviewer.displayName}, choose a new password`)).toBeVisible();
-  await page.getByLabel('New password').fill(resetPassword);
+  await page.getByLabel('New password', { exact: true }).fill(resetPassword);
   await page.getByLabel('Confirm new password').fill(resetPassword);
   await page.getByRole('button', { name: 'Set password' }).click();
   await expect(page.getByRole('status')).toContainText('Your password is changed');

@@ -86,7 +86,7 @@ import { type ResetLinkKind, ResetLinksService } from './reset-links.service';
 
           <hlm-dialog-footer>
             @if (issued()) {
-              <button hlmBtn hlmDialogClose type="button">Close</button>
+              <button hlmBtn hlmDialogClose type="button">Done</button>
             } @else {
               <button hlmBtn hlmDialogClose type="button" variant="outline">Cancel</button>
               <button hlmBtn type="button" [disabled]="pending()" (click)="generate()">
