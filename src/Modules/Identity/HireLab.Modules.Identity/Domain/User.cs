@@ -31,6 +31,17 @@ internal sealed class User : IdentityUser<UserId>
 
     public void Reactivate() => IsActive = true;
 
+    /// <summary>Moves an interviewer to another team. Follow it with a new security stamp, as for every access change.</summary>
+    public void MoveToTeam(TeamId teamId)
+    {
+        if (Role != StaffRole.Interviewer)
+        {
+            throw new InvalidOperationException("Only an interviewer can move to another team.");
+        }
+
+        TeamId = teamId;
+    }
+
     private static User Create(string email, string displayName, StaffRole role, TeamId? teamId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
