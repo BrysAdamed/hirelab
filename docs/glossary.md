@@ -4,7 +4,8 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 
 | Term | Meaning |
 |---|---|
-| **Job position** | An opening the team is hiring for. It holds requirements, nice-to-haves and other information. Its state is `Open` or `Closed`. |
+| **Job position** | An opening the team is hiring for: a title and the Markdown sections description, requirements (required), nice-to-haves and interviewer notes. Its state is `Open` or `Closed`; a closed position is read-only. The manager creates, edits and deletes positions (delete only while open and without candidates); interviewers read them. In code: `JobPosition`. |
+| **Version** | The number an editable aggregate is read with (PostgreSQL `xmin`). An edit sends it back; if someone else saved in between, the edit is refused with "changed by someone else, reload". |
 | **Candidate** | A person applying to exactly one job position. The same person applying again is a new candidate. |
 | **Attachment** | A file on a candidate's profile. The CV is an attachment. |
 | **Anonymisation** | What closing a job position does to its candidates: contact details are replaced with "Candidate #N" and attachments are deleted. Notes, scores and task results stay. It is irreversible. |
@@ -22,7 +23,7 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **Level** | A task's difficulty: `Junior`, `Mid` or `Senior`. |
 | **Tag** | A free label on a task, such as `csharp`, `cqrs`, `security` or `role:qa`. |
 | **Reference answer** | Markdown describing what a strong answer contains. It is shown next to the candidate's response, never to the candidate. |
-| **Interviewer notes** | Markdown on a task with hints for a stuck candidate and follow-up questions. Staff only. |
+| **Interviewer notes** | Markdown on a task or a job position with hints for a stuck candidate and follow-up questions. Staff only. |
 | **Rubric** | The scoring criteria of a task, defined with the task. |
 | **Criterion** | One rubric item. A `scale` criterion is scored 0–4 and weighted; a `check` criterion is Yes / No with an expected answer. Any criterion can be "not assessed". |
 | **Critical check** | A `check` criterion whose failure is highlighted above the score. |
