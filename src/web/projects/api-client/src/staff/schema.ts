@@ -504,6 +504,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/candidates/{candidateId}/attachments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists a candidate's attachments, oldest upload first. */
+        get: operations["ListAttachments"];
+        put?: never;
+        /** Uploads a file (multipart form field `file`) to a candidate while their position is open. PDF, DOCX, TXT, MD, PNG or JPG, checked by content; at most 10 MB and 10 files per candidate. A larger request body is refused with 413. */
+        post: operations["UploadAttachment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/candidates/{candidateId}/attachments/{attachmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Downloads an attachment's content with its stored content type, always as a download (Content-Disposition: attachment with the original file name) and never sniffed or cached. */
+        get: operations["DownloadAttachment"];
+        put?: never;
+        post?: never;
+        /** Deletes an attachment for good while the candidate's position is open (409 JobPosition.Closed otherwise). */
+        delete: operations["DeleteAttachment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -519,6 +555,19 @@ export interface components {
             id: string;
             /** Format: int32 */
             number: number;
+        };
+        AttachmentResponse: {
+            /** Format: uuid */
+            id: string;
+            fileName: string;
+            contentType: string;
+            /** Format: int64 */
+            size: number;
+            /** Format: date-time */
+            uploadedAt: string;
+            /** Format: uuid */
+            uploadedById: string;
+            uploadedByName: null | string;
         };
         CandidateResponse: {
             /** Format: uuid */
@@ -596,6 +645,8 @@ export interface components {
             /** Format: uint32 */
             version: number;
         };
+        /** Format: binary */
+        IFormFile: Blob;
         InvitePreviewResponse: {
             email: string;
             displayName: string;
@@ -715,6 +766,8 @@ export interface components {
          * @enum {unknown}
          */
         StaffRole: "Admin" | "Manager" | "Interviewer";
+        /** Format: binary */
+        Stream: Blob;
         TeamResponse: {
             /** Format: uuid */
             id: string;
@@ -726,6 +779,14 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+        };
+        UploadedAttachmentResponse: {
+            /** Format: uuid */
+            id: string;
+            fileName: string;
+            contentType: string;
+            /** Format: int64 */
+            size: number;
         };
         UserResponse: {
             /** Format: uuid */
@@ -1837,6 +1898,136 @@ export interface operations {
                 "application/json": components["schemas"]["EditCandidateRequest"];
             };
         };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListAttachments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AttachmentResponse"][];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    UploadAttachment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    file: components["schemas"]["IFormFile"];
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UploadedAttachmentResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    DownloadAttachment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: string;
+                attachmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": components["schemas"]["Stream"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    DeleteAttachment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: string;
+                attachmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description No Content */
             204: {
