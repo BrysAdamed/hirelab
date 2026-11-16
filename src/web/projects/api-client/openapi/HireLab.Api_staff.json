@@ -981,6 +981,206 @@
           }
         }
       }
+    },
+    "/api/staff/positions": {
+      "get": {
+        "tags": [
+          "JobPositions"
+        ],
+        "summary": "Lists the team's job positions in one state (Open by default), newest first.",
+        "operationId": "ListJobPositions",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/JobPositionState"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/JobPositionSummaryResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "JobPositions"
+        ],
+        "summary": "Creates an open job position in the manager's team.",
+        "operationId": "CreateJobPosition",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJobPositionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedJobPositionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/positions/{positionId}": {
+      "get": {
+        "tags": [
+          "JobPositions"
+        ],
+        "summary": "Gets one of the team's job positions with its version, which an edit sends back.",
+        "operationId": "GetJobPosition",
+        "parameters": [
+          {
+            "name": "positionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobPositionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "JobPositions"
+        ],
+        "summary": "Edits an open job position. Send the version it was read with: when someone else changed it since, the edit is refused with 409 Concurrency.ChangedMeanwhile. A closed position is read-only (409 JobPosition.Closed).",
+        "operationId": "EditJobPosition",
+        "parameters": [
+          {
+            "name": "positionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditJobPositionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "JobPositions"
+        ],
+        "summary": "Deletes a job position. Only an open position without candidates can be deleted.",
+        "operationId": "DeleteJobPosition",
+        "parameters": [
+          {
+            "name": "positionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1015,6 +1215,42 @@
           }
         }
       },
+      "CreateJobPositionRequest": {
+        "required": [
+          "title",
+          "description",
+          "requirements",
+          "niceToHaves",
+          "interviewerNotes"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requirements": {
+            "type": "string"
+          },
+          "niceToHaves": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "interviewerNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CreateManagerInviteRequest": {
         "required": [
           "email",
@@ -1042,6 +1278,18 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "CreatedJobPositionResponse": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -1093,6 +1341,47 @@
           },
           "name": {
             "type": "string"
+          }
+        }
+      },
+      "EditJobPositionRequest": {
+        "required": [
+          "title",
+          "description",
+          "requirements",
+          "niceToHaves",
+          "interviewerNotes",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requirements": {
+            "type": "string"
+          },
+          "niceToHaves": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "interviewerNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -1231,6 +1520,92 @@
           },
           "linkPath": {
             "type": "string"
+          }
+        }
+      },
+      "JobPositionResponse": {
+        "required": [
+          "id",
+          "title",
+          "description",
+          "requirements",
+          "niceToHaves",
+          "interviewerNotes",
+          "state",
+          "createdAt",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requirements": {
+            "type": "string"
+          },
+          "niceToHaves": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "interviewerNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "state": {
+            "$ref": "#/components/schemas/JobPositionState"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "JobPositionState": {
+        "enum": [
+          "Open",
+          "Closed"
+        ]
+      },
+      "JobPositionSummaryResponse": {
+        "required": [
+          "id",
+          "title",
+          "state",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/JobPositionState"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -1518,6 +1893,9 @@
     },
     {
       "name": "Users"
+    },
+    {
+      "name": "JobPositions"
     }
   ]
 }

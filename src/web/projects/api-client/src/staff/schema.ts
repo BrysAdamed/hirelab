@@ -431,6 +431,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/positions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists the team's job positions in one state (Open by default), newest first. */
+        get: operations["ListJobPositions"];
+        put?: never;
+        /** Creates an open job position in the manager's team. */
+        post: operations["CreateJobPosition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/positions/{positionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets one of the team's job positions with its version, which an edit sends back. */
+        get: operations["GetJobPosition"];
+        /** Edits an open job position. Send the version it was read with: when someone else changed it since, the edit is refused with 409 Concurrency.ChangedMeanwhile. A closed position is read-only (409 JobPosition.Closed). */
+        put: operations["EditJobPosition"];
+        post?: never;
+        /** Deletes a job position. Only an open position without candidates can be deleted. */
+        delete: operations["DeleteJobPosition"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -443,12 +480,23 @@ export interface components {
             email: string;
             displayName: string;
         };
+        CreateJobPositionRequest: {
+            title: string;
+            description: null | string;
+            requirements: string;
+            niceToHaves: null | string;
+            interviewerNotes: null | string;
+        };
         CreateManagerInviteRequest: {
             email: string;
             displayName: string;
             /** Format: uuid */
             teamId: null | string;
             newTeamName: null | string;
+        };
+        CreatedJobPositionResponse: {
+            /** Format: uuid */
+            id: string;
         };
         CurrentUserResponse: {
             /** Format: uuid */
@@ -462,6 +510,15 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+        };
+        EditJobPositionRequest: {
+            title: string;
+            description: null | string;
+            requirements: string;
+            niceToHaves: null | string;
+            interviewerNotes: null | string;
+            /** Format: uint32 */
+            version: number;
         };
         InvitePreviewResponse: {
             email: string;
@@ -499,6 +556,30 @@ export interface components {
             /** Format: date-time */
             expiresAt: string;
             linkPath: string;
+        };
+        JobPositionResponse: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            description: null | string;
+            requirements: string;
+            niceToHaves: null | string;
+            interviewerNotes: null | string;
+            state: components["schemas"]["JobPositionState"];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uint32 */
+            version: number;
+        };
+        /** @enum {unknown} */
+        JobPositionState: "Open" | "Closed";
+        JobPositionSummaryResponse: {
+            /** Format: uuid */
+            id: string;
+            title: string;
+            state: components["schemas"]["JobPositionState"];
+            /** Format: date-time */
+            createdAt: string;
         };
         LoginRequest: {
             email: string;
@@ -1377,6 +1458,163 @@ export interface operations {
             header?: never;
             path: {
                 userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListJobPositions: {
+        parameters: {
+            query?: {
+                state?: components["schemas"]["JobPositionState"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobPositionSummaryResponse"][];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    CreateJobPosition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateJobPositionRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedJobPositionResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetJobPosition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                positionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobPositionResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    EditJobPosition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                positionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditJobPositionRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    DeleteJobPosition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                positionId: string;
             };
             cookie?: never;
         };
