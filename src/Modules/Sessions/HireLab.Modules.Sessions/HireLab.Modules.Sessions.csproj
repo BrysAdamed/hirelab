@@ -6,7 +6,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\HireLab.SharedKernel\HireLab.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\..\TaskTypes\HireLab.TaskTypes.Abstractions\HireLab.TaskTypes.Abstractions.csproj" />
     <ProjectReference Include="..\HireLab.Modules.Sessions.Contracts\HireLab.Modules.Sessions.Contracts.csproj" />
+    <ProjectReference Include="..\..\Identity\HireLab.Modules.Identity.Contracts\HireLab.Modules.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\TaskBank\HireLab.Modules.TaskBank.Contracts\HireLab.Modules.TaskBank.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

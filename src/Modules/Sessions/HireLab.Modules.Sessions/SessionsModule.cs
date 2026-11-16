@@ -1,9 +1,13 @@
 using HireLab.Modules.Sessions.Contracts;
 using HireLab.Modules.Sessions.Persistence;
+using HireLab.Modules.Sessions.Queue;
+using HireLab.Modules.Sessions.Sessions;
 using HireLab.Modules.Sessions.UnfinishedSessions;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Modules;
 using HireLab.SharedKernel.Persistence;
+using HireLab.TaskTypes.Abstractions;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,8 +24,13 @@ public sealed class SessionsModule : IModule, IModuleMigrator
 
         builder.Services.AddModuleDbContext<SessionsDbContext>();
         builder.Services.AddHandlers<SessionsDbContext>(typeof(SessionsModule).Assembly);
+        builder.Services.AddTaskTypeRegistry();
         builder.Services.AddScoped<IUnfinishedSessionsQuery, UnfinishedSessionsQuery>();
+        builder.Services.AddScoped<LazyRepinning>();
     }
+
+    /// <inheritdoc />
+    public void MapStaffEndpoints(IEndpointRouteBuilder staff) => staff.MapSessionEndpoints();
 
     /// <inheritdoc />
     public void AddMigrationServices(IServiceCollection services) =>

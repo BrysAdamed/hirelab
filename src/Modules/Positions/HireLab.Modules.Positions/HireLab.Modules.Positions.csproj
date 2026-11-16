@@ -12,4 +12,9 @@
     <ProjectReference Include="..\..\Sessions\HireLab.Modules.Sessions.Contracts\HireLab.Modules.Sessions.Contracts.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The shared integration host creates candidates for the test assemblies of other modules. -->
+    <InternalsVisibleTo Include="HireLab.Testing" />
+  </ItemGroup>
+
 </Project>
