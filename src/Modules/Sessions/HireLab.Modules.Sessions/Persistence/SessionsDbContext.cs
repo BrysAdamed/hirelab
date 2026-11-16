@@ -20,6 +20,7 @@ internal sealed class SessionsDbContext(DbContextOptions<SessionsDbContext> opti
         configurationBuilder.AddSharedKernelIdConversions();
         configurationBuilder.Properties<InterviewSessionId>().HaveConversion<InterviewSessionIdConverter>();
         configurationBuilder.Properties<SessionTaskId>().HaveConversion<SessionTaskIdConverter>();
+        configurationBuilder.Properties<CandidateLinkId>().HaveConversion<CandidateLinkIdConverter>();
         configurationBuilder.Properties<CandidateId>().HaveConversion<CandidateIdConverter>();
         configurationBuilder.Properties<TaskId>().HaveConversion<TaskIdConverter>();
         configurationBuilder.Properties<TaskVersionId>().HaveConversion<TaskVersionIdConverter>();
@@ -38,6 +39,8 @@ internal sealed class SessionsDbContext(DbContextOptions<SessionsDbContext> opti
     private sealed class InterviewSessionIdConverter() : ValueConverter<InterviewSessionId, Guid>(id => id.Value, value => new InterviewSessionId(value));
 
     private sealed class SessionTaskIdConverter() : ValueConverter<SessionTaskId, Guid>(id => id.Value, value => new SessionTaskId(value));
+
+    private sealed class CandidateLinkIdConverter() : ValueConverter<CandidateLinkId, Guid>(id => id.Value, value => new CandidateLinkId(value));
 
     private sealed class CandidateIdConverter() : ValueConverter<CandidateId, Guid>(id => id.Value, value => new CandidateId(value));
 

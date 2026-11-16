@@ -17,4 +17,8 @@
     <PackageReference Include="OpenTelemetry.Instrumentation.Runtime" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="HireLab.Api.Tests" />
+  </ItemGroup>
+
 </Project>

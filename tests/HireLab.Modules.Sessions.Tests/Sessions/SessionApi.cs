@@ -153,6 +153,7 @@ internal sealed record SessionView(
     string? CreatedByName,
     DateTimeOffset CreatedAt,
     int QueueRevision,
+    DateTimeOffset? CandidateLinkCreatedAt,
     List<SessionTaskView> Tasks);
 
 internal sealed record SessionTaskView(

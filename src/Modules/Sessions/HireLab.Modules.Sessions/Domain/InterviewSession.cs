@@ -47,6 +47,9 @@ internal sealed class InterviewSession : ITeamOwned
 
     public uint Version { get; private set; }
 
+    /// <summary>The session's current candidate link, or <c>null</c> before one is created.</summary>
+    public CandidateLink? CandidateLink { get; private set; }
+
     /// <summary>The session tasks in no particular order; <see cref="Queue"/> orders them.</summary>
     public IReadOnlyCollection<SessionTask> Tasks => _tasks;
 
@@ -147,6 +150,22 @@ internal sealed class InterviewSession : ITeamOwned
         }
 
         return Result.Success();
+    }
+
+    /// <summary>
+    /// Creates the candidate link, or regenerates it: the new link replaces the current one, whose token and cookies stop
+    /// working. Refused once the session has finished. The token is returned once and never stored.
+    /// </summary>
+    public Result<CandidateLinkToken> IssueCandidateLink(UserId issuedBy, DateTimeOffset now)
+    {
+        if (State == InterviewSessionState.Finished)
+        {
+            return InterviewSessionErrors.Finished;
+        }
+
+        var token = CandidateLinkToken.New();
+        CandidateLink = CandidateLink.Issue(token, issuedBy, now);
+        return token;
     }
 
     /// <summary>Adds the task whose active version is <paramref name="snapshot"/> to the end of the queue.</summary>

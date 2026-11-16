@@ -5,7 +5,7 @@ namespace HireLab.Api.Auth;
 internal static class AuthSchemes
 {
     public const string Staff = StaffAuthentication.Scheme;
-    public const string Candidate = "Candidate";
+    public const string Candidate = CandidateAuthentication.Scheme;
 }
 
 internal static class AuthPolicies

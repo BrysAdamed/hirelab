@@ -1,3 +1,4 @@
+using HireLab.Modules.Sessions.CandidateLinks.IssueCandidateLink;
 using HireLab.Modules.Sessions.Queue.AddSessionTask;
 using HireLab.Modules.Sessions.Queue.GetSessionTask;
 using HireLab.Modules.Sessions.Queue.RemoveSessionTask;
@@ -37,6 +38,7 @@ internal static class SessionEndpoints
         sessions.MapRescheduleSession();
         sessions.MapGoLive();
         sessions.MapFinishSession();
+        sessions.MapIssueCandidateLink();
 
         var queue = sessions.MapGroup("/{sessionId:guid}/tasks");
         queue.MapAddSessionTask();

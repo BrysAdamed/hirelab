@@ -15,7 +15,8 @@ internal sealed record GetSessionQuery(InterviewSessionId SessionId);
 /// <summary>
 /// A session with its queue in order. <see cref="CandidateDisplayName"/> is read from Positions each time (ADR 0023);
 /// <see cref="CreatedByName"/> is <c>null</c> when the user is unknown. <see cref="QueueRevision"/> changes with every
-/// queue change.
+/// queue change. <see cref="CandidateLinkCreatedAt"/> is <c>null</c> until a candidate link is created; the link itself
+/// can't be shown again.
 /// </summary>
 internal sealed record SessionResponse(
     Guid Id,
@@ -28,6 +29,7 @@ internal sealed record SessionResponse(
     string? CreatedByName,
     DateTimeOffset CreatedAt,
     int QueueRevision,
+    DateTimeOffset? CandidateLinkCreatedAt,
     IReadOnlyList<SessionTaskResponse> Tasks);
 
 /// <summary>A task in the queue with the task version it pins (<c>vN</c>).</summary>
@@ -90,6 +92,7 @@ internal sealed class GetSessionHandler(
             createdBy.GetValueOrDefault(session.CreatedBy),
             session.CreatedAt,
             session.QueueRevision,
+            session.CandidateLink?.CreatedAt,
             [.. session.Queue.Select(task => new SessionTaskResponse(
                 task.Id.Value,
                 task.TaskId.Value,

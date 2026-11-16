@@ -3,6 +3,7 @@ using HireLab.Api.Modules;
 using Azure.Storage.Blobs;
 using HireLab.Modules.Identity.Domain;
 using HireLab.Modules.Positions;
+using HireLab.Testing.Sessions;
 using HireLab.Testing.Staff;
 using HireLab.SharedKernel.Modules;
 using HireLab.TaskTypes.Abstractions;
@@ -165,8 +166,11 @@ public partial class HireLabTestHost : IAsyncLifetime
     /// <summary>Creates a <see cref="BrowserSession"/> that starts with <paramref name="cookies"/> and no antiforgery token.</summary>
     public BrowserSession CreateBrowser(IEnumerable<SetCookieHeaderValue>? cookies = null) => new(CreateClient(), cookies ?? []);
 
-    /// <summary>Signs in with the candidate cookie scheme through a test-only endpoint and returns the issued cookies.</summary>
-    public Task<IReadOnlyList<SetCookieHeaderValue>> SignInAsCandidateAsync() => SignInAsync(TestSignIn.CandidateUri);
+    /// <summary>
+    /// Plans a session for a new candidate of a new team, creates its candidate link and exchanges it, as the candidate
+    /// app does; returns the candidate cookie, which gives access while the session isn't finished.
+    /// </summary>
+    public Task<IReadOnlyList<SetCookieHeaderValue>> SignInAsCandidateAsync() => TestCandidateAccess.SignInAsCandidateAsync(this);
 
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
