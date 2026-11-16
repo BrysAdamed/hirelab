@@ -1,20 +1,34 @@
 using HireLab.AppHost;
 using HireLab.AppHost.Azure;
+using Microsoft.Extensions.Configuration;
 
 var builder = DistributedApplication.CreateBuilder(args);
+
+var keepsData = !builder.Configuration.GetValue<bool>("HIRELAB_E2E_EPHEMERAL_DATA");
 
 var postgres = builder.AddAzurePostgresFlexibleServer("postgres")
     .WithHireLabSettings()
     .ClearDefaultRoleAssignments()
-    .RunAsContainer(container => container
-        .WithImageTag(AzureResourceSettings.PostgresContainerImageTag)
-        .WithDataVolume(AzureResourceSettings.PostgresDataVolumeName));
+    .RunAsContainer(container =>
+    {
+        container.WithImageTag(AzureResourceSettings.PostgresContainerImageTag);
+        if (keepsData)
+        {
+            container.WithDataVolume(AzureResourceSettings.PostgresDataVolumeName);
+        }
+    });
 
 var database = postgres.AddDatabase("hirelab");
 
 var storage = builder.AddAzureStorage("storage")
     .WithHireLabSettings()
-    .RunAsEmulator(azurite => azurite.WithDataVolume());
+    .RunAsEmulator(azurite =>
+    {
+        if (keepsData)
+        {
+            azurite.WithDataVolume();
+        }
+    });
 
 var blobs = storage.AddBlobs("blobs");
 var dataProtectionKeys = storage.AddBlobContainer("data-protection-keys");

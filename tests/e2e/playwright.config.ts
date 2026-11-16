@@ -18,7 +18,7 @@ export default defineConfig({
   webServer: {
     command: 'dotnet run --project ../../src/HireLab.AppHost --launch-profile http',
     url: staffApp.url,
-    reuseExistingServer: !isCi,
+    reuseExistingServer: !isCi && process.env['E2E_REUSE_APP'] === '1',
     timeout: 10 * 60_000,
     gracefulShutdown: { signal: 'SIGINT', timeout: 30_000 },
     stdout: 'pipe',
@@ -26,6 +26,7 @@ export default defineConfig({
     env: {
       ASPIRE_ALLOW_UNSECURED_TRANSPORT: 'true',
       HIRELAB_E2E_AUTH_PERMIT_LIMIT: '1000',
+      HIRELAB_E2E_EPHEMERAL_DATA: 'true',
     },
   },
 });
