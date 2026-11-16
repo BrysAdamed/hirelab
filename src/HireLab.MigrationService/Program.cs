@@ -1,7 +1,7 @@
 using HireLab.MigrationService;
 using HireLab.ServiceDefaults;
 
-var builder = Host.CreateApplicationBuilder(args);
+var builder = Host.CreateApplicationBuilder(CommandLine.ToConfigurationArgs(args));
 
 builder.AddServiceDefaults();
 builder.AddAzureNpgsqlDataSource(ResourceNames.Database);
