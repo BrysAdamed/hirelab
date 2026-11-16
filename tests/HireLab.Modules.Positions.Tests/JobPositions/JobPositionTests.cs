@@ -30,6 +30,9 @@ public sealed class JobPositionTests(HireLabTestHost host) : IntegrationTest(hos
             input.InterviewerNotes,
             JobPositionState.Open,
             Host.Time.GetUtcNow(),
+            ClosedAt: null,
+            ClosedById: null,
+            ClosedByName: null,
             position.Version));
         (await manager.PositionsAsync()).ShouldHaveSingleItem().Id.ShouldBe(positionId.Value);
     }

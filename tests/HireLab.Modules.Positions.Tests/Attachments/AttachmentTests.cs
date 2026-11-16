@@ -255,27 +255,22 @@ public sealed class AttachmentTests(HireLabTestHost host) : IntegrationTest(host
     }
 
     [Fact]
-    public async Task On_a_closed_position_attachments_can_be_listed_and_downloaded_but_not_uploaded_or_deleted()
+    public async Task A_candidate_of_a_closed_position_takes_no_uploads()
     {
         // Arrange
         var staff = await SignInAsAsync(StaffRole.Manager);
         var positionId = await Host.CreateJobPositionAsync(staff.User.TeamId!.Value);
         var candidateId = await Host.AddCandidateAsync(positionId);
         using var browser = await CreateBrowserAsync(staff);
-        var uploaded = await browser.UploadedAsync(candidateId, "cv.pdf", FakeFiles.Pdf);
         await Host.ClosePositionAsync(positionId);
 
         // Act
         using var upload = await browser.UploadAsync(candidateId, "late.pdf", FakeFiles.Pdf);
-        using var delete = await browser.DeleteAsync(candidateId, uploaded.Id);
-        using var download = await browser.DownloadAsync(candidateId, uploaded.Id);
 
         // Assert
         await upload.ShouldBeProblemAsync(HttpStatusCode.Conflict, "JobPosition.Closed");
-        await delete.ShouldBeProblemAsync(HttpStatusCode.Conflict, "JobPosition.Closed");
-        download.StatusCode.ShouldBe(HttpStatusCode.OK);
-        (await browser.AttachmentsAsync(candidateId)).ShouldHaveSingleItem().Id.ShouldBe(uploaded.Id);
-        (await BlobNamesAsync()).ShouldBe([$"{candidateId}/{uploaded.Id}"]);
+        (await browser.AttachmentsAsync(candidateId)).ShouldBeEmpty();
+        (await BlobNamesAsync()).ShouldBeEmpty();
     }
 
     [Fact]

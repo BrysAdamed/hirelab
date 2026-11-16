@@ -11,6 +11,11 @@ internal static class CandidateApi
 
     public static Uri Candidate(CandidateId candidateId) => new($"/api/staff/candidates/{candidateId}", UriKind.Relative);
 
+    public static Uri Anonymise(CandidateId candidateId) => new($"/api/staff/candidates/{candidateId}/anonymise", UriKind.Relative);
+
+    public static Task<HttpResponseMessage> AnonymiseAsync(this BrowserSession browser, CandidateId candidateId, uint version) =>
+        browser.PostAsJsonAsync(Anonymise(candidateId), new { version });
+
     public static CandidateInput ValidInput(string fullName = "Jane Fakeperson") => new(
         fullName,
         "jane.fakeperson@example.com",
@@ -73,6 +78,9 @@ internal sealed record CandidateView(
     string? Phone,
     List<string> Links,
     bool IsAnonymised,
+    DateTimeOffset? AnonymisedAt,
+    Guid? AnonymisedById,
+    string? AnonymisedByName,
     DateTimeOffset CreatedAt,
     uint Version);
 

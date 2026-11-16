@@ -32,6 +32,7 @@ public sealed class PositionsModule : IModule, IModuleMigrator
         builder.Services.AddHandlers<PositionsDbContext>(typeof(PositionsModule).Assembly);
         builder.Services.AddScoped<ICandidateDirectory, CandidateDirectory>();
         builder.Services.AddSingleton<IAttachmentStore, BlobAttachmentStore>();
+        builder.Services.AddSingleton<AttachmentBlobCleanup>();
     }
 
     /// <inheritdoc />

@@ -1,3 +1,4 @@
+using HireLab.Modules.Positions.Attachments.Storage;
 using HireLab.Modules.Positions.Contracts;
 using HireLab.Modules.Positions.Domain;
 using HireLab.Modules.Positions.Persistence;
@@ -61,14 +62,27 @@ internal static class JobPositionBuilderExtensions
         return position.Id;
     }
 
+    /// <summary>
+    /// Closes a position through the domain as another manager would: its candidates are anonymised and their
+    /// attachments deleted with their blobs.
+    /// </summary>
     public static async Task ClosePositionAsync(this HireLabTestHost host, JobPositionId positionId)
     {
+        var cancellationToken = TestContext.Current.CancellationToken;
         await using var scope = host.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<PositionsDbContext>();
+        var position = await dbContext.JobPositions.IgnoreQueryFilters().SingleAsync(position => position.Id == positionId, cancellationToken);
+        var candidates = await dbContext.Candidates.IgnoreQueryFilters()
+            .Where(candidate => candidate.JobPositionId == positionId)
+            .ToListAsync(cancellationToken);
+        var candidateIds = candidates.Select(candidate => candidate.Id).ToList();
+        var attachments = await dbContext.Attachments.IgnoreQueryFilters()
+            .Where(attachment => candidateIds.Contains(attachment.CandidateId))
+            .ToListAsync(cancellationToken);
 
-        // TODO HLB-43: close the position through the domain once closing exists.
-        await dbContext.Database.ExecuteSqlAsync(
-            $"UPDATE positions.job_positions SET state = 'Closed' WHERE id = {positionId.Value}",
-            TestContext.Current.CancellationToken);
+        position.Close(candidates, UserId.New(), host.Time.GetUtcNow()).IsSuccess.ShouldBeTrue();
+        dbContext.Attachments.RemoveRange(attachments);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await scope.ServiceProvider.GetRequiredService<AttachmentBlobCleanup>().DeleteAsync(attachments);
     }
 }

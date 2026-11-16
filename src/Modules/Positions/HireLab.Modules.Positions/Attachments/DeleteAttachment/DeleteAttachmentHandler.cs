@@ -5,7 +5,6 @@ using HireLab.Modules.Positions.Persistence;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Results;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace HireLab.Modules.Positions.Attachments.DeleteAttachment;
 
@@ -15,10 +14,7 @@ internal sealed record DeleteAttachmentCommand(CandidateId CandidateId, Attachme
 /// Deletes an attachment while the candidate's position is open (ADR 0005): the row is deleted and committed first,
 /// then the blob, best effort. A blob that survives is an orphan for the sweep.
 /// </summary>
-internal sealed partial class DeleteAttachmentHandler(
-    PositionsDbContext dbContext,
-    IAttachmentStore store,
-    ILogger<DeleteAttachmentHandler> logger)
+internal sealed class DeleteAttachmentHandler(PositionsDbContext dbContext, AttachmentBlobCleanup blobCleanup)
     : ICommandHandler<DeleteAttachmentCommand, Result>
 {
     public async Task<Result> HandleAsync(DeleteAttachmentCommand command, CancellationToken cancellationToken)
@@ -43,21 +39,8 @@ internal sealed partial class DeleteAttachmentHandler(
 
         dbContext.Attachments.Remove(attachment);
         await dbContext.SaveChangesAsync(cancellationToken);
-
-        try
-        {
-            await store.DeleteAsync(attachment.CandidateId, attachment.Id, CancellationToken.None);
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            LogBlobNotDeleted(logger, exception, attachment.CandidateId.Value, attachment.Id.Value);
-        }
+        await blobCleanup.DeleteAsync([attachment]);
 
         return Result.Success();
     }
-
-    [LoggerMessage(
-        Level = LogLevel.Warning,
-        Message = "The blob of deleted attachment {AttachmentId} of candidate {CandidateId} was not deleted; the sweep will remove it")]
-    private static partial void LogBlobNotDeleted(ILogger logger, Exception exception, Guid candidateId, Guid attachmentId);
 }

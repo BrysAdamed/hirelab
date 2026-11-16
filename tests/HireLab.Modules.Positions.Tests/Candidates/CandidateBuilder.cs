@@ -53,14 +53,8 @@ internal static class CandidateBuilderExtensions
 
         if (builder.IsAnonymised)
         {
-            // TODO HLB-43: anonymise the candidate through the domain once anonymisation exists.
-            await dbContext.Database.ExecuteSqlAsync(
-                $"""
-                UPDATE positions.candidates
-                SET full_name = NULL, email = NULL, phone = NULL, links = ARRAY[]::text[],anonymised_by = {Guid.CreateVersion7()}, anonymised_at = now()
-                WHERE id = {candidate.Id.Value}
-                """,
-                cancellationToken);
+            candidate.Anonymise(position, UserId.New(), host.Time.GetUtcNow()).IsSuccess.ShouldBeTrue();
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
 
         return candidate.Id;

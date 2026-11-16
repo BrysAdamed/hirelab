@@ -9,4 +9,8 @@ internal static class CandidateErrors
     public static readonly Error Anonymised = Error.Conflict(
         "Candidate.Anonymised",
         "This candidate has been anonymised. Their details can no longer be changed.");
+
+    public static readonly Error UnfinishedSessions = Error.Conflict(
+        "Candidate.UnfinishedSessions",
+        "This candidate has an interview session that isn't finished yet. Finish it before anonymising the candidate.");
 }

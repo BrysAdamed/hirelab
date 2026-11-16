@@ -1,3 +1,4 @@
+using HireLab.Modules.Identity.Contracts;
 using HireLab.Modules.Positions.Contracts;
 using HireLab.Modules.Positions.Domain;
 using HireLab.Modules.Positions.Persistence;
@@ -11,7 +12,8 @@ internal sealed record GetCandidateQuery(CandidateId CandidateId);
 
 /// <summary>
 /// A candidate's profile with their position's title and state. <see cref="DisplayName"/> is how to show them;
-/// <see cref="FullName"/> and the contact details are empty once they are anonymised. Send <see cref="Version"/> back
+/// <see cref="FullName"/> and the contact details are empty once they are anonymised, and <see cref="AnonymisedAt"/>
+/// says when (<see cref="AnonymisedByName"/> is <c>null</c> when the user is unknown). Send <see cref="Version"/> back
 /// with an edit.
 /// </summary>
 internal sealed record CandidateResponse(
@@ -26,10 +28,14 @@ internal sealed record CandidateResponse(
     string? Phone,
     IReadOnlyList<string> Links,
     bool IsAnonymised,
+    DateTimeOffset? AnonymisedAt,
+    Guid? AnonymisedById,
+    string? AnonymisedByName,
     DateTimeOffset CreatedAt,
     uint Version);
 
-internal sealed class GetCandidateHandler(PositionsDbContext dbContext) : IQueryHandler<GetCandidateQuery, Result<CandidateResponse>>
+internal sealed class GetCandidateHandler(PositionsDbContext dbContext, IStaffDirectory staffDirectory)
+    : IQueryHandler<GetCandidateQuery, Result<CandidateResponse>>
 {
     public async Task<Result<CandidateResponse>> HandleAsync(GetCandidateQuery query, CancellationToken cancellationToken)
     {
@@ -47,6 +53,13 @@ internal sealed class GetCandidateHandler(PositionsDbContext dbContext) : IQuery
         }
 
         var candidate = found.Candidate;
+        string? anonymisedByName = null;
+        if (candidate.AnonymisedBy is { } anonymisedBy)
+        {
+            var names = await staffDirectory.FindDisplayNamesAsync([anonymisedBy], cancellationToken);
+            anonymisedByName = names.GetValueOrDefault(anonymisedBy);
+        }
+
         return new CandidateResponse(
             candidate.Id.Value,
             candidate.JobPositionId.Value,
@@ -59,6 +72,9 @@ internal sealed class GetCandidateHandler(PositionsDbContext dbContext) : IQuery
             candidate.Phone,
             candidate.Links,
             candidate.IsAnonymised,
+            candidate.AnonymisedAt,
+            candidate.AnonymisedBy?.Value,
+            anonymisedByName,
             candidate.CreatedAt,
             candidate.Version);
     }

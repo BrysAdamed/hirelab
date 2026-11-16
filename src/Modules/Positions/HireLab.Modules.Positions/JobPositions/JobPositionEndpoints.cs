@@ -1,3 +1,4 @@
+using HireLab.Modules.Positions.JobPositions.CloseJobPosition;
 using HireLab.Modules.Positions.JobPositions.CreateJobPosition;
 using HireLab.Modules.Positions.JobPositions.DeleteJobPosition;
 using HireLab.Modules.Positions.JobPositions.EditJobPosition;
@@ -24,5 +25,6 @@ internal static class JobPositionEndpoints
         managed.MapCreateJobPosition();
         managed.MapEditJobPosition();
         managed.MapDeleteJobPosition();
+        managed.MapCloseJobPosition();
     }
 }

@@ -58,6 +58,9 @@ public partial class HireLabTestHost : IAsyncLifetime
     /// <summary>Runs a change from another request just before one of the API's saves, to reproduce a lost race.</summary>
     public ConcurrentChange ConcurrentChange { get; } = new();
 
+    /// <summary>The candidates the API sees an unfinished interview session for. Emptied before every test.</summary>
+    public UnfinishedSessions UnfinishedSessions { get; } = new();
+
     /// <summary>The running API's root service provider.</summary>
     public IServiceProvider Services => Factory.Services;
 
@@ -99,6 +102,7 @@ public partial class HireLabTestHost : IAsyncLifetime
 
         PasswordHashes.Reset();
         ConcurrentChange.Reset();
+        UnfinishedSessions.Reset();
 
         await foreach (var blob in AttachmentBlobs.GetBlobsAsync())
         {
@@ -255,6 +259,7 @@ public partial class HireLabTestHost : IAsyncLifetime
                 services.AddSingleton(host.PasswordHashes);
                 services.Replace(ServiceDescriptor.Scoped<IPasswordHasher<User>, ProbingPasswordHasher>());
                 ConcurrentChange.AddToEveryDbContext(services, host.ConcurrentChange);
+                UnfinishedSessions.Decorate(services, host.UnfinishedSessions);
             });
 
             host.ConfigureWebHost(builder);

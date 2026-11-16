@@ -44,6 +44,18 @@ internal static class AttachmentApi
     public static Task<HttpResponseMessage> DownloadAsync(this BrowserSession browser, CandidateId candidateId, Guid attachmentId) =>
         browser.GetAsync(Attachment(candidateId, attachmentId));
 
+    /// <summary>The names of the blobs in the attachments container in Azurite.</summary>
+    public static async Task<List<string>> AttachmentBlobNamesAsync(this HireLabTestHost host)
+    {
+        var names = new List<string>();
+        await foreach (var blob in host.AttachmentBlobs.GetBlobsAsync(cancellationToken: TestContext.Current.CancellationToken))
+        {
+            names.Add(blob.Name);
+        }
+
+        return names;
+    }
+
     public static Task<HttpResponseMessage> DeleteAsync(this BrowserSession browser, CandidateId candidateId, Guid attachmentId) =>
         browser.DeleteAsync(Attachment(candidateId, attachmentId));
 }

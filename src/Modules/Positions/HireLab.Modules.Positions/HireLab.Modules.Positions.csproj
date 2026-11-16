@@ -9,6 +9,7 @@
     <ProjectReference Include="..\..\..\HireLab.SharedKernel\HireLab.SharedKernel.csproj" />
     <ProjectReference Include="..\HireLab.Modules.Positions.Contracts\HireLab.Modules.Positions.Contracts.csproj" />
     <ProjectReference Include="..\..\Identity\HireLab.Modules.Identity.Contracts\HireLab.Modules.Identity.Contracts.csproj" />
+    <ProjectReference Include="..\..\Sessions\HireLab.Modules.Sessions.Contracts\HireLab.Modules.Sessions.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

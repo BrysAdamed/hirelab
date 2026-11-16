@@ -1,4 +1,5 @@
 using HireLab.Modules.Positions.Candidates.AddCandidate;
+using HireLab.Modules.Positions.Candidates.AnonymiseCandidate;
 using HireLab.Modules.Positions.Candidates.EditCandidate;
 using HireLab.Modules.Positions.Candidates.GetCandidate;
 using HireLab.Modules.Positions.Candidates.ListCandidates;
@@ -24,5 +25,8 @@ internal static class CandidateEndpoints
         var candidates = staff.MapGroup("/candidates").WithTags(Tag).RequireAuthorization(StaffPolicies.ManagerOrInterviewer);
         candidates.MapGetCandidate();
         candidates.MapEditCandidate();
+
+        var managed = candidates.MapGroup(string.Empty).RequireAuthorization(StaffPolicies.Manager);
+        managed.MapAnonymiseCandidate();
     }
 }

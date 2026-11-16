@@ -83,6 +83,40 @@ internal sealed class Candidate : ITeamOwned
     /// <summary>Whether attachments may be uploaded or deleted: only while <paramref name="position"/>, the candidate's position, is open.</summary>
     public Result EnsureAttachmentsCanChange(JobPosition position) => EnsureEditable(position);
 
+    /// <summary>
+    /// Anonymises the candidate for good while <paramref name="position"/>, the candidate's position, is open: the
+    /// contact details are cleared and who did it and when is recorded (ADR 0023). The caller deletes the candidate's
+    /// attachments in the same transaction. Closing the position anonymises its candidates through
+    /// <see cref="JobPosition.Close"/>.
+    /// </summary>
+    public Result Anonymise(JobPosition position, UserId anonymisedBy, DateTimeOffset anonymisedAt)
+    {
+        ArgumentNullException.ThrowIfNull(position);
+        if (IsAnonymised)
+        {
+            return CandidateErrors.Anonymised;
+        }
+
+        var editable = EnsureEditable(position);
+        if (editable.IsFailure)
+        {
+            return editable;
+        }
+
+        ErasePersonalData(anonymisedBy, anonymisedAt);
+        return Result.Success();
+    }
+
+    internal void ErasePersonalData(UserId anonymisedBy, DateTimeOffset anonymisedAt)
+    {
+        FullName = null;
+        Email = null;
+        Phone = null;
+        Links = [];
+        AnonymisedBy = anonymisedBy;
+        AnonymisedAt = anonymisedAt;
+    }
+
     private Result EnsureEditable(JobPosition position)
     {
         ArgumentNullException.ThrowIfNull(position);

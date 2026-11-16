@@ -13,6 +13,11 @@ internal static class JobPositionApi
 
     public static Uri Position(Guid positionId) => Position(new JobPositionId(positionId));
 
+    public static Uri Close(JobPositionId positionId) => new($"/api/staff/positions/{positionId}/close", UriKind.Relative);
+
+    public static Task<HttpResponseMessage> CloseAsync(this BrowserSession browser, JobPositionId positionId, uint version) =>
+        browser.PostAsJsonAsync(Close(positionId), new { version });
+
     public static Uri PositionsIn(JobPositionState state) => new($"/api/staff/positions?state={state}", UriKind.Relative);
 
     public static JobPositionInput ValidInput(string title = "Fake Backend Developer") => new(
@@ -78,6 +83,9 @@ internal sealed record JobPositionView(
     string? InterviewerNotes,
     JobPositionState State,
     DateTimeOffset CreatedAt,
+    DateTimeOffset? ClosedAt,
+    Guid? ClosedById,
+    string? ClosedByName,
     uint Version);
 
 internal sealed record JobPositionSummaryView(Guid Id, string Title, JobPositionState State, DateTimeOffset CreatedAt);

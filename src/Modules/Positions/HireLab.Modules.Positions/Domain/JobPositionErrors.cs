@@ -13,4 +13,8 @@ internal static class JobPositionErrors
     public static readonly Error HasCandidates = Error.Conflict(
         "JobPosition.HasCandidates",
         "This job position has candidates, so it can't be deleted.");
+
+    public static readonly Error UnfinishedSessions = Error.Conflict(
+        "JobPosition.UnfinishedSessions",
+        "Some of this position's interview sessions aren't finished yet. Finish them before closing the position.");
 }

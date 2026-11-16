@@ -233,7 +233,8 @@ public sealed class CandidateTests(HireLabTestHost host) : IntegrationTest(host)
         // Assert
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "JobPosition.Closed");
         var candidate = await manager.CandidateAsync(candidateId);
-        candidate.FullName.ShouldBe("Fake Before Closing");
+        candidate.FullName.ShouldBeNull();
+        candidate.DisplayName.ShouldBe("Candidate #1");
         candidate.PositionState.ShouldBe(JobPositionState.Closed);
     }
 

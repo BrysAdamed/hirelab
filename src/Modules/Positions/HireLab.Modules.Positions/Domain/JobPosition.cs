@@ -41,6 +41,10 @@ internal sealed class JobPosition : ITeamOwned
     /// </summary>
     public int LastCandidateNumber { get; private set; }
 
+    public UserId? ClosedBy { get; private set; }
+
+    public DateTimeOffset? ClosedAt { get; private set; }
+
     public uint Version { get; private set; }
 
     public bool IsClosed => State == JobPositionState.Closed;
@@ -85,6 +89,34 @@ internal sealed class JobPosition : ITeamOwned
 
         LastCandidateNumber++;
         return Candidate.Create(this, LastCandidateNumber, details, addedBy);
+    }
+
+    /// <summary>
+    /// Closes the position for good and anonymises every one of its <paramref name="candidates"/> that isn't anonymised
+    /// yet (ADR 0023). The caller deletes those candidates' attachments in the same transaction.
+    /// </summary>
+    public Result Close(IReadOnlyCollection<Candidate> candidates, UserId closedBy, DateTimeOffset closedAt)
+    {
+        ArgumentNullException.ThrowIfNull(candidates);
+        if (candidates.Any(candidate => candidate.JobPositionId != Id))
+        {
+            throw new ArgumentException("Every candidate must be the position's.", nameof(candidates));
+        }
+
+        if (IsClosed)
+        {
+            return JobPositionErrors.Closed;
+        }
+
+        State = JobPositionState.Closed;
+        ClosedBy = closedBy;
+        ClosedAt = closedAt;
+        foreach (var candidate in candidates.Where(candidate => !candidate.IsAnonymised))
+        {
+            candidate.ErasePersonalData(closedBy, closedAt);
+        }
+
+        return Result.Success();
     }
 
     public Result EnsureCanBeDeleted(bool hasCandidates)
