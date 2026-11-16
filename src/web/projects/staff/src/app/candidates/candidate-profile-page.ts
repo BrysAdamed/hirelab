@@ -24,6 +24,7 @@ import type { Candidate } from '../api/staff-api';
 import { AuthService } from '../auth/auth.service';
 import { AnonymiseCandidateAction } from './anonymise-candidate-action';
 import { CandidateAttachments } from './candidate-attachments';
+import { CandidateSessions } from './candidate-sessions';
 import { CandidatesService } from './candidates.service';
 
 /** A candidate's profile: their position, contact details and attachments. */
@@ -37,6 +38,7 @@ import { CandidatesService } from './candidates.service';
     HlmCardImports,
     AnonymiseCandidateAction,
     CandidateAttachments,
+    CandidateSessions,
   ],
   providers: [
     provideIcons({
@@ -196,6 +198,8 @@ import { CandidatesService } from './candidates.service';
           [candidateVersion]="candidate.version"
         />
       }
+
+      <hl-candidate-sessions class="mt-3 block" [candidateId]="candidate.id" [canPlan]="canEdit()" />
     }
   `,
 })

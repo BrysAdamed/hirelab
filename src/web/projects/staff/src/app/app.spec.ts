@@ -48,8 +48,8 @@ describe('staff app routes', () => {
 
   it.each<[StaffRole, string[]]>([
     ['Admin', ['Home', 'Teams', 'Users']],
-    ['Manager', ['Home', 'Job positions', 'Task bank', 'My team']],
-    ['Interviewer', ['Home', 'Job positions', 'Task bank']],
+    ['Manager', ['Home', 'Job positions', 'Sessions', 'Task bank', 'My team']],
+    ['Interviewer', ['Home', 'Job positions', 'Sessions', 'Task bank']],
   ])('shows the %s the navigation of their role', async (role, expected) => {
     // Act
     await start('/', role);
