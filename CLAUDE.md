@@ -8,7 +8,7 @@ Live technical interview platform: a task bank authored in the app, interview se
 - Planted "personal data" and "secrets" in AI-assistant tasks must be obviously fake (reserved domains such as `example.com`, test card numbers, made-up names).
 - Use glossary terms in code, API and UI. When you introduce a new term, add it to `docs/glossary.md`.
 - Every structural decision gets a new ADR in `docs/adr/` (next number) and a row in `docs/adr/README.md`.
-- Tasks are authored in the app; task *types* are code ([ADR 0015](docs/adr/0015-task-authoring-in-the-app.md)). Published task versions are immutable. Seed packages in `src/Tasks/` are showcase tasks only: never edit a published seed version (`tasks.lock.json` enforces it); add `v<N+1>` instead.
+- Tasks are authored in the app; task *types* are code ([ADR 0015](docs/adr/0015-task-authoring-in-the-app.md)). Published task versions are immutable. Seed packages in `src/Tasks/` are showcase tasks only: never edit a published seed version (`tasks.lock.json` enforces it); add `v<N+1>` instead ([ADR 0030](docs/adr/0030-seed-task-packages.md)).
 - A new task type ships with three frontend entry points: `candidate`, `review` and `editor`.
 - The UI is in English only.
 - UI: Spartan UI (helm components live in the `ui` lib and are our code) with Tailwind v4 and design tokens only; no PrimeNG (paid licence). Follow `docs/design-system.md` ([ADR 0016](docs/adr/0016-ui-stack.md)).
@@ -50,6 +50,8 @@ Tickets live in the ticketing app (MCP server `ticketing`), project key `HLB`. E
 
 - `src/HireLab.AppHost` (Aspire: local orchestration and the Azure resources), `src/HireLab.Api` (host; serves both SPAs), `src/HireLab.MigrationService` (migration worker), `src/HireLab.ServiceDefaults`, `src/HireLab.SharedKernel`.
 - `src/Modules/<Name>/HireLab.Modules.<Name>` and `.Contracts`: Identity, Positions, TaskBank, Sessions, Evaluation.
+- `src/TaskTypes`: `HireLab.TaskTypes.Abstractions` (the task type contract), `HireLab.TaskTypes.Catalog` (the one list of shipped types, used by the API, the migration worker and the lock guard) and one project per task type ([ADR 0028](docs/adr/0028-task-type-plug-in-contract.md)).
+- `src/Tasks`: `HireLab.Tasks`, the seed packages `<slug>/v<N>/` (`task.json` plus the files it references) and `tasks.lock.json` ([ADR 0030](docs/adr/0030-seed-task-packages.md)).
 - `src/web`: one Angular workspace with the `staff` and `candidate` apps and the `ui`, `core`, `tasks` and `api-client` libs.
 - `tests/`: .NET test projects, `HireLab.Testing` (shared integration host), `coverage.config`; `tests/e2e`: Playwright.
 - `infra/`: hand-written Bicep (budget, deployment identity). `eng/`: scripts. `docs/`: vision, glossary, ADRs, design system. `.github/workflows`: `ci.yml` (every PR) and `deploy.yml` (manual).
@@ -59,6 +61,7 @@ Commands (from the repo root unless noted; Docker must be running):
 - Build: `dotnet build HireLab.slnx`. Run everything locally: `dotnet run --project src/HireLab.AppHost`.
 - Backend tests and E2E: see Testing above.
 - In `src/web`: `npm ci`, `npm run lint`, `npm test`, `npm run build`, `npm run check:contrast`, `npm run api:update` / `npm run api:check`.
+- Seed packages: after adding a `src/Tasks/<slug>/v<N>/` folder, run `eng/update-tasks-lock.ps1` and commit `tasks.lock.json`. It only adds versions; the guard in `tests/HireLab.Tasks.Tests` fails on an edited or removed one.
 - Operations in Azure (first admin link, `--issue-admin-link`): `docs/operations.md`.
 - Infrastructure: `eng/validate-infra.sh` (generates the Bicep from the AppHost, then builds and lints it and `infra/`; needs the Bicep CLI or `az`).
 - Container images (local Docker, no push): `dotnet publish src/HireLab.Api -c Release -r linux-x64 -t:PublishContainer` (builds the SPAs unless `-p:SkipSpaBuild=true`), and the same for `src/HireLab.MigrationService`.

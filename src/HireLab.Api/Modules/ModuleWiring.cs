@@ -3,6 +3,7 @@ using HireLab.Api.Infrastructure;
 using HireLab.Api.OpenApi;
 using HireLab.SharedKernel.Modules;
 using HireLab.TaskTypes.Abstractions;
+using HireLab.TaskTypes.Catalog;
 
 namespace HireLab.Api.Modules;
 

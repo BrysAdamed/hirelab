@@ -1,6 +1,6 @@
 # 0013. Task module contract
 
-> The **Authoring** and **Versions** sections are superseded by [0015](0015-task-authoring-in-the-app.md): tasks are authored in the app, and the folder format is now a seed import format.
+> The **Authoring** and **Versions** sections are superseded by [0015](0015-task-authoring-in-the-app.md): tasks are authored in the app, and the folder format is now a seed import format, defined in [0030](0030-seed-task-packages.md).
 >
 > The **Backend contract** section is superseded by [0028](0028-task-type-plug-in-contract.md), which has the final signatures.
 

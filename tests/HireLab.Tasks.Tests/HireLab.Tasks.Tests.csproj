@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Modules\TaskBank\HireLab.Modules.TaskBank\HireLab.Modules.TaskBank.csproj" />
+    <ProjectReference Include="..\..\src\Tasks\HireLab.Tasks.csproj" />
+    <ProjectReference Include="..\..\src\TaskTypes\HireLab.TaskTypes.Catalog\HireLab.TaskTypes.Catalog.csproj" />
+    <ProjectReference Include="..\HireLab.Testing\HireLab.Testing.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Fixtures/*/v*/**" LogicalName="fixture/%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Shouldly" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>
