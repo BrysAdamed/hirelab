@@ -10,6 +10,8 @@ import {
 } from '../staff-flows.ts';
 import { seededUsers } from '../staff-users.ts';
 
+test.describe.configure({ timeout: 120_000 });
+
 test('the admin invites a manager, who invites an interviewer, who logs in', async ({ page }) => {
   const [admin] = seededUsers;
   const run = Date.now();

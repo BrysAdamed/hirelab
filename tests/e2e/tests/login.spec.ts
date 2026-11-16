@@ -4,8 +4,8 @@ import { seededUsers, type StaffUser } from '../staff-users.ts';
 
 const navigationByRole: Record<StaffUser['role'], string[]> = {
   Admin: ['Home', 'Teams', 'Users'],
-  Manager: ['Home', 'Job positions', 'Task bank', 'My team'],
-  Interviewer: ['Home', 'Job positions', 'Task bank'],
+  Manager: ['Home', 'Job positions', 'Sessions', 'Task bank', 'My team'],
+  Interviewer: ['Home', 'Job positions', 'Sessions', 'Task bank'],
 };
 
 for (const user of seededUsers) {
