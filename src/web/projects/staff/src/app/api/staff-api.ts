@@ -26,6 +26,8 @@ export type Candidate = components['schemas']['CandidateResponse'];
 export type PositionCandidate = components['schemas']['PositionCandidateResponse'];
 export type AddedCandidate = components['schemas']['AddedCandidateResponse'];
 export type CandidateDetails = components['schemas']['AddCandidateRequest'];
+export type Attachment = components['schemas']['AttachmentResponse'];
+export type UploadedAttachment = components['schemas']['UploadedAttachmentResponse'];
 
 /** The message of a failed API call: the ProblemDetails detail, or a generic fallback. */
 export function problemMessage(

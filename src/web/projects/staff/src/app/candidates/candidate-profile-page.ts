@@ -21,12 +21,13 @@ import {
 import { HlmButton } from '@hirelab/ui/helm/button';
 import { HlmCardImports } from '@hirelab/ui/helm/card';
 import type { Candidate } from '../api/staff-api';
+import { CandidateAttachments } from './candidate-attachments';
 import { CandidatesService } from './candidates.service';
 
-/** A candidate's profile: their position and contact details. */
+/** A candidate's profile: their position, contact details and attachments. */
 @Component({
   selector: 'hl-candidate-profile-page',
-  imports: [DatePipe, RouterLink, NgIcon, HlmButton, HlmCardImports],
+  imports: [DatePipe, RouterLink, NgIcon, HlmButton, HlmCardImports, CandidateAttachments],
   providers: [
     provideIcons({
       lucideArrowLeft,
@@ -144,6 +145,12 @@ import { CandidatesService } from './candidates.service';
           </dl>
         </div>
       </section>
+
+      <hl-candidate-attachments
+        class="mt-3 block"
+        [candidateId]="candidate.id"
+        [canChange]="canEdit()"
+      />
     }
   `,
 })
