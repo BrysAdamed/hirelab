@@ -15,6 +15,7 @@
     "paths": {
       "@hirelab/ui": ["./projects/ui/src/index.ts"],
       "@hirelab/ui/copy": ["./projects/ui/src/copy/index.ts"],
+      "@hirelab/ui/markdown": ["./projects/ui/src/markdown/index.ts"],
       "@hirelab/core": ["./projects/core/src/index.ts"],
       "@hirelab/api-client/staff": ["./projects/api-client/src/staff/index.ts"],
       "@hirelab/api-client/candidate": ["./projects/api-client/src/candidate/index.ts"],
@@ -26,7 +27,8 @@
       "@hirelab/ui/helm/card": ["./projects/ui/src/helm/card/src/index.ts"],
       "@hirelab/ui/helm/badge": ["./projects/ui/src/helm/badge/src/index.ts"],
       "@hirelab/ui/helm/dialog": ["./projects/ui/src/helm/dialog/src/index.ts"],
-      "@hirelab/ui/helm/dropdown-menu": ["./projects/ui/src/helm/dropdown-menu/src/index.ts"]
+      "@hirelab/ui/helm/dropdown-menu": ["./projects/ui/src/helm/dropdown-menu/src/index.ts"],
+      "@hirelab/ui/helm/textarea": ["./projects/ui/src/helm/textarea/src/index.ts"]
     }
   },
   "angularCompilerOptions": {

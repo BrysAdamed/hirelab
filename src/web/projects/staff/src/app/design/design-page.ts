@@ -20,6 +20,8 @@ import { HlmDialogImports } from '@hirelab/ui/helm/dialog';
 import { HlmDropdownMenuImports } from '@hirelab/ui/helm/dropdown-menu';
 import { HlmInput } from '@hirelab/ui/helm/input';
 import { HlmLabel } from '@hirelab/ui/helm/label';
+import { HlmTextarea } from '@hirelab/ui/helm/textarea';
+import { MarkdownViewer } from '@hirelab/ui/markdown';
 
 @Component({
   selector: 'hl-design-page',
@@ -33,6 +35,8 @@ import { HlmLabel } from '@hirelab/ui/helm/label';
     HlmDropdownMenuImports,
     HlmInput,
     HlmLabel,
+    HlmTextarea,
+    MarkdownViewer,
   ],
   providers: [
     provideIcons({
@@ -52,6 +56,15 @@ import { HlmLabel } from '@hirelab/ui/helm/label';
 })
 export class DesignPage {
   protected readonly themes: readonly Theme[] = THEMES;
+
+  protected readonly markdownSample = [
+    '### Requirements',
+    '',
+    '- **Three** years of backend work',
+    '- Knows `SQL` and [HTTP](https://example.com)',
+    '',
+    '> Interviewer notes stay with the team.',
+  ].join('\n');
 
   protected readonly buttonVariants = [
     'default',

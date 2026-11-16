@@ -25,11 +25,30 @@ export const shellRoutes: Routes = [
   {
     path: 'positions',
     title: 'Job positions - HireLab',
-    loadComponent: placeholder,
+    loadComponent: () => import('../positions/positions-page').then((m) => m.PositionsPage),
     data: staffPage({
       roles: ['Manager', 'Interviewer'],
       nav: { label: 'Job positions', icon: lucideBriefcase },
     }),
+  },
+  {
+    path: 'positions/new',
+    title: 'New job position - HireLab',
+    loadComponent: () => import('../positions/position-form-page').then((m) => m.PositionFormPage),
+    data: staffPage({ roles: ['Manager'] }),
+  },
+  {
+    path: 'positions/:positionId',
+    title: 'Job position - HireLab',
+    loadComponent: () =>
+      import('../positions/position-detail-page').then((m) => m.PositionDetailPage),
+    data: staffPage({ roles: ['Manager', 'Interviewer'] }),
+  },
+  {
+    path: 'positions/:positionId/edit',
+    title: 'Edit job position - HireLab',
+    loadComponent: () => import('../positions/position-form-page').then((m) => m.PositionFormPage),
+    data: staffPage({ roles: ['Manager'] }),
   },
   {
     path: 'tasks',
