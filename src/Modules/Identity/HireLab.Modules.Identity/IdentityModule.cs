@@ -1,5 +1,6 @@
 using HireLab.Modules.Identity.Auth;
 using HireLab.Modules.Identity.Authentication;
+using HireLab.Modules.Identity.Bootstrap;
 using HireLab.Modules.Identity.Invites;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.Modules.Identity.Seed;
@@ -16,6 +17,11 @@ namespace HireLab.Modules.Identity;
 /// <summary>The Identity module's registration entry point.</summary>
 public sealed class IdentityModule : IModule, IModuleMigrator
 {
+    /// <summary>
+    /// The setting that makes one migration run issue a fresh admin invite link, replacing a pending one (ADR 0022).
+    /// </summary>
+    public const string IssueAdminLinkSetting = AdminBootstrapOptions.Section + ":" + nameof(AdminBootstrapOptions.IssueNewLink);
+
     /// <inheritdoc />
     public void AddServices(IHostApplicationBuilder builder)
     {
@@ -40,6 +46,7 @@ public sealed class IdentityModule : IModule, IModuleMigrator
         services.AddModuleDbContext<IdentityModuleDbContext>();
         services.AddStaffIdentityCore();
         services.AddScoped<InviteIssuer>();
+        services.AddAdminBootstrap();
     }
 
     /// <inheritdoc />
@@ -49,4 +56,8 @@ public sealed class IdentityModule : IModule, IModuleMigrator
     /// <inheritdoc />
     public Task SeedDevelopmentDataAsync(IServiceProvider services, CancellationToken cancellationToken) =>
         ActivatorUtilities.CreateInstance<DevelopmentSeed>(services).RunAsync(cancellationToken);
+
+    /// <inheritdoc />
+    public Task BootstrapAsync(IServiceProvider services, CancellationToken cancellationToken) =>
+        services.GetRequiredService<AdminBootstrap>().RunAsync(cancellationToken);
 }

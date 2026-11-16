@@ -34,6 +34,12 @@ internal sealed partial class MigrationWorker(
                 }
             }
 
+            foreach (var migrator in ModuleMigrators.All)
+            {
+                LogBootstrapping(migrator.GetType().Name);
+                await RunInScopeAsync(migrator.BootstrapAsync, stoppingToken);
+            }
+
             LogCompleted();
         }
         catch (Exception exception) when (exception is not OperationCanceledException)
@@ -61,9 +67,12 @@ internal sealed partial class MigrationWorker(
     [LoggerMessage(Level = LogLevel.Information, Message = "Seeding Development data of {Module}")]
     private partial void LogSeeding(string module);
 
+    [LoggerMessage(Level = LogLevel.Information, Message = "Bootstrapping {Module}")]
+    private partial void LogBootstrapping(string module);
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Database migration completed")]
     private partial void LogCompleted();
 
-    [LoggerMessage(Level = LogLevel.Critical, Message = "Database migration failed")]
+    [LoggerMessage(Level = LogLevel.Critical, Message = "Database migration or bootstrap failed")]
     private partial void LogFailed(Exception exception);
 }
