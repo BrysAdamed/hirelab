@@ -1,0 +1,2 @@
+# Seed packages and their lock are hashed with LF line endings (ADR 0030).
+src/Tasks/** text eol=lf

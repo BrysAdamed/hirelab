@@ -4,6 +4,7 @@ using HireLab.Modules.Positions;
 using HireLab.Modules.Sessions;
 using HireLab.Modules.TaskBank;
 using HireLab.SharedKernel.Modules;
+using HireLab.Tasks;
 
 namespace HireLab.MigrationService;
 
@@ -13,7 +14,7 @@ internal static class ModuleMigrators
     [
         new IdentityModule(),
         new PositionsModule(),
-        new TaskBankModule(),
+        new TaskBankModule(SeedTaskPackages.Assembly, SeedTaskPackages.ResourcePrefix),
         new SessionsModule(),
         new EvaluationModule(),
     ];
