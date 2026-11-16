@@ -35,6 +35,9 @@
     <Project Path="src/Modules/TaskBank/HireLab.Modules.TaskBank.Contracts/HireLab.Modules.TaskBank.Contracts.csproj" />
     <Project Path="src/Modules/TaskBank/HireLab.Modules.TaskBank/HireLab.Modules.TaskBank.csproj" />
   </Folder>
+  <Folder Name="/src/TaskTypes/">
+    <Project Path="src/TaskTypes/HireLab.TaskTypes.Abstractions/HireLab.TaskTypes.Abstractions.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/HireLab.Api.Tests/HireLab.Api.Tests.csproj" />
     <Project Path="tests/HireLab.ArchitectureTests/HireLab.ArchitectureTests.csproj" />
@@ -44,6 +47,7 @@
     <Project Path="tests/HireLab.Modules.Sessions.Tests/HireLab.Modules.Sessions.Tests.csproj" />
     <Project Path="tests/HireLab.Modules.TaskBank.Tests/HireLab.Modules.TaskBank.Tests.csproj" />
     <Project Path="tests/HireLab.SharedKernel.Tests/HireLab.SharedKernel.Tests.csproj" />
+    <Project Path="tests/HireLab.TaskTypes.Abstractions.Tests/HireLab.TaskTypes.Abstractions.Tests.csproj" />
     <Project Path="tests/HireLab.Testing/HireLab.Testing.csproj" />
   </Folder>
 </Solution>
