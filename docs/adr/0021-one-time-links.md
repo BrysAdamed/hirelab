@@ -12,11 +12,18 @@
 - The state is derived from those columns and the clock: `Pending`, `Used`, `Revoked` or `Expired` (`OneTimeLinkState`). Only a pending link can be used. A link that is neither used nor revoked is *open*; revoking works on open links, including expired ones.
 - Errors use the link's prefix (`Invite.Expired`, `Invite.Revoked`, `Invite.AlreadyUsed`), so the page can say what happened.
 
+**One way to issue and find links.**
+- `OneTimeLinkIssuer` issues every link: in one transaction it revokes the open links the new one replaces and adds the new one. A unique partial index allows one open link per email (invites) or per user (reset links). A concurrent request that issues or replaces first makes the slower one fail with `409` `<Prefix>.IssuedMeanwhile` (`Invite.IssuedMeanwhile`, `ResetLink.IssuedMeanwhile`), never with a constraint violation.
+- Redemption finds a link by the hash of its token and checks that it is pending, the same way for every kind of link.
+- Who manages which links is one `StaffScope` (role and team), shared with user management: the admin manages manager invites and managers' reset links, a manager those of the interviewers of their own team.
+
 **The token never travels in a URL the server sees.** The link is a staff app page with the token in the fragment (`/invite#<token>`). The page posts the token in the request body to anonymous, rate-limited endpoints ([0007](0007-staff-authentication.md)): one to preview the link, one to redeem it. The API returns the link's path once, when it is issued, and the UI builds the absolute URL from its own origin.
 
 **Invites.**
 - An invite stores the invitee's email (and its normalised form), display name, role, an existing `TeamId` or the name of a new team, and who issued it (empty for the bootstrap invite).
 - Each email has at most one open invite: issuing a new one revokes the open ones in the same transaction, and a unique partial index on the normalised email enforces it.
+- Only the issuer's own invites are replaced. If the email has a pending invite outside the issuer's scope (the admin's manager invite for a manager, another team's interviewer invite, a manager's interviewer invite for the admin), the new invite is refused with `409` `Invite.PendingElsewhere`, and the pending one stays. An expired one is revoked and replaced like any other.
+- An admin bootstrap invite also replaces every open admin invite, in the same transaction, so a run that can't issue (for example because the email belongs to a user) keeps the pending one.
 - The email must not belong to a user, both when the invite is issued and when it is redeemed.
 - Redemption creates the team (for a new-team invite), marks the invite used and creates the user in one save. The concurrency token stops a second concurrent redemption; the user indexes of [0020](0020-teams-and-user-lifecycle.md) stop a second active manager or admin. The new user is signed in at once.
 - Invites are not `ITeamOwned`: a manager invite for a new team has no team yet, and the admin manages all manager invites. The handlers scope them instead: the admin sees manager invites, a manager sees the interviewer invites of their own team, and anything else is not found.
@@ -24,6 +31,7 @@
 **Reset links** (HLB-38).
 - `ResetLink : OneTimeLink`, valid for 24 hours, in its own table. It stores the user it resets and who issued it (empty when the system issues it, for the admin recovery of HLB-39). The link is `/reset#<token>`.
 - `ResetLinkIssuer` issues a link for an active user and revokes that user's open link in the same transaction; a unique partial index allows one open link per user. Who may issue for whom is checked by the endpoint: the admin for any manager, a manager for the interviewers of their own team. Anyone else is not found.
+- A reset link must not outlive the access it was issued for. Deactivating a user revokes the pending reset links they issued and those for them; moving an interviewer to another team revokes the pending reset links for them. The links are revoked in the same save as the change, so an old team's manager can't log in as the moved interviewer, a deactivated manager can't take over anyone, and an old link doesn't work after a reactivation.
 - Redemption refuses a deactivated user. It sets the new password, clears the lockout, changes the security stamp (ending existing sessions within the validation window) and marks the link used, all in one save. The concurrency token stops a second concurrent redemption. Unlike an invite, it doesn't sign the user in: they log in with the new password, which also proves they know it.
 - Reset links aren't listed: a lost link is replaced by generating a new one.
 

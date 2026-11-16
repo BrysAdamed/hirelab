@@ -3,6 +3,7 @@ using HireLab.Modules.Identity.Auth.Login;
 using HireLab.Modules.Identity.Authentication;
 using HireLab.Modules.Identity.Bootstrap;
 using HireLab.Modules.Identity.Invites;
+using HireLab.Modules.Identity.OneTimeLinks;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.Modules.Identity.ResetLinks;
 using HireLab.Modules.Identity.Seed;
@@ -35,6 +36,7 @@ public sealed class IdentityModule : IModule, IModuleMigrator
         builder.Services.AddModuleDbContext<IdentityModuleDbContext>();
         builder.Services.AddHandlers<IdentityModuleDbContext>(typeof(IdentityModule).Assembly);
         builder.Services.AddStaffIdentityCore().AddStaffSignIn();
+        builder.Services.AddScoped<OneTimeLinkIssuer>();
         builder.Services.AddScoped<InviteIssuer>();
         builder.Services.AddScoped<ResetLinkIssuer>();
         builder.Services.AddSingleton<UnknownUserPasswordCheck>();
@@ -55,6 +57,7 @@ public sealed class IdentityModule : IModule, IModuleMigrator
     {
         services.AddModuleDbContext<IdentityModuleDbContext>();
         services.AddStaffIdentityCore();
+        services.AddScoped<OneTimeLinkIssuer>();
         services.AddScoped<InviteIssuer>();
         services.AddScoped<ResetLinkIssuer>();
         services.AddAdminBootstrap();

@@ -1,29 +1,36 @@
+using System.Linq.Expressions;
 using HireLab.Modules.Identity.Domain;
+using HireLab.Modules.Identity.OneTimeLinks;
 using HireLab.Modules.Identity.Persistence;
+using HireLab.Modules.Identity.Persistence.Configurations;
+using HireLab.Modules.Identity.Users;
 using HireLab.SharedKernel.Results;
+using HireLab.SharedKernel.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace HireLab.Modules.Identity.Invites;
 
-internal sealed record IssuedInvite(Invite Invite, string Token)
-{
-    public override string ToString() => nameof(IssuedInvite);
-}
-
 /// <summary>
-/// Issues an invite of any kind: the email must not belong to a user, and any open invite for the same email is revoked
-/// in the same transaction, so each email has at most one open invite.
+/// Issues an invite of any kind (ADR 0021). The email must not belong to a user, and must not have a pending invite
+/// outside the issuer's <see cref="StaffScope"/>. The open invites for the email are revoked in the same transaction,
+/// so each email has at most one open invite; an admin invite also replaces every open admin invite.
 /// </summary>
-internal sealed class InviteIssuer(IdentityModuleDbContext dbContext, UserManager<User> userManager, TimeProvider timeProvider)
+internal sealed class InviteIssuer(
+    IdentityModuleDbContext dbContext,
+    UserManager<User> userManager,
+    OneTimeLinkIssuer issuer,
+    TimeProvider timeProvider)
 {
-    public async Task<Result<IssuedInvite>> IssueAsync(
+    public async Task<Result<IssuedLink<Invite>>> IssueAsync(
         string email,
         string displayName,
+        StaffScope scope,
         Func<Invitee, OneTimeToken, DateTimeOffset, Invite> create,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(email);
+        ArgumentNullException.ThrowIfNull(scope);
         ArgumentNullException.ThrowIfNull(create);
 
         var login = email.Trim();
@@ -32,27 +39,27 @@ internal sealed class InviteIssuer(IdentityModuleDbContext dbContext, UserManage
             return InviteErrors.EmailInUse;
         }
 
-        var invitee = new Invitee(login, userManager.NormalizeEmail(login)!, displayName);
+        var normalizedEmail = userManager.NormalizeEmail(login)!;
         var now = timeProvider.GetUtcNow();
-        var token = OneTimeToken.New();
-        var invite = create(invitee, token, now);
 
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-
-        var open = await dbContext.Invites
-            .Where(existing => existing.NormalizedEmail == invitee.NormalizedEmail && existing.UsedAt == null && existing.RevokedAt == null)
+        var pending = await dbContext.Invites.AsNoTracking()
+            .WherePendingAt(now)
+            .Where(invite => invite.NormalizedEmail == normalizedEmail)
+            .Select(invite => new { invite.Role, invite.TeamId })
             .ToListAsync(cancellationToken);
-        foreach (var existing in open)
+
+        if (pending.Any(invite => !scope.Covers(invite.Role, invite.TeamId)))
         {
-            existing.Revoke(now);
+            return InviteErrors.PendingElsewhere;
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        var token = OneTimeToken.New();
+        var invite = create(new Invitee(login, normalizedEmail, displayName), token, now);
 
-        dbContext.Invites.Add(invite);
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        Expression<Func<Invite, bool>> replaces = invite.Role == StaffRole.Admin
+            ? existing => existing.NormalizedEmail == normalizedEmail || existing.Role == StaffRole.Admin
+            : existing => existing.NormalizedEmail == normalizedEmail;
 
-        return new IssuedInvite(invite, token.Value);
+        return await issuer.IssueAsync(invite, token, replaces, InviteConfiguration.OneOpenInvitePerEmailIndex, cancellationToken);
     }
 }

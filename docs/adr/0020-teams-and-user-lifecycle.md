@@ -25,6 +25,7 @@ The database enforces these rules, so two concurrent requests can't break them. 
 - A manager can deactivate and reactivate the interviewers of their own team.
 - Interviewers can't deactivate anyone.
 - A deactivated user can't log in, and their open sessions end at the next security stamp validation (at most 5 minutes). The sign-in manager refuses inactive users both at login and at that validation.
+- Deactivation revokes the pending invites and reset links the user issued and the reset links for them ([0021](0021-one-time-links.md)). Moving an interviewer to another team revokes the reset links for them.
 - Reactivating a manager is refused while their team has another active manager.
 
 **Every change that affects access updates the security stamp**: deactivation, reactivation, a role change, moving an interviewer to another team, and a password reset. The new stamp ends existing sessions at the next stamp check, so a reassigned or deactivated user loses access within 5 minutes ([0007](0007-staff-authentication.md), [0009](0009-authorisation-model.md)).
@@ -39,7 +40,7 @@ The database enforces these rules, so two concurrent requests can't break them. 
 - A team can exist without an active manager. Screens and invites have to handle "No manager".
 - "Exactly one admin" depends on the bootstrap path. If the only admin is locked out, recovery is the bootstrap job's manual option (HLB-39), not a second admin.
 - Deactivated accounts stay in the database with their personal data (email, display name). Erasing them would need a separate anonymisation step later.
-- Expected rule violations come back as `409`; a race that slips past the handler check is still stopped by the database.
+- Expected rule violations come back as `409`; a race that slips past the handler check is still stopped by the database, and still answered with a `409`: a lost `xmin` race is `Concurrency.ChangedMeanwhile` ([0004](0004-database-and-ef-core.md)).
 
 ## Status
 

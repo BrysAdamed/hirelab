@@ -1,5 +1,6 @@
 using HireLab.Modules.Identity.Domain;
 using HireLab.Modules.Identity.Persistence;
+using HireLab.Modules.Identity.Users;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Results;
 using HireLab.SharedKernel.Users;
@@ -38,6 +39,7 @@ internal sealed class CreateManagerInviteHandler(
         var issued = await issuer.IssueAsync(
             command.Email,
             command.DisplayName,
+            StaffScope.Managers,
             (invitee, token, now) => command.TeamId is { } teamId
                 ? Invite.ForManagerOfTeam(invitee, new TeamId(teamId), invitedBy, token, now)
                 : Invite.ForManagerOfNewTeam(invitee, command.NewTeamName!, invitedBy, token, now),
@@ -49,7 +51,7 @@ internal sealed class CreateManagerInviteHandler(
         }
 
         return new IssuedInviteResponse(
-            InviteResponse.From(issued.Value.Invite, existingTeamName, timeProvider.GetUtcNow()),
-            InviteLinks.PathFor(issued.Value.Token));
+            InviteResponse.From(issued.Value.Link, existingTeamName, timeProvider.GetUtcNow()),
+            issued.Value.LinkPath);
     }
 }

@@ -16,8 +16,8 @@ internal static class CreateInterviewerInviteEndpoint
         interviewers.MapPost(string.Empty, HandleAsync)
             .WithName("CreateInterviewerInvite")
             .WithSummary(
-                "Invites an interviewer into the manager's team. Revokes any open invite for the same email and returns the "
-                + "link, which is shown only once.");
+                "Invites an interviewer into the manager's team. Replaces the team's open invite for the same email (a pending "
+                + "invite someone else manages is a conflict) and returns the link, which is shown only once.");
 
     private static async Task<Results<Ok<IssuedInviteResponse>, ProblemHttpResult>> HandleAsync(
         CreateInterviewerInviteRequest request,

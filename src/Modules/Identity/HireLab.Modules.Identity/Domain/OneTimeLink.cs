@@ -3,7 +3,7 @@ using HireLab.SharedKernel.Results;
 namespace HireLab.Modules.Identity.Domain;
 
 /// <summary>
-/// A link sent by hand that works once until it expires (ADR 0007): invite links now, reset links later. It stores only
+/// A link sent by hand that works once until it expires (ADR 0007, ADR 0021): invite links and reset links. It stores only
 /// the hash of its <see cref="OneTimeToken"/>. Its state is derived from the clock: Pending, Used, Revoked or Expired.
 /// </summary>
 internal abstract class OneTimeLink
@@ -38,6 +38,20 @@ internal abstract class OneTimeLink
 
     /// <summary>How the link is called in messages, for example <c>invite link</c>.</summary>
     protected abstract string LinkName { get; }
+
+    /// <summary>The staff app page that redeems the link, for example <c>invite</c>.</summary>
+    protected abstract string RedemptionPage { get; }
+
+    /// <summary>Another request issued a link replacing the same open links first.</summary>
+    public Error IssuedMeanwhile => Error.Conflict(
+        $"{ErrorPrefix}.IssuedMeanwhile",
+        $"Another {LinkName} for the same person was issued at the same time. Reload and try again.");
+
+    /// <summary>
+    /// The path of the staff app page that redeems the link. The token travels in the fragment, so it never reaches a
+    /// server log or a <c>Referer</c> header; the page posts it to the API in the request body.
+    /// </summary>
+    public string PathFor(string token) => $"/{RedemptionPage}#{token}";
 
     public OneTimeLinkState StateAt(DateTimeOffset now) => this switch
     {

@@ -1,3 +1,4 @@
+using HireLab.Modules.Identity.Users;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Http;
 using HireLab.SharedKernel.Results;
@@ -10,7 +11,7 @@ namespace HireLab.Modules.Identity.Invites.ListInvites;
 
 internal static class ListInvitesEndpoint
 {
-    public static RouteHandlerBuilder MapListInvites(this IEndpointRouteBuilder group, string name, Func<ICurrentUser, InviteScope> scopeOf) =>
+    public static RouteHandlerBuilder MapListInvites(this IEndpointRouteBuilder group, string name, Func<ICurrentUser, StaffScope> scopeOf) =>
         group.MapGet(string.Empty, async (
                 ICurrentUser currentUser,
                 IQueryHandler<ListInvitesQuery, Result<IReadOnlyList<InviteResponse>>> handler,

@@ -6,8 +6,9 @@ using Microsoft.Extensions.Options;
 namespace HireLab.Modules.Identity.Auth.Login;
 
 /// <summary>
-/// Verifies a login password against a throwaway hash when the email is unknown, so that path costs one password hash
-/// verification, like a wrong password, and response times don't reveal which emails have accounts.
+/// Verifies a login password against a throwaway hash when the email is unknown or the account can't log in, so those
+/// paths cost one password hash verification, like a wrong password, and response times don't reveal which emails have
+/// accounts or which accounts are deactivated or locked out.
 /// </summary>
 internal sealed class UnknownUserPasswordCheck(IOptions<PasswordHasherOptions> options)
 {

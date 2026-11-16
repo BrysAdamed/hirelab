@@ -196,7 +196,7 @@
         "tags": [
           "Invites"
         ],
-        "summary": "Invites a manager into a new team (newTeamName) or an existing team without an active manager (teamId). Revokes any open invite for the same email and returns the link, which is shown only once.",
+        "summary": "Invites a manager into a new team (newTeamName) or an existing team without an active manager (teamId). Replaces the admin's open invite for the same email (a pending invite someone else manages is a conflict) and returns the link, which is shown only once.",
         "operationId": "CreateManagerInvite",
         "requestBody": {
           "content": {
@@ -338,7 +338,7 @@
         "tags": [
           "Invites"
         ],
-        "summary": "Invites an interviewer into the manager's team. Revokes any open invite for the same email and returns the link, which is shown only once.",
+        "summary": "Invites an interviewer into the manager's team. Replaces the team's open invite for the same email (a pending invite someone else manages is a conflict) and returns the link, which is shown only once.",
         "operationId": "CreateInterviewerInvite",
         "requestBody": {
           "content": {

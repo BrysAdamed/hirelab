@@ -1,4 +1,5 @@
 using HireLab.Modules.Identity.Domain;
+using HireLab.Modules.Identity.OneTimeLinks;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Results;
@@ -8,12 +9,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HireLab.Modules.Identity.Users.DeactivateUser;
 
-internal sealed record DeactivateUserCommand(UserId UserId, UserScope Scope);
+internal sealed record DeactivateUserCommand(UserId UserId, StaffScope Scope);
 
 /// <summary>
 /// Deactivates a user in the caller's scope, never the caller. The user gets a new security stamp, so their sessions end
-/// within the validation window, and the pending invites they issued are revoked, so a departing manager's links create
-/// no accounts. Deactivating an inactive user changes nothing.
+/// within the validation window. The pending invites and reset links they issued are revoked, so a departing manager's
+/// links create no accounts and take over none, and so are the reset links for them, so none works after a
+/// reactivation. Deactivating an inactive user changes nothing.
 /// </summary>
 internal sealed class DeactivateUserHandler(
     IdentityModuleDbContext dbContext,
@@ -41,13 +43,9 @@ internal sealed class DeactivateUserHandler(
         }
 
         var now = timeProvider.GetUtcNow();
-        var pendingInvites = await dbContext.Invites
-            .Where(invite => invite.InvitedBy == user.Id && invite.UsedAt == null && invite.RevokedAt == null && invite.ExpiresAt > now)
-            .ToListAsync(cancellationToken);
-        foreach (var invite in pendingInvites)
-        {
-            invite.Revoke(now);
-        }
+        var userId = user.Id;
+        await dbContext.Invites.Where(invite => invite.InvitedBy == userId).RevokePendingAsync(now, cancellationToken);
+        await dbContext.ResetLinks.Where(link => link.IssuedBy == userId || link.UserId == userId).RevokePendingAsync(now, cancellationToken);
 
         user.Deactivate();
         return await userManager.SaveAccessChangeAsync(user);

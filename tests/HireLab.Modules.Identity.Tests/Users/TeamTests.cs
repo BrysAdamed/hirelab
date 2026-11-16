@@ -1,7 +1,9 @@
 using System.Net;
+using HireLab.Modules.Identity.Domain;
 using HireLab.Modules.Identity.Tests.Invites;
 using HireLab.SharedKernel.Users;
 using HireLab.Testing.Staff;
+using Microsoft.EntityFrameworkCore;
 
 namespace HireLab.Modules.Identity.Tests.Users;
 
@@ -52,6 +54,28 @@ public sealed class TeamTests(HireLabTestHost host) : IntegrationTest(host)
         renamed.Id.ShouldBe(team.Id.Value);
         renamed.Name.ShouldBe("Fake Team New");
         renamed.Members.ShouldHaveSingleItem().Id.ShouldBe(interviewer.Id.Value);
+    }
+
+    [Fact]
+    public async Task Renaming_a_team_that_a_concurrent_request_renamed_is_a_conflict()
+    {
+        // Arrange
+        var team = await Host.CreateTeamAsync(new TeamBuilder().WithName("Fake Team Gamma"));
+        var adminStaff = await SignInAsAsync(StaffRole.Admin);
+        using var admin = await CreateBrowserAsync(adminStaff);
+        using var concurrentAdmin = await CreateBrowserAsync(adminStaff);
+        Host.ConcurrentChange.BeforeNextSave<Team>(EntityState.Modified, async () =>
+        {
+            using var renamed = await concurrentAdmin.RenameTeamAsync(team.Id, "Fake Team Kappa");
+            renamed.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        });
+
+        // Act
+        using var response = await admin.RenameTeamAsync(team.Id, "Fake Team Lambda");
+
+        // Assert
+        await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "Concurrency.ChangedMeanwhile");
+        (await admin.TeamsAsync()).Single(view => view.Id == team.Id.Value).Name.ShouldBe("Fake Team Kappa");
     }
 
     [Fact]

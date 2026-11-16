@@ -1,11 +1,12 @@
 using HireLab.Modules.Identity.Persistence;
+using HireLab.Modules.Identity.Users;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Results;
 using Microsoft.EntityFrameworkCore;
 
 namespace HireLab.Modules.Identity.Invites.ListInvites;
 
-internal sealed record ListInvitesQuery(InviteScope Scope);
+internal sealed record ListInvitesQuery(StaffScope Scope);
 
 /// <summary>Lists the invites in a scope, newest first, until 30 days after they expire.</summary>
 internal sealed class ListInvitesHandler(IdentityModuleDbContext dbContext, TimeProvider timeProvider)

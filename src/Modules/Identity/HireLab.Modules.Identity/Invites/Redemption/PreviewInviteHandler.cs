@@ -1,5 +1,6 @@
 using FluentValidation;
 using HireLab.Modules.Identity.Domain;
+using HireLab.Modules.Identity.OneTimeLinks;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Results;
@@ -32,7 +33,7 @@ internal sealed class PreviewInviteHandler(IdentityModuleDbContext dbContext, Ti
 {
     public async Task<Result<InvitePreviewResponse>> HandleAsync(PreviewInviteQuery query, CancellationToken cancellationToken)
     {
-        var found = await dbContext.FindRedeemableAsync(query.Token, timeProvider.GetUtcNow(), cancellationToken);
+        var found = await dbContext.Invites.FindUsableAsync(query.Token, timeProvider.GetUtcNow(), InviteErrors.LinkNotFound, cancellationToken);
         if (found.IsFailure)
         {
             return found.Error;

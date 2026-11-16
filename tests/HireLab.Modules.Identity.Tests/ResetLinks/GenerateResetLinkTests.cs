@@ -143,6 +143,47 @@ public sealed class GenerateResetLinkTests(HireLabTestHost host) : IntegrationTe
         current.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
 
+    [Fact]
+    public async Task A_link_generated_for_the_same_user_by_a_concurrent_request_is_a_conflict()
+    {
+        // Arrange
+        var managerStaff = await SignInAsAsync(StaffRole.Manager);
+        using var manager = await CreateBrowserAsync(managerStaff);
+        using var concurrentManager = await CreateBrowserAsync(managerStaff);
+        var interviewer = await Host.CreateUserAsync(UserBuilder.Interviewer(managerStaff.User.TeamId!.Value));
+        Host.ConcurrentChange.BeforeNextSave<ResetLink>(
+            EntityState.Added,
+            async () => await (await concurrentManager.GenerateForInterviewerAsync(interviewer.Id.Value)).IssuedAsync());
+
+        // Act
+        using var response = await manager.GenerateForInterviewerAsync(interviewer.Id.Value);
+
+        // Assert
+        await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "ResetLink.IssuedMeanwhile");
+        (await SingleLinkAsync()).StateAt(Host.Time.GetUtcNow()).ShouldBe(OneTimeLinkState.Pending);
+    }
+
+    [Fact]
+    public async Task Replacing_a_link_that_a_concurrent_request_replaced_first_is_a_conflict()
+    {
+        // Arrange
+        var managerStaff = await SignInAsAsync(StaffRole.Manager);
+        using var manager = await CreateBrowserAsync(managerStaff);
+        using var concurrentManager = await CreateBrowserAsync(managerStaff);
+        var interviewer = await Host.CreateUserAsync(UserBuilder.Interviewer(managerStaff.User.TeamId!.Value));
+        await (await manager.GenerateForInterviewerAsync(interviewer.Id.Value)).IssuedAsync();
+        Host.ConcurrentChange.BeforeNextSave<ResetLink>(
+            EntityState.Modified,
+            async () => await (await concurrentManager.GenerateForInterviewerAsync(interviewer.Id.Value)).IssuedAsync());
+
+        // Act
+        using var response = await manager.GenerateForInterviewerAsync(interviewer.Id.Value);
+
+        // Assert
+        await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "ResetLink.IssuedMeanwhile");
+        (await LinkCountAsync()).ShouldBe(2);
+    }
+
     private async Task<ResetLink> SingleLinkAsync()
     {
         await using var scope = Host.Services.CreateAsyncScope();

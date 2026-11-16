@@ -3,6 +3,7 @@ using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Handlers.Decorators;
 using HireLab.SharedKernel.Results;
 using HireLab.SharedKernel.Tests.TestDoubles;
+using Microsoft.EntityFrameworkCore;
 
 namespace HireLab.SharedKernel.Tests.Handlers;
 
@@ -100,6 +101,43 @@ public sealed class UnitOfWorkDecoratorTests
         // Assert
         await act.ShouldThrowAsync<InvalidOperationException>();
         await _eventDispatcher.DidNotReceive().DispatchAsync(Arg.Any<IReadOnlyList<IIntegrationEvent>>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task A_concurrency_conflict_on_save_becomes_a_changed_meanwhile_failure()
+    {
+        // Arrange
+        _inner.HandleAsync(Arg.Any<CreateNote>(), Arg.Any<CancellationToken>())
+            .Returns(_ =>
+            {
+                _eventQueue.Enqueue(new NoteCreated(Guid.CreateVersion7()));
+                return Result.Success(Guid.CreateVersion7());
+            });
+        _unitOfWork.SaveChangesAsync(Arg.Any<CancellationToken>()).Returns<int>(_ => throw new DbUpdateConcurrencyException());
+
+        // Act
+        var result = await _decorator.HandleAsync(new CreateNote("Ask about caching"), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Error.ShouldBe(Error.ChangedMeanwhile);
+        Error.ChangedMeanwhile.Type.ShouldBe(ErrorType.Conflict);
+        await _eventDispatcher.DidNotReceive().DispatchAsync(Arg.Any<IReadOnlyList<IIntegrationEvent>>(), Arg.Any<CancellationToken>());
+        _eventQueue.DequeueAll().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task A_concurrency_conflict_inside_the_handler_becomes_a_changed_meanwhile_failure()
+    {
+        // Arrange
+        _inner.HandleAsync(Arg.Any<CreateNote>(), Arg.Any<CancellationToken>())
+            .Returns<Result<Guid>>(_ => throw new DbUpdateConcurrencyException());
+
+        // Act
+        var result = await _decorator.HandleAsync(new CreateNote("Ask about caching"), TestContext.Current.CancellationToken);
+
+        // Assert
+        result.Error.ShouldBe(Error.ChangedMeanwhile);
+        await _unitOfWork.DidNotReceive().SaveChangesAsync(Arg.Any<CancellationToken>());
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using FluentValidation;
 using HireLab.Modules.Identity.Domain;
+using HireLab.Modules.Identity.OneTimeLinks;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.Modules.Identity.Persistence.Configurations;
 using HireLab.SharedKernel.Handlers;
@@ -38,7 +39,7 @@ internal sealed class RedeemInviteHandler(
     public async Task<Result<UserId>> HandleAsync(RedeemInviteCommand command, CancellationToken cancellationToken)
     {
         var now = timeProvider.GetUtcNow();
-        var found = await dbContext.FindRedeemableAsync(command.Token, now, cancellationToken);
+        var found = await dbContext.Invites.FindUsableAsync(command.Token, now, InviteErrors.LinkNotFound, cancellationToken);
         if (found.IsFailure)
         {
             return found.Error;

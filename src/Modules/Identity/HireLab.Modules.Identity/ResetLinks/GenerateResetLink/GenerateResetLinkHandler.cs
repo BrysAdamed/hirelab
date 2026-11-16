@@ -1,4 +1,5 @@
 using HireLab.Modules.Identity.Persistence;
+using HireLab.Modules.Identity.Users;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Results;
 using HireLab.SharedKernel.Users;
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HireLab.Modules.Identity.ResetLinks.GenerateResetLink;
 
-internal sealed record GenerateResetLinkCommand(UserId UserId, ResetLinkScope Scope);
+internal sealed record GenerateResetLinkCommand(UserId UserId, StaffScope Scope);
 
 /// <summary>A new reset link and the path of its link, shown once: only a hash of the token is stored.</summary>
 internal sealed record IssuedResetLinkResponse(Guid UserId, DateTimeOffset ExpiresAt, string LinkPath);

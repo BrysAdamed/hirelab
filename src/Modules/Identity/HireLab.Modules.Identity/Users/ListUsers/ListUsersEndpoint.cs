@@ -10,7 +10,7 @@ namespace HireLab.Modules.Identity.Users.ListUsers;
 
 internal static class ListUsersEndpoint
 {
-    public static RouteHandlerBuilder MapListUsers(this IEndpointRouteBuilder group, string name, Func<ICurrentUser, UserScope> scopeOf) =>
+    public static RouteHandlerBuilder MapListUsers(this IEndpointRouteBuilder group, string name, Func<ICurrentUser, StaffScope> scopeOf) =>
         group.MapGet(string.Empty, async (
                 ICurrentUser currentUser,
                 IQueryHandler<ListUsersQuery, Result<IReadOnlyList<UserResponse>>> handler,

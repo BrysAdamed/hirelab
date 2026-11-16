@@ -1,5 +1,6 @@
 using FluentValidation;
 using HireLab.Modules.Identity.Domain;
+using HireLab.Modules.Identity.OneTimeLinks;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.Modules.Identity.Teams;
 using HireLab.SharedKernel.Handlers;
@@ -22,9 +23,11 @@ internal sealed class ReassignUserValidator : AbstractValidator<ReassignUserComm
 
 /// <summary>
 /// Moves an interviewer to another team with a new security stamp, so their sessions in the old team end within the
-/// validation window (ADR 0009). Invites are not touched. Moving an interviewer to their own team changes nothing.
+/// validation window (ADR 0009). Their pending reset links are revoked in the same save: the old team's manager must not
+/// be able to log in as them in the new team. Invites are not touched. Moving an interviewer to their own team changes
+/// nothing.
 /// </summary>
-internal sealed class ReassignUserHandler(IdentityModuleDbContext dbContext, UserManager<User> userManager)
+internal sealed class ReassignUserHandler(IdentityModuleDbContext dbContext, UserManager<User> userManager, TimeProvider timeProvider)
     : ICommandHandler<ReassignUserCommand, Result>
 {
     public async Task<Result> HandleAsync(ReassignUserCommand command, CancellationToken cancellationToken)
@@ -50,6 +53,9 @@ internal sealed class ReassignUserHandler(IdentityModuleDbContext dbContext, Use
         {
             return Result.Success();
         }
+
+        var userId = user.Id;
+        await dbContext.ResetLinks.Where(link => link.UserId == userId).RevokePendingAsync(timeProvider.GetUtcNow(), cancellationToken);
 
         user.MoveToTeam(teamId);
         return await userManager.SaveAccessChangeAsync(user);

@@ -99,7 +99,7 @@ export interface paths {
         /** Lists manager invites, newest first, until 30 days after they expire. */
         get: operations["ListManagerInvites"];
         put?: never;
-        /** Invites a manager into a new team (newTeamName) or an existing team without an active manager (teamId). Revokes any open invite for the same email and returns the link, which is shown only once. */
+        /** Invites a manager into a new team (newTeamName) or an existing team without an active manager (teamId). Replaces the admin's open invite for the same email (a pending invite someone else manages is a conflict) and returns the link, which is shown only once. */
         post: operations["CreateManagerInvite"];
         delete?: never;
         options?: never;
@@ -151,7 +151,7 @@ export interface paths {
         /** Lists the interviewer invites of the manager's team, newest first, until 30 days after they expire. */
         get: operations["ListInterviewerInvites"];
         put?: never;
-        /** Invites an interviewer into the manager's team. Revokes any open invite for the same email and returns the link, which is shown only once. */
+        /** Invites an interviewer into the manager's team. Replaces the team's open invite for the same email (a pending invite someone else manages is a conflict) and returns the link, which is shown only once. */
         post: operations["CreateInterviewerInvite"];
         delete?: never;
         options?: never;

@@ -1,5 +1,6 @@
 using HireLab.SharedKernel.Events;
 using HireLab.SharedKernel.Results;
+using Microsoft.EntityFrameworkCore;
 
 namespace HireLab.SharedKernel.Handlers.Decorators;
 
@@ -14,15 +15,25 @@ internal sealed class UnitOfWorkDecorator<TCommand, TResult>(
 {
     public async Task<TResult> HandleAsync(TCommand command, CancellationToken cancellationToken)
     {
-        var result = await inner.HandleAsync(command, cancellationToken);
+        TResult result;
+        try
+        {
+            result = await inner.HandleAsync(command, cancellationToken);
+            if (result.IsSuccess)
+            {
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            result = TResult.Failure(Error.ChangedMeanwhile);
+        }
 
         if (result.IsFailure)
         {
             eventQueue.DequeueAll();
             return result;
         }
-
-        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         var integrationEvents = eventQueue.DequeueAll();
         if (integrationEvents.Count > 0)

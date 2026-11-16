@@ -1,5 +1,6 @@
 using HireLab.Modules.Identity.Domain;
 using HireLab.Modules.Identity.Persistence;
+using HireLab.Modules.Identity.Users;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Results;
 using HireLab.SharedKernel.Users;
@@ -22,6 +23,7 @@ internal sealed class CreateInterviewerInviteHandler(
         var issued = await issuer.IssueAsync(
             command.Email,
             command.DisplayName,
+            StaffScope.InterviewersOf(currentUser),
             (invitee, token, now) => Invite.ForInterviewer(invitee, teamId, invitedBy, token, now),
             cancellationToken);
 
@@ -33,7 +35,7 @@ internal sealed class CreateInterviewerInviteHandler(
         var teamName = await dbContext.Teams.Where(team => team.Id == teamId).Select(team => team.Name).SingleAsync(cancellationToken);
 
         return new IssuedInviteResponse(
-            InviteResponse.From(issued.Value.Invite, teamName, timeProvider.GetUtcNow()),
-            InviteLinks.PathFor(issued.Value.Token));
+            InviteResponse.From(issued.Value.Link, teamName, timeProvider.GetUtcNow()),
+            issued.Value.LinkPath);
     }
 }

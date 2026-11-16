@@ -1,12 +1,13 @@
 using HireLab.Modules.Identity.Domain;
 using HireLab.Modules.Identity.Persistence;
+using HireLab.Modules.Identity.Users;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Results;
 using Microsoft.EntityFrameworkCore;
 
 namespace HireLab.Modules.Identity.Invites.RevokeInvite;
 
-internal sealed record RevokeInviteCommand(InviteId InviteId, InviteScope Scope);
+internal sealed record RevokeInviteCommand(InviteId InviteId, StaffScope Scope);
 
 internal sealed class RevokeInviteHandler(IdentityModuleDbContext dbContext, TimeProvider timeProvider)
     : ICommandHandler<RevokeInviteCommand, Result>

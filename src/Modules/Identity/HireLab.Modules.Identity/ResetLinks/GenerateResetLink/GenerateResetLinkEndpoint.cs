@@ -1,3 +1,4 @@
+using HireLab.Modules.Identity.Users;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Http;
 using HireLab.SharedKernel.Results;
@@ -14,7 +15,7 @@ internal static class GenerateResetLinkEndpoint
     public static RouteHandlerBuilder MapGenerateResetLink(
         this IEndpointRouteBuilder group,
         string name,
-        Func<ICurrentUser, ResetLinkScope> scopeOf) =>
+        Func<ICurrentUser, StaffScope> scopeOf) =>
         group.MapPost("/{userId:guid}", async Task<Results<Ok<IssuedResetLinkResponse>, ProblemHttpResult>> (
                 UserId userId,
                 ICurrentUser currentUser,

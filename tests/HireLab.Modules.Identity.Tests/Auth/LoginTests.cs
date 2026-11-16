@@ -101,6 +101,48 @@ public sealed class LoginTests(HireLabTestHost host) : IntegrationTest(host)
     }
 
     [Fact]
+    public async Task A_locked_out_account_costs_a_password_hash_verification_like_a_wrong_password()
+    {
+        // Arrange
+        var team = await Host.CreateTeamAsync();
+        var user = await Host.CreateUserAsync(UserBuilder.Interviewer(team.Id));
+        using var browser = await CreateBrowserAsync();
+        for (var attempt = 0; attempt < 4; attempt++)
+        {
+            using var failed = await browser.LoginAsync(user.Email, "wrong-password-not-a-secret");
+        }
+
+        Host.PasswordHashes.Reset();
+        using var lockingAttempt = await browser.LoginAsync(user.Email, "wrong-password-not-a-secret");
+        var forLockingAttempt = Host.PasswordHashes.Verifications;
+        Host.PasswordHashes.Reset();
+
+        // Act
+        using var response = await browser.LoginAsync(user.Email, user.Password);
+
+        // Assert
+        await ShouldBeInvalidCredentialsAsync(response);
+        forLockingAttempt.ShouldBe(1);
+        Host.PasswordHashes.Verifications.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task An_inactive_account_costs_a_password_hash_verification_like_a_wrong_password()
+    {
+        // Arrange
+        var team = await Host.CreateTeamAsync();
+        var user = await Host.CreateUserAsync(UserBuilder.Interviewer(team.Id).Inactive());
+        using var browser = await CreateBrowserAsync();
+
+        // Act
+        using var response = await browser.LoginAsync(user.Email, user.Password);
+
+        // Assert
+        await ShouldBeInvalidCredentialsAsync(response);
+        Host.PasswordHashes.Verifications.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Five_wrong_passwords_lock_the_account_so_even_the_right_one_is_refused()
     {
         // Arrange

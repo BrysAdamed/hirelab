@@ -15,6 +15,10 @@ internal static class InviteErrors
 
     public static readonly Error EmailInUse = Error.Conflict("Invite.EmailInUse", "A user with this email already exists.");
 
+    public static readonly Error PendingElsewhere = Error.Conflict(
+        "Invite.PendingElsewhere",
+        "This email already has a pending invite that someone else manages. It has to be revoked or expire before you can invite this email.");
+
     public static readonly Error TeamNotFound = Error.NotFound("Invite.TeamNotFound", "The team was not found.");
 
     public static readonly Error TeamHasManager = Error.Conflict(

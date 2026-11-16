@@ -1,4 +1,5 @@
 using HireLab.Modules.Identity.Domain;
+using HireLab.Modules.Identity.OneTimeLinks;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.SharedKernel.Results;
 using Microsoft.EntityFrameworkCore;
@@ -16,19 +17,13 @@ internal static class UsableResetLinks
         DateTimeOffset now,
         CancellationToken cancellationToken)
     {
-        var hash = OneTimeToken.HashOf(token);
-        var link = await dbContext.ResetLinks.SingleOrDefaultAsync(link => link.TokenHash == hash, cancellationToken);
-        if (link is null)
+        var found = await dbContext.ResetLinks.FindUsableAsync(token, now, ResetLinkErrors.LinkNotFound, cancellationToken);
+        if (found.IsFailure)
         {
-            return ResetLinkErrors.LinkNotFound;
+            return found.Error;
         }
 
-        var usable = link.EnsureUsable(now);
-        if (usable.IsFailure)
-        {
-            return usable.Error;
-        }
-
+        var link = found.Value;
         var user = await dbContext.Users.SingleAsync(user => user.Id == link.UserId, cancellationToken);
         return user.IsActive ? new UsableResetLink(link, user) : ResetLinkErrors.UserInactive;
     }

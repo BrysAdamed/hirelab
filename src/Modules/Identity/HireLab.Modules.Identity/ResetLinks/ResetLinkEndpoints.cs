@@ -1,5 +1,6 @@
 using HireLab.Modules.Identity.ResetLinks.GenerateResetLink;
 using HireLab.Modules.Identity.ResetLinks.Redemption;
+using HireLab.Modules.Identity.Users;
 using HireLab.SharedKernel.Users;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -20,12 +21,12 @@ internal static class ResetLinkEndpoints
 
         resetLinks.MapGroup("/managers")
             .RequireAuthorization(StaffPolicies.Admin)
-            .MapGenerateResetLink("GenerateManagerResetLink", _ => ResetLinkScope.Managers)
+            .MapGenerateResetLink("GenerateManagerResetLink", _ => StaffScope.Managers)
             .WithSummary(GenerateSummary);
 
         resetLinks.MapGroup("/interviewers")
             .RequireAuthorization(StaffPolicies.Manager)
-            .MapGenerateResetLink("GenerateInterviewerResetLink", ResetLinkScope.InterviewersOf)
+            .MapGenerateResetLink("GenerateInterviewerResetLink", StaffScope.InterviewersOf)
             .WithSummary(GenerateSummary);
 
         resetLinks.MapResetLinkRedemption();

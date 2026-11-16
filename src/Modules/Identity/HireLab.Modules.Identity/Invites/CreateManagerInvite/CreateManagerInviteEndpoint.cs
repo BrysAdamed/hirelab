@@ -17,7 +17,8 @@ internal static class CreateManagerInviteEndpoint
             .WithName("CreateManagerInvite")
             .WithSummary(
                 "Invites a manager into a new team (newTeamName) or an existing team without an active manager (teamId). "
-                + "Revokes any open invite for the same email and returns the link, which is shown only once.");
+                + "Replaces the admin's open invite for the same email (a pending invite someone else manages is a conflict) and "
+                + "returns the link, which is shown only once.");
 
     private static async Task<Results<Ok<IssuedInviteResponse>, ProblemHttpResult>> HandleAsync(
         CreateManagerInviteRequest request,

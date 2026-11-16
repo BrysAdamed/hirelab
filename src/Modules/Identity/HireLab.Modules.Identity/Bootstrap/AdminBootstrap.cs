@@ -1,7 +1,9 @@
 using HireLab.Modules.Identity.Domain;
 using HireLab.Modules.Identity.Invites;
+using HireLab.Modules.Identity.OneTimeLinks;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.Modules.Identity.ResetLinks;
+using HireLab.Modules.Identity.Users;
 using HireLab.SharedKernel.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -12,7 +14,8 @@ namespace HireLab.Modules.Identity.Bootstrap;
 /// <summary>
 /// Makes sure the single admin can come to exist (ADR 0022): while there is no admin, the migration job issues a
 /// bootstrap invite and writes its link to the log. A manual run with <see cref="AdminBootstrapOptions.IssueNewLink"/>
-/// replaces a pending invite or, once the admin exists, issues a reset link for them.
+/// replaces a pending invite or, once the admin exists, issues a reset link for them. Issuing an admin invite revokes the
+/// open ones in the same transaction, so a run that can't issue keeps the pending invite.
 /// </summary>
 internal sealed partial class AdminBootstrap(
     IdentityModuleDbContext dbContext,
@@ -46,23 +49,21 @@ internal sealed partial class AdminBootstrap(
             return;
         }
 
-        var now = timeProvider.GetUtcNow();
-        var openInvites = await dbContext.Invites
-            .Where(invite => invite.Role == StaffRole.Admin && invite.UsedAt == null && invite.RevokedAt == null)
-            .ToListAsync(cancellationToken);
-
-        if (!settings.IssueNewLink && openInvites.FirstOrDefault(invite => invite.StateAt(now) == OneTimeLinkState.Pending) is { } pending)
+        if (!settings.IssueNewLink)
         {
-            LogInvitePending(pending.ExpiresAt);
-            return;
+            var pendingUntil = await dbContext.Invites
+                .WherePendingAt(timeProvider.GetUtcNow())
+                .Where(invite => invite.Role == StaffRole.Admin)
+                .Select(invite => (DateTimeOffset?)invite.ExpiresAt)
+                .MaxAsync(cancellationToken);
+
+            if (pendingUntil is { } expiresAt)
+            {
+                LogInvitePending(expiresAt);
+                return;
+            }
         }
 
-        foreach (var invite in openInvites)
-        {
-            invite.Revoke(now);
-        }
-
-        await dbContext.SaveChangesAsync(cancellationToken);
         await IssueAsync(settings, cancellationToken);
     }
 
@@ -74,14 +75,14 @@ internal sealed partial class AdminBootstrap(
                 $"{AdminBootstrapOptions.Section}:{nameof(AdminBootstrapOptions.Email)} is not set, so no admin invite can be issued.");
         }
 
-        var issued = await inviteIssuer.IssueAsync(settings.Email, settings.DisplayName, Invite.ForAdmin, cancellationToken);
+        var issued = await inviteIssuer.IssueAsync(settings.Email, settings.DisplayName, StaffScope.Everyone, Invite.ForAdmin, cancellationToken);
         if (issued.IsFailure)
         {
             throw new InvalidOperationException($"The admin invite could not be issued: {issued.Error.Code}. {issued.Error.Description}");
         }
 
-        var link = staffApp.Value.LinkTo(InviteLinks.PathFor(issued.Value.Token));
-        LogInviteLink(issued.Value.Invite.ExpiresAt, link);
+        var link = staffApp.Value.LinkTo(issued.Value.LinkPath);
+        LogInviteLink(issued.Value.Link.ExpiresAt, link);
     }
 
     private async Task IssueResetLinkAsync(UserId adminId, CancellationToken cancellationToken)

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HireLab.Modules.Identity.Users.ReactivateUser;
 
-internal sealed record ReactivateUserCommand(UserId UserId, UserScope Scope);
+internal sealed record ReactivateUserCommand(UserId UserId, StaffScope Scope);
 
 /// <summary>
 /// Reactivates a user in the caller's scope with a new security stamp. A manager is refused while their team has another

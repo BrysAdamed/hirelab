@@ -10,7 +10,7 @@ namespace HireLab.Modules.Identity.Users.ReactivateUser;
 
 internal static class ReactivateUserEndpoint
 {
-    public static RouteHandlerBuilder MapReactivateUser(this IEndpointRouteBuilder group, string name, Func<ICurrentUser, UserScope> scopeOf) =>
+    public static RouteHandlerBuilder MapReactivateUser(this IEndpointRouteBuilder group, string name, Func<ICurrentUser, StaffScope> scopeOf) =>
         group.MapPost("/{userId:guid}/reactivate", async (
                 UserId userId,
                 ICurrentUser currentUser,

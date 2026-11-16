@@ -72,6 +72,8 @@ internal sealed class Invite : OneTimeLink
 
     protected override string LinkName => "invite link";
 
+    protected override string RedemptionPage => "invite";
+
     public static Invite ForManagerOfNewTeam(Invitee invitee, string teamName, UserId invitedBy, OneTimeToken token, DateTimeOffset now)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(teamName);

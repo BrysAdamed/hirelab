@@ -1,4 +1,5 @@
 using HireLab.Modules.Identity.Domain;
+using HireLab.Modules.Identity.Users;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Http;
 using HireLab.SharedKernel.Results;
@@ -11,7 +12,7 @@ namespace HireLab.Modules.Identity.Invites.RevokeInvite;
 
 internal static class RevokeInviteEndpoint
 {
-    public static RouteHandlerBuilder MapRevokeInvite(this IEndpointRouteBuilder group, string name, Func<ICurrentUser, InviteScope> scopeOf) =>
+    public static RouteHandlerBuilder MapRevokeInvite(this IEndpointRouteBuilder group, string name, Func<ICurrentUser, StaffScope> scopeOf) =>
         group.MapPost("/{inviteId:guid}/revoke", async (
                 InviteId inviteId,
                 ICurrentUser currentUser,

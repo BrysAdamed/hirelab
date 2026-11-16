@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HireLab.Modules.Identity.Users.ListUsers;
 
-internal sealed record ListUsersQuery(UserScope Scope);
+internal sealed record ListUsersQuery(StaffScope Scope);
 
 /// <summary>Lists the users in a scope, active and deactivated, by display name.</summary>
 internal sealed class ListUsersHandler(IdentityModuleDbContext dbContext) : IQueryHandler<ListUsersQuery, Result<IReadOnlyList<UserResponse>>>

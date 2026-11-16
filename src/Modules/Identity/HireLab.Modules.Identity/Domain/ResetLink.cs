@@ -34,6 +34,8 @@ internal sealed class ResetLink : OneTimeLink
 
     protected override string LinkName => "reset link";
 
+    protected override string RedemptionPage => "reset";
+
     public static ResetLink For(UserId userId, UserId? issuedBy, OneTimeToken token, DateTimeOffset now) =>
         new(userId, issuedBy, token, now);
 }

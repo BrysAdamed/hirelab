@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.Modules.Identity.Tests.Auth;
 using HireLab.Modules.Identity.Tests.Invites;
+using HireLab.Modules.Identity.Tests.Users;
 using HireLab.SharedKernel.Users;
 using HireLab.Testing.Staff;
 using Microsoft.EntityFrameworkCore;
@@ -182,6 +183,62 @@ public sealed class ResetLinkRedemptionTests(HireLabTestHost host) : Integration
     }
 
     [Fact]
+    public async Task Deactivating_the_user_revokes_their_link_so_it_fails_after_reactivation()
+    {
+        // Arrange
+        var (_, interviewer, issued) = await IssueAsManagerAsync();
+        using var admin = await CreateBrowserAsync(await SignInAsAsync(StaffRole.Admin));
+        using var deactivated = await admin.PostAsync(UserApi.Deactivate(interviewer.Id));
+        using var reactivated = await admin.PostAsync(UserApi.Reactivate(interviewer.Id));
+        using var browser = await CreateBrowserAsync();
+
+        // Act
+        using var redeemed = await browser.RedeemResetLinkAsync(issued.Token);
+
+        // Assert
+        deactivated.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        reactivated.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await redeemed.ShouldBeProblemAsync(HttpStatusCode.Conflict, "ResetLink.Revoked");
+    }
+
+    [Fact]
+    public async Task Deactivating_the_issuer_revokes_the_links_they_issued()
+    {
+        // Arrange
+        var (manager, _, issued) = await IssueAsManagerAsync();
+        using var admin = await CreateBrowserAsync(await SignInAsAsync(StaffRole.Admin));
+        using var deactivated = await admin.PostAsync(UserApi.Deactivate(manager.Id));
+        using var browser = await CreateBrowserAsync();
+
+        // Act
+        using var redeemed = await browser.RedeemResetLinkAsync(issued.Token);
+
+        // Assert
+        deactivated.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await redeemed.ShouldBeProblemAsync(HttpStatusCode.Conflict, "ResetLink.Revoked");
+    }
+
+    [Fact]
+    public async Task Reassigning_the_user_to_another_team_revokes_their_link()
+    {
+        // Arrange
+        var (_, interviewer, issued) = await IssueAsManagerAsync();
+        var otherTeam = await Host.CreateTeamAsync();
+        using var admin = await CreateBrowserAsync(await SignInAsAsync(StaffRole.Admin));
+        using var reassigned = await admin.ReassignAsync(interviewer.Id, otherTeam.Id);
+        using var browser = await CreateBrowserAsync();
+
+        // Act
+        using var redeemed = await browser.RedeemResetLinkAsync(issued.Token);
+
+        // Assert
+        reassigned.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await redeemed.ShouldBeProblemAsync(HttpStatusCode.Conflict, "ResetLink.Revoked");
+        using var login = await browser.LoginAsync(interviewer.Email, interviewer.Password);
+        login.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+
+    [Fact]
     public async Task Redemption_requires_the_antiforgery_header()
     {
         // Arrange
@@ -215,11 +272,17 @@ public sealed class ResetLinkRedemptionTests(HireLabTestHost host) : Integration
 
     private async Task<(TestUser Interviewer, IssuedResetLinkView Issued)> IssueForInterviewerAsync()
     {
+        var (_, interviewer, issued) = await IssueAsManagerAsync();
+        return (interviewer, issued);
+    }
+
+    private async Task<(TestUser Manager, TestUser Interviewer, IssuedResetLinkView Issued)> IssueAsManagerAsync()
+    {
         var managerStaff = await SignInAsAsync(StaffRole.Manager);
         using var manager = await CreateBrowserAsync(managerStaff);
         var interviewer = await Host.CreateUserAsync(UserBuilder.Interviewer(managerStaff.User.TeamId!.Value));
         var issued = await (await manager.GenerateForInterviewerAsync(interviewer.Id.Value)).IssuedAsync();
-        return (interviewer, issued);
+        return (managerStaff.User, interviewer, issued);
     }
 
     private async Task DeactivateAsync(UserId userId)

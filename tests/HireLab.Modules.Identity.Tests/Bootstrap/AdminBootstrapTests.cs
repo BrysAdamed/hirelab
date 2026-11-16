@@ -200,6 +200,23 @@ public sealed class AdminBootstrapTests(HireLabTestHost host) : IntegrationTest(
         job.AdminInviteLink().ShouldBeNull();
     }
 
+    [Fact]
+    public async Task A_manual_run_that_cannot_issue_keeps_the_pending_invite()
+    {
+        // Arrange
+        await MigrationJob.RunAsync(Host, MigrationJob.DefaultSettings(adminEmail: "old.admin@example.com"));
+        var team = await Host.CreateTeamAsync();
+        await Host.CreateUserAsync(UserBuilder.Manager(team.Id).WithEmail(MigrationJob.AdminEmail));
+        await using var job = MigrationJob.Create(Host, MigrationJob.DefaultSettings(issueNewLink: true));
+
+        // Act
+        var exception = await Should.ThrowAsync<InvalidOperationException>(job.BootstrapAsync());
+
+        // Assert
+        exception.Message.ShouldContain("Invite.EmailInUse");
+        (await AdminInvitesAsync()).ShouldHaveSingleItem().StateAt(Host.Time.GetUtcNow()).ShouldBe(OneTimeLinkState.Pending);
+    }
+
     private static string TokenOf(string link) => new Uri(link).Fragment.TrimStart('#');
 
     private async Task LockOutAsync(UserId userId)
