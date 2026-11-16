@@ -1647,6 +1647,186 @@
           }
         }
       }
+    },
+    "/api/staff/tasks": {
+      "get": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Lists the task bank: the active version of every task the caller can see, by title. A task has every given tag, one of the given levels, the given task type, and the search text in its title or summary.",
+        "operationId": "ListTasks",
+        "parameters": [
+          {
+            "name": "tag",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "level",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/TaskLevel"
+              }
+            }
+          },
+          {
+            "name": "taskType",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskSummaryResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/tasks/tags": {
+      "get": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Lists the distinct tags of the tasks in the caller's task bank, alphabetically.",
+        "operationId": "ListTaskTags",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/tasks/types": {
+      "get": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Lists the keys of the task types that tasks in the caller's task bank have, alphabetically.",
+        "operationId": "ListTaskTypes",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/tasks/{taskId}": {
+      "get": {
+        "tags": [
+          "Tasks"
+        ],
+        "summary": "Gets a task in the caller's task bank with its active version: metadata, reference answer, interviewer notes, rubric and content.",
+        "operationId": "GetTask",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1756,6 +1936,13 @@
             ]
           }
         }
+      },
+      "BankVisibility": {
+        "enum": [
+          "Team",
+          "Global",
+          "System"
+        ]
       },
       "CandidateResponse": {
         "required": [
@@ -1870,6 +2057,13 @@
             "type": "string"
           }
         }
+      },
+      "CheckAnswer": {
+        "enum": [
+          "yes",
+          "no"
+        ],
+        "description": "The answer to a CheckCriterion."
       },
       "CloseJobPositionRequest": {
         "required": [
@@ -2359,6 +2553,7 @@
           }
         }
       },
+      "JsonElement": { },
       "LoginRequest": {
         "required": [
           "email",
@@ -2557,6 +2752,132 @@
           }
         }
       },
+      "Rubric": {
+        "required": [
+          "criteria"
+        ],
+        "type": "object",
+        "properties": {
+          "criteria": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RubricCriterion"
+            }
+          }
+        },
+        "description": "The scoring criteria of a task version (ADR 0013). Staff only: it never reaches the candidate API."
+      },
+      "RubricCriterion": {
+        "required": [
+          "type"
+        ],
+        "type": "object",
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/RubricCriterionScaleCriterion"
+          },
+          {
+            "$ref": "#/components/schemas/RubricCriterionCheckCriterion"
+          }
+        ],
+        "description": "One rubric item, identified within its rubric by a kebab-case string RubricCriterion.Id. Serialised with a `type` discriminator.",
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "scale": "#/components/schemas/RubricCriterionScaleCriterion",
+            "check": "#/components/schemas/RubricCriterionCheckCriterion"
+          }
+        }
+      },
+      "RubricCriterionCheckCriterion": {
+        "required": [
+          "expected",
+          "id",
+          "title",
+          "description"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "check"
+            ],
+            "type": "string"
+          },
+          "expected": {
+            "$ref": "#/components/schemas/CheckAnswer"
+          },
+          "critical": {
+            "type": "boolean",
+            "default": false
+          },
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "description": "A Yes / No criterion with an expected answer. A failed critical check is highlighted above the score."
+      },
+      "RubricCriterionScaleCriterion": {
+        "required": [
+          "weight",
+          "id",
+          "title",
+          "description"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "scale"
+            ],
+            "type": "string"
+          },
+          "weight": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "levels": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ScaleLevel"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "description": "A criterion scored 0–4 and weighted in the overall score, with an optional description per level."
+      },
+      "ScaleLevel": {
+        "required": [
+          "score",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "score": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "description": "What one score of a ScaleCriterion means."
+      },
       "StaffRole": {
         "enum": [
           "Admin",
@@ -2568,6 +2889,134 @@
       "Stream": {
         "type": "string",
         "format": "binary"
+      },
+      "TaskLevel": {
+        "enum": [
+          "Junior",
+          "Mid",
+          "Senior"
+        ]
+      },
+      "TaskResponse": {
+        "required": [
+          "id",
+          "versionNumber",
+          "taskType",
+          "title",
+          "summary",
+          "level",
+          "estimatedMinutes",
+          "tags",
+          "visibility",
+          "referenceAnswer",
+          "interviewerNotes",
+          "rubric",
+          "candidateContent",
+          "staffContent"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "versionNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "taskType": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "level": {
+            "$ref": "#/components/schemas/TaskLevel"
+          },
+          "estimatedMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/BankVisibility"
+          },
+          "referenceAnswer": {
+            "type": "string"
+          },
+          "interviewerNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rubric": {
+            "$ref": "#/components/schemas/Rubric"
+          },
+          "candidateContent": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "staffContent": {
+            "$ref": "#/components/schemas/JsonElement"
+          }
+        }
+      },
+      "TaskSummaryResponse": {
+        "required": [
+          "id",
+          "versionNumber",
+          "taskType",
+          "title",
+          "summary",
+          "level",
+          "estimatedMinutes",
+          "tags",
+          "visibility"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "versionNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "taskType": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "level": {
+            "$ref": "#/components/schemas/TaskLevel"
+          },
+          "estimatedMinutes": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/BankVisibility"
+          }
+        }
       },
       "TeamResponse": {
         "required": [
@@ -2725,6 +3174,9 @@
     },
     {
       "name": "Attachments"
+    },
+    {
+      "name": "Tasks"
     }
   ]
 }

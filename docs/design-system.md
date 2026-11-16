@@ -100,7 +100,7 @@ Spartan helm components are generated with `npx ng g @spartan-ng/cli:ui <name>` 
 | Confirm dialog | For irreversible actions. Names the action on the button ("Close position"), never just "OK". |
 | Toast | Success, error, info. Errors stay until dismissed. |
 | Empty state | Icon, one sentence, optional action |
-| Status badge | Session (`Planned`, `Live`, `Finished`), session task (`Pending`, `Current`, `Done`), version (`Draft`, `vN`, `Active`), visibility (`Team`, `Global`). Always icon + label. |
+| Status badge | Session (`Planned`, `Live`, `Finished`), session task (`Pending`, `Current`, `Done`), version (`Draft`, `vN`, `Active`), visibility (`Team`, `Global`, and `System` in the task bank). Always icon + label. |
 | Markdown viewer | `hl-markdown` from `@hirelab/ui/markdown` (its own entry point): `marked` (GitHub flavoured) + DOMPurify. All user-authored markdown goes through it. |
 | Markdown editor | Monaco in markdown mode with live preview |
 | Code editor / diff editor | Monaco behind our wrapper, lazy-loaded, theme-synced |
