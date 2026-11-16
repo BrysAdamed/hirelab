@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.Modules.Identity.Tests.Auth;
-using HireLab.Modules.Identity.Tests.Invites;
 using HireLab.Modules.Identity.Tests.Users;
 using HireLab.SharedKernel.Users;
 using HireLab.Testing.Staff;

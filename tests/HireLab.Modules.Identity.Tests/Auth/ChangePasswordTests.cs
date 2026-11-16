@@ -1,5 +1,4 @@
 using System.Net;
-using HireLab.Modules.Identity.Tests.Invites;
 using HireLab.Modules.Identity.Tests.ResetLinks;
 using HireLab.SharedKernel.Users;
 

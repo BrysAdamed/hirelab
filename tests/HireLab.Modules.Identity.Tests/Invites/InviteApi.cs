@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using HireLab.Modules.Identity.Tests.Auth;
 using HireLab.SharedKernel.Users;
 
 namespace HireLab.Modules.Identity.Tests.Invites;
@@ -57,12 +56,6 @@ internal static class InviteApi
 
     public static Task<HttpResponseMessage> RedeemAsync(this BrowserSession browser, string token, string password = ValidPassword) =>
         browser.PostAsJsonAsync(Redeem, new { token, password });
-
-    public static async Task ShouldBeProblemAsync(this HttpResponseMessage response, HttpStatusCode status, string code)
-    {
-        response.StatusCode.ShouldBe(status);
-        (await response.ProblemAsync()).Code().ShouldBe(code);
-    }
 }
 
 internal sealed record IssuedInviteView(InviteView Invite, string LinkPath)
