@@ -13,6 +13,7 @@ public static class TaskTypeJson
     /// <summary>
     /// Web defaults (camelCase), strict numbers (ADR 0018), nullable annotations and required constructor parameters
     /// respected, and unknown properties rejected, so a typo in content fails validation instead of being dropped.
+    /// A <c>type</c> discriminator may come after other properties, because <c>jsonb</c> doesn't keep property order.
     /// </summary>
     public static JsonSerializerOptions Options { get; } = CreateOptions();
 
@@ -24,6 +25,7 @@ public static class TaskTypeJson
             RespectNullableAnnotations = true,
             RespectRequiredConstructorParameters = true,
             UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
+            AllowOutOfOrderMetadataProperties = true,
             TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
         };
 

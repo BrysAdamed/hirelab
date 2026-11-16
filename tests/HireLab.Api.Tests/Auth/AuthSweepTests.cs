@@ -20,6 +20,12 @@ public sealed class AuthSweepTests(ApiTestHost host) : IntegrationTest(host)
         "HireLab.Modules.Identity.Domain.Invite",
     ];
 
+    private static readonly Dictionary<string, string> _ownTeamFilters = new(StringComparer.Ordinal)
+    {
+        ["HireLab.Modules.TaskBank.Domain.InterviewTask"] = "Visibility",
+        ["HireLab.Modules.TaskBank.Domain.TaskVersion"] = "Visibility",
+    };
+
     private static readonly string[] _anonymousEndpoints =
     [
         "GET /api/staff/auth/antiforgery",
@@ -133,9 +139,29 @@ public sealed class AuthSweepTests(ApiTestHost host) : IntegrationTest(host)
             .ShouldBeEmpty("These team-owned entities have no team query filter");
         entityTypes.Where(entityType => HasTeam(entityType)
                 && !teamOwned.Contains(entityType)
-                && !_teamDataExceptions.Contains(entityType.ClrType.FullName))
+                && !_teamDataExceptions.Contains(entityType.ClrType.FullName)
+                && !_ownTeamFilters.ContainsKey(entityType.ClrType.FullName!))
             .Select(entityType => entityType.ClrType.FullName)
             .ShouldBeEmpty($"These entities store a team but aren't {nameof(ITeamOwned)}, so other teams and the admin would see them");
+    }
+
+    [Fact]
+    public void Entities_with_their_own_team_filter_declare_it()
+    {
+        // Arrange
+        using var scope = Host.Services.CreateScope();
+
+        // Act
+        var entityTypes = ModuleDbContextTypes()
+            .SelectMany(type => ((DbContext)scope.ServiceProvider.GetRequiredService(type)).Model.GetEntityTypes())
+            .Where(entityType => _ownTeamFilters.ContainsKey(entityType.ClrType.FullName!))
+            .ToList();
+
+        // Assert
+        entityTypes.Select(entityType => entityType.ClrType.FullName).ShouldBe(_ownTeamFilters.Keys, ignoreOrder: true);
+        entityTypes.Where(entityType => entityType.FindDeclaredQueryFilter(_ownTeamFilters[entityType.ClrType.FullName!]) is null)
+            .Select(entityType => entityType.ClrType.FullName)
+            .ShouldBeEmpty("These entities have no filter of their own, so every team and the admin would see them");
     }
 
     [Theory]
