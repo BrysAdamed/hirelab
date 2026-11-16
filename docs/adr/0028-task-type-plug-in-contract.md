@@ -14,7 +14,7 @@ This ADR supersedes the **Backend contract** section of 0013. The rest of 0013 a
 
 - Each task type is a project `src/TaskTypes/HireLab.TaskTypes.<Name>` that references the Abstractions and, at most, module `.Contracts` projects.
 - Modules (TaskBank, Sessions, Evaluation) reference the Abstractions, never a type project.
-- The API host references the type projects and registers them in `TaskTypeCatalog`.
+- `src/TaskTypes/HireLab.TaskTypes.Catalog` references the type projects and registers them in `TaskTypeCatalog.AddTaskTypes()`, the one list the API, the migration worker and the seed lock guard use ([0030](0030-seed-task-packages.md)).
 - Architecture tests enforce the references.
 
 ### Signatures
@@ -94,7 +94,7 @@ The candidate OpenAPI document must not contain `referenceAnswer`, `interviewerN
 
 ### Seeds and drafts
 
-- **Seeds are never drafts.** A seed package is always published; `draft` in `task.json` is rejected by the import. This drops the `draft` field of 0013's folder format.
+- **Seeds are never drafts.** A seed package is always published; `draft` in `task.json` is rejected by the import. This drops the `draft` field of 0013's folder format. The final seed package format is in [0030](0030-seed-task-packages.md).
 - **`TaskBank:IncludeDrafts`** and drafts in the bank move to HLB-22 together with the editor. HLB-5's bank shows active versions only.
 
 ### Re-pinning is lazy

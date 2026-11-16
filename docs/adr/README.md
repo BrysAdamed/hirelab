@@ -35,3 +35,4 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0027](0027-orphan-attachment-sweep.md) | Orphan attachment sweep | Accepted |
 | [0028](0028-task-type-plug-in-contract.md) | Task type plug-in contract | Accepted |
 | [0029](0029-task-storage.md) | Task storage | Accepted |
+| [0030](0030-seed-task-packages.md) | Seed task packages | Accepted |
