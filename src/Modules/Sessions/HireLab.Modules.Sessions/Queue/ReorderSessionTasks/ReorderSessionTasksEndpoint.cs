@@ -25,6 +25,7 @@ internal static class ReorderSessionTasksEndpoint
             })
             .WithName("ReorderSessionTasks")
             .WithSummary(
-                "Puts a planned session's queue in the given order. It must list every task in the queue exactly once; "
+                "Puts a session's queue in the given order. It must list every task in the queue exactly once and keep the tasks "
+                + "that have started in their places (409 InterviewSession.TaskStarted); "
                 + "a stale list is refused with 409 InterviewSession.OrderMismatch.");
 }

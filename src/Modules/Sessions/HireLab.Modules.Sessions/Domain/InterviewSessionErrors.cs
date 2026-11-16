@@ -20,6 +20,26 @@ internal static class InterviewSessionErrors
         "InterviewSession.NotPlanned",
         "This session has already started. Only a planned session can be changed this way.");
 
+    public static readonly Error NotLive = Error.Conflict(
+        "InterviewSession.NotLive",
+        "This session isn't live. Only a live session can be run or finished.");
+
+    public static readonly Error Finished = Error.Conflict(
+        "InterviewSession.Finished",
+        "This session has finished, so it can't be changed any more.");
+
+    public static readonly Error EmptyQueue = Error.Conflict(
+        "InterviewSession.EmptyQueue",
+        "Add at least one task to the queue before going live.");
+
+    public static readonly Error TaskStarted = Error.Conflict(
+        "InterviewSession.TaskStarted",
+        "This task has already started. Only tasks that haven't started can be removed or moved.");
+
+    public static readonly Error TaskNotCurrent = Error.Conflict(
+        "InterviewSession.TaskNotCurrent",
+        "This task isn't the current one any more. Reload and try again.");
+
     public static readonly Error TaskNotFound = Error.NotFound("Task.NotFound", "The task was not found in the task bank.");
 
     public static readonly Error SessionTaskNotFound = Error.NotFound(

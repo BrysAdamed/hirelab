@@ -73,7 +73,41 @@ internal static class SessionApi
     public static Task<HttpResponseMessage> ReorderAsync(this BrowserSession browser, InterviewSessionId sessionId, params Guid[] sessionTaskIds) =>
         browser.PutAsJsonAsync(Order(sessionId), new { sessionTaskIds });
 
-    /// <summary>Puts a session in a state the API can't reach yet, as running and finishing a session will.</summary>
+    public static Task<HttpResponseMessage> GoLiveAsync(this BrowserSession browser, InterviewSessionId sessionId) =>
+        browser.PostAsync(new Uri($"/api/staff/sessions/{sessionId}/go-live", UriKind.Relative));
+
+    public static async Task WentLiveAsync(this BrowserSession browser, InterviewSessionId sessionId)
+    {
+        using var response = await browser.GoLiveAsync(sessionId);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    public static Task<HttpResponseMessage> MarkDoneAsync(this BrowserSession browser, InterviewSessionId sessionId, Guid sessionTaskId) =>
+        browser.PostAsync(new Uri($"/api/staff/sessions/{sessionId}/tasks/{sessionTaskId}/done", UriKind.Relative));
+
+    public static async Task MarkedDoneAsync(this BrowserSession browser, InterviewSessionId sessionId, Guid sessionTaskId)
+    {
+        using var response = await browser.MarkDoneAsync(sessionId, sessionTaskId);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    public static Task<HttpResponseMessage> FinishAsync(this BrowserSession browser, InterviewSessionId sessionId) =>
+        browser.PostAsync(new Uri($"/api/staff/sessions/{sessionId}/finish", UriKind.Relative));
+
+    public static async Task FinishedAsync(this BrowserSession browser, InterviewSessionId sessionId)
+    {
+        using var response = await browser.FinishAsync(sessionId);
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    public static async Task<SessionTaskDetailView> SessionTaskAsync(this BrowserSession browser, InterviewSessionId sessionId, Guid sessionTaskId)
+    {
+        using var response = await browser.GetAsync(QueuedTask(sessionId, sessionTaskId));
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        return (await response.Content.ReadFromJsonAsync<SessionTaskDetailView>(TestContext.Current.CancellationToken)).ShouldNotBeNull();
+    }
+
+    /// <summary>Puts a session straight into a state, for tests about what a state allows rather than how it is reached.</summary>
     public static async Task SetStateAsync(this HireLabTestHost host, InterviewSessionId sessionId, InterviewSessionState state)
     {
         await using var scope = host.Services.CreateAsyncScope();
@@ -129,6 +163,17 @@ internal sealed record SessionTaskView(
     string TaskType,
     string Title,
     string Summary);
+
+internal sealed record SessionTaskDetailView(
+    Guid Id,
+    Guid TaskId,
+    SessionTaskState State,
+    int VersionNumber,
+    string TaskType,
+    string Title,
+    string Summary,
+    string ReferenceAnswer,
+    string? InterviewerNotes);
 
 internal sealed record CandidateSessionView(
     Guid Id,

@@ -17,6 +17,8 @@ internal sealed class InterviewSessionConfiguration : IEntityTypeConfiguration<I
         builder.Property(session => session.Version).IsRowVersion();
         builder.Ignore(session => session.Queue);
         builder.Ignore(session => session.IsPlanned);
+        builder.Ignore(session => session.IsLive);
+        builder.Ignore(session => session.NextTask);
 
         builder.HasMany(session => session.Tasks)
             .WithOne()

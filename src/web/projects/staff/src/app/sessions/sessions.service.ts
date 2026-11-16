@@ -4,6 +4,7 @@ import {
   type CandidateSession,
   type CreatedSession,
   type InterviewSession,
+  type SessionTaskDetail,
   STAFF_API,
   type TeamSession,
 } from '../api/staff-api';
@@ -72,6 +73,39 @@ export class SessionsService {
       '/api/staff/sessions/{sessionId}/tasks/{sessionTaskId}',
       { params: { path: { sessionId, sessionTaskId } } },
     );
+    return response.ok ? { ok: true, value: undefined } : apiFailure(error);
+  }
+
+  /** A queued task with the reference answer and interviewer notes of the version it pins. */
+  async getTask(sessionId: string, sessionTaskId: string): Promise<ApiResult<SessionTaskDetail>> {
+    const { data, error } = await this.api.GET('/api/staff/sessions/{sessionId}/tasks/{sessionTaskId}', {
+      params: { path: { sessionId, sessionTaskId } },
+    });
+    return data ? { ok: true, value: data } : apiFailure(error);
+  }
+
+  /** Starts a planned session: its first task becomes Current. */
+  async goLive(sessionId: string): Promise<ApiResult<void>> {
+    const { error, response } = await this.api.POST('/api/staff/sessions/{sessionId}/go-live', {
+      params: { path: { sessionId } },
+    });
+    return response.ok ? { ok: true, value: undefined } : apiFailure(error);
+  }
+
+  /** Marks the Current task done; the next Pending task becomes Current. */
+  async markDone(sessionId: string, sessionTaskId: string): Promise<ApiResult<void>> {
+    const { error, response } = await this.api.POST(
+      '/api/staff/sessions/{sessionId}/tasks/{sessionTaskId}/done',
+      { params: { path: { sessionId, sessionTaskId } } },
+    );
+    return response.ok ? { ok: true, value: undefined } : apiFailure(error);
+  }
+
+  /** Finishes a live session for good; Pending tasks are not reached. */
+  async finish(sessionId: string): Promise<ApiResult<void>> {
+    const { error, response } = await this.api.POST('/api/staff/sessions/{sessionId}/finish', {
+      params: { path: { sessionId } },
+    });
     return response.ok ? { ok: true, value: undefined } : apiFailure(error);
   }
 

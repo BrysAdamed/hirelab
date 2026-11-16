@@ -53,6 +53,9 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **Sessions page** | The team's `Planned` and `Live` sessions, soonest first: Live ones, then by schedule, unscheduled ones last. |
 | **Task queue** | The ordered tasks of a session, at most 30, each task at most once. Tasks are added from the task bank, removed or reordered while the session is Planned, and those that haven't started also while it is Live. Every change raises the session's queue revision. |
 | **Session task** | One task in a queue. When queued, it pins the task's active version and stores a task version snapshot. Its state is `Pending`, `Current` or `Done`. In code: `SessionTask`. |
+| **Not reached** | A `Pending` session task of a `Finished` session: the session ended before the candidate got to it. It keeps its pin and is shown as "not reached". |
+| **Go Live** | Starting a `Planned` session: its first task becomes `Current`. Refused with an empty queue, for an anonymised candidate or a closed position. |
+| **Mark done** | The interviewer completing the `Current` task: it becomes `Done` and the next `Pending` task `Current`. After the last task the session stays `Live` until it is finished. |
 | **Re-pin** | A `Pending` session task following its task's active version: when the queue is opened or the task becomes `Current`, a changed active version is pinned with a fresh snapshot. An archived task, or one whose task type is no longer registered, keeps its pin (ADR 0028, ADR 0031). In code: `LazyRepinning`. |
 | **Candidate link** | An unguessable URL that gives the candidate access to one session. Before Live it shows a waiting page; after Finished it stops working. The interviewer can regenerate it, which revokes the old one. |
 | **Response** | Everything a candidate produced for a session task: comments, files, prompts. It is saved continuously. |

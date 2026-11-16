@@ -23,28 +23,39 @@ internal sealed partial class LazyRepinning(
         var changed = false;
         foreach (var task in session.Queue.Where(task => task.IsPending))
         {
-            if (taskTypes.Find(task.TaskTypeKey) is null)
-            {
-                LogUnregisteredTaskType(session.Id.Value, task.Id.Value, task.TaskId.Value);
-                continue;
-            }
-
-            var snapshot = await activeVersions.FindAsync(task.TaskId, cancellationToken);
-            if (snapshot is null)
-            {
-                LogTaskNotInBank(session.Id.Value, task.Id.Value, task.TaskId.Value);
-                continue;
-            }
-
-            var previousVersionId = task.TaskVersionId;
-            if (session.Repin(task.Id, snapshot))
-            {
-                LogRepinned(session.Id.Value, task.Id.Value, previousVersionId.Value, snapshot.VersionId.Value);
-                changed = true;
-            }
+            changed |= await RepinAsync(session, task, cancellationToken);
         }
 
         return changed;
+    }
+
+    /// <summary>Re-pins one Pending task of <paramref name="session"/>, as it becomes Current, and returns whether its pin changed.</summary>
+    public async Task<bool> RepinAsync(InterviewSession session, SessionTask task, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(session);
+        ArgumentNullException.ThrowIfNull(task);
+
+        if (taskTypes.Find(task.TaskTypeKey) is null)
+        {
+            LogUnregisteredTaskType(session.Id.Value, task.Id.Value, task.TaskId.Value);
+            return false;
+        }
+
+        var snapshot = await activeVersions.FindAsync(task.TaskId, cancellationToken);
+        if (snapshot is null)
+        {
+            LogTaskNotInBank(session.Id.Value, task.Id.Value, task.TaskId.Value);
+            return false;
+        }
+
+        var previousVersionId = task.TaskVersionId;
+        if (!session.Repin(task.Id, snapshot))
+        {
+            return false;
+        }
+
+        LogRepinned(session.Id.Value, task.Id.Value, previousVersionId.Value, snapshot.VersionId.Value);
+        return true;
     }
 
     [LoggerMessage(

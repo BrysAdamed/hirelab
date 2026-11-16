@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\HireLab.SharedKernel\HireLab.SharedKernel.csproj" />
     <ProjectReference Include="..\..\Positions\HireLab.Modules.Positions.Contracts\HireLab.Modules.Positions.Contracts.csproj" />
   </ItemGroup>
 

@@ -18,8 +18,9 @@ internal static class AddSessionTaskEndpoint
         queue.MapPost(string.Empty, HandleAsync)
             .WithName("AddSessionTask")
             .WithSummary(
-                "Adds a task from the task bank to the end of a planned session's queue, pinning its active version. "
-                + "A task is queued at most once (409 InterviewSession.TaskAlreadyQueued).");
+                "Adds a task from the task bank to the end of a session's queue, pinning its active version. "
+                + "A task is queued at most once (409 InterviewSession.TaskAlreadyQueued); a finished session's queue can't change "
+                + "(409 InterviewSession.Finished).");
 
     private static async Task<Results<Created<AddedSessionTaskResponse>, ProblemHttpResult>> HandleAsync(
         InterviewSessionId sessionId,

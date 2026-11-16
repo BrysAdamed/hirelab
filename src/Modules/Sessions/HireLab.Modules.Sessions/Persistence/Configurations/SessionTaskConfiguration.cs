@@ -19,6 +19,7 @@ internal sealed class SessionTaskConfiguration : IEntityTypeConfiguration<Sessio
         builder.Property(task => task.StaffContent).HasColumnType("jsonb");
         builder.Property(task => task.Rubric).HasColumnType("jsonb");
         builder.Ignore(task => task.IsPending);
+        builder.Ignore(task => task.IsCurrent);
 
         builder.HasIndex(task => new { task.SessionId, task.Position }).HasDatabaseName("ix_session_tasks_session_id_position");
         builder.HasIndex(task => task.TaskId).HasDatabaseName("ix_session_tasks_task_id");

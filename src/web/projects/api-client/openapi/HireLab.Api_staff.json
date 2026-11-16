@@ -2077,12 +2077,82 @@
         }
       }
     },
+    "/api/staff/sessions/{sessionId}/go-live": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Starts a planned session: its first task becomes Current, re-pinned to its task's active version. Refused for a session that has started (409 InterviewSession.NotPlanned), an empty queue (409 InterviewSession.EmptyQueue), a closed position (409 InterviewSession.PositionClosed) and an anonymised candidate (409 InterviewSession.CandidateAnonymised).",
+        "operationId": "GoLive",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/sessions/{sessionId}/finish": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Finishes a live session for good: the Current task becomes Done and Pending tasks stay Pending (not reached). Refused for a session that isn't Live (409 InterviewSession.NotLive).",
+        "operationId": "FinishSession",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/staff/sessions/{sessionId}/tasks": {
       "post": {
         "tags": [
           "Sessions"
         ],
-        "summary": "Adds a task from the task bank to the end of a planned session's queue, pinning its active version. A task is queued at most once (409 InterviewSession.TaskAlreadyQueued).",
+        "summary": "Adds a task from the task bank to the end of a session's queue, pinning its active version. A task is queued at most once (409 InterviewSession.TaskAlreadyQueued); a finished session's queue can't change (409 InterviewSession.Finished).",
         "operationId": "AddSessionTask",
         "parameters": [
           {
@@ -2134,7 +2204,7 @@
         "tags": [
           "Sessions"
         ],
-        "summary": "Removes a task from a planned session's queue.",
+        "summary": "Removes a task that hasn't started from a session's queue (409 InterviewSession.TaskStarted for a Current or Done task, 409 InterviewSession.Finished once the session has finished).",
         "operationId": "RemoveSessionTask",
         "parameters": [
           {
@@ -2171,6 +2241,55 @@
             }
           }
         }
+      },
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Gets a task of a session's queue with the reference answer and interviewer notes of the version it pins.",
+        "operationId": "GetSessionTask",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionTaskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionTaskDetailResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/staff/sessions/{sessionId}/tasks/order": {
@@ -2178,7 +2297,7 @@
         "tags": [
           "Sessions"
         ],
-        "summary": "Puts a planned session's queue in the given order. It must list every task in the queue exactly once; a stale list is refused with 409 InterviewSession.OrderMismatch.",
+        "summary": "Puts a session's queue in the given order. It must list every task in the queue exactly once and keep the tasks that have started in their places (409 InterviewSession.TaskStarted); a stale list is refused with 409 InterviewSession.OrderMismatch.",
         "operationId": "ReorderSessionTasks",
         "parameters": [
           {
@@ -2201,6 +2320,50 @@
           },
           "required": true
         },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/sessions/{sessionId}/tasks/{sessionTaskId}/done": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Marks a live session's Current task done; the next Pending task becomes Current, re-pinned to its task's active version. Refused for a session that isn't Live (409 InterviewSession.NotLive) and a task that isn't Current (409 InterviewSession.TaskNotCurrent).",
+        "operationId": "MarkSessionTaskDone",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionTaskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "204": {
             "description": "No Content"
@@ -3464,6 +3627,55 @@
             "items": {
               "$ref": "#/components/schemas/SessionTaskResponse"
             }
+          }
+        }
+      },
+      "SessionTaskDetailResponse": {
+        "required": [
+          "id",
+          "taskId",
+          "state",
+          "versionNumber",
+          "taskType",
+          "title",
+          "summary",
+          "referenceAnswer",
+          "interviewerNotes"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "$ref": "#/components/schemas/SessionTaskState"
+          },
+          "versionNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "taskType": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "referenceAnswer": {
+            "type": "string"
+          },
+          "interviewerNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

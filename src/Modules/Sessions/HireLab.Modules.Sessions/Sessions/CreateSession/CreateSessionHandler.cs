@@ -24,20 +24,10 @@ internal sealed class CreateSessionHandler(SessionsDbContext dbContext, ICandida
 {
     public async Task<Result<CreatedSessionResponse>> HandleAsync(CreateSessionCommand command, CancellationToken cancellationToken)
     {
-        var candidate = await candidates.FindAsync(command.CandidateId, cancellationToken);
-        if (candidate is null)
+        var eligibility = CandidateEligibility.Check(await candidates.FindAsync(command.CandidateId, cancellationToken));
+        if (eligibility.IsFailure)
         {
-            return InterviewSessionErrors.CandidateNotFound;
-        }
-
-        if (candidate.IsJobPositionClosed)
-        {
-            return InterviewSessionErrors.PositionClosed;
-        }
-
-        if (candidate.IsAnonymised)
-        {
-            return InterviewSessionErrors.CandidateAnonymised;
+            return eligibility.Error;
         }
 
         var lastNumber = await dbContext.Sessions

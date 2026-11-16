@@ -21,5 +21,7 @@ internal static class RemoveSessionTaskEndpoint
                 return result.ToHttpResult();
             })
             .WithName("RemoveSessionTask")
-            .WithSummary("Removes a task from a planned session's queue.");
+            .WithSummary(
+                "Removes a task that hasn't started from a session's queue (409 InterviewSession.TaskStarted for a Current or Done "
+                + "task, 409 InterviewSession.Finished once the session has finished).");
 }

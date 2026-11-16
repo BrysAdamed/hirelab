@@ -1,7 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { fireEvent, render, screen, within } from '@testing-library/angular';
-import { type InterviewSession, STAFF_API_FETCH, type TaskSummary } from '../api/staff-api';
+import {
+  type InterviewSession,
+  STAFF_API_FETCH,
+  type SessionTask,
+  type SessionTaskDetail,
+  type TaskSummary,
+} from '../api/staff-api';
 import { FakeFetch, json, noContent } from '../testing/fake-fetch';
 import { SessionPage } from './session-page';
 
@@ -38,6 +44,12 @@ describe('SessionPage', () => {
       },
     ],
   };
+  const liveSession: InterviewSession = {
+    ...session,
+    state: 'Live',
+    queueRevision: 3,
+    tasks: [{ ...session.tasks[0], state: 'Current' }, session.tasks[1]],
+  };
   const bankTask: TaskSummary = {
     id: '0190a5c4-7e3d-7b8a-9f21-000000000063',
     versionNumber: 1,
@@ -53,9 +65,20 @@ describe('SessionPage', () => {
 
   let fake: FakeFetch;
 
+  function detailOf(task: SessionTask): SessionTaskDetail {
+    return {
+      ...task,
+      referenceAnswer: `Echo **${task.title}**.`,
+      interviewerNotes: 'Ask about _imaginary_ echoes.',
+    };
+  }
+
   async function renderPage(shown: InterviewSession = session) {
-    fake = new FakeFetch()
-      .on('GET', path, () => json(200, shown))
+    fake = new FakeFetch().on('GET', path, () => json(200, shown));
+    for (const task of shown.tasks) {
+      fake.on('GET', `${path}/tasks/${task.id}`, () => json(200, detailOf(task)));
+    }
+    fake
       .on('GET', '/api/staff/tasks', () => json(200, [bankTask]))
       .on('GET', '/api/staff/tasks/tags', () => json(200, ['fake']))
       .on('GET', '/api/staff/tasks/types', () => json(200, ['fake-echo']));
@@ -84,12 +107,96 @@ describe('SessionPage', () => {
       `/candidates/${session.candidateId}`,
     );
     const items = within(screen.getByRole('list', { name: 'Task queue' })).getAllByRole('listitem');
-    expect(items.map((item) => within(item).getAllByRole('link')[0].textContent?.trim())).toEqual([
-      'Fake echo task',
-      'Fake review task',
+    expect(items.map((item) => within(item).getAllByRole('button')[0].textContent)).toEqual([
+      expect.stringContaining('Fake echo task'),
+      expect.stringContaining('Fake review task'),
     ]);
     expect(within(items[0]).getByText('v3')).toBeTruthy();
+    expect(within(items[0]).getByText('Pending')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Move Fake echo task up' })).toHaveProperty('disabled', true);
+  });
+
+  it('shows the selected task’s reference answer and interviewer notes, the first one at first', async () => {
+    // Act
+    await renderPage();
+
+    // Assert
+    expect(await screen.findByRole('heading', { name: 'Fake echo task' })).toBeTruthy();
+    expect((await screen.findByText('Fake echo task', { selector: 'strong' })).tagName).toBe('STRONG');
+    expect(screen.getByText('imaginary', { selector: 'em' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Task bank' }).getAttribute('href')).toBe(
+      `/tasks/${session.tasks[0].taskId}`,
+    );
+
+    // Act
+    fireEvent.click(screen.getByRole('button', { name: /Fake review task\s*v1/ }));
+
+    // Assert
+    expect(await screen.findByRole('heading', { name: 'Fake review task' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Fake review task\s*v1/ }).getAttribute('aria-current')).toBe('true');
+  });
+
+  it('goes live', async () => {
+    // Arrange
+    await renderPage();
+    fake.on('POST', `${path}/go-live`, noContent);
+
+    // Act
+    fireEvent.click(await screen.findByRole('button', { name: 'Go live' }));
+
+    // Assert
+    await vi.waitFor(() =>
+      expect(new URL(lastRequest('POST')!.url).pathname).toBe(`${path}/go-live`),
+    );
+  });
+
+  it('can’t go live with an empty queue', async () => {
+    // Act
+    await renderPage({ ...session, tasks: [] });
+
+    // Assert
+    expect(await screen.findByRole('button', { name: 'Go live' })).toHaveProperty('disabled', true);
+  });
+
+  it('marks the current task done and offers no changes to it', async () => {
+    // Arrange
+    await renderPage(liveSession);
+    fake.on('POST', `${path}/tasks/${liveSession.tasks[0].id}/done`, noContent);
+
+    // Act
+    fireEvent.click(await screen.findByRole('button', { name: 'Mark Fake echo task done' }));
+
+    // Assert
+    await vi.waitFor(() =>
+      expect(new URL(lastRequest('POST')!.url).pathname).toBe(`${path}/tasks/${liveSession.tasks[0].id}/done`),
+    );
+    expect(screen.getAllByText('Current').length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: 'Remove Fake echo task from the queue' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Remove Fake review task from the queue' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Move Fake review task up' })).toHaveProperty('disabled', true);
+    expect(screen.getByRole('button', { name: 'Add to queue' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
+    expect(screen.queryByLabelText('Date and time')).toBeNull();
+  });
+
+  it('finishes a live session after confirmation, naming the tasks that won’t be reached', async () => {
+    // Arrange
+    await renderPage(liveSession);
+    fake.on('POST', `${path}/finish`, noContent);
+
+    // Act
+    fireEvent.click(await screen.findByRole('button', { name: 'Finish' }));
+
+    // Assert
+    expect(
+      await screen.findByText(/1 task that hasn’t started will be shown as not reached/),
+    ).toBeTruthy();
+
+    // Act
+    fireEvent.click(screen.getByRole('button', { name: 'Finish session' }));
+
+    // Assert
+    await vi.waitFor(() => expect(new URL(lastRequest('POST')!.url).pathname).toBe(`${path}/finish`));
   });
 
   it('moves a task down by sending the new order', async () => {
@@ -170,15 +277,24 @@ describe('SessionPage', () => {
     );
   });
 
-  it('offers no changes once the session has started', async () => {
+  it('offers no changes once the session has finished and shows pending tasks as not reached', async () => {
     // Act
-    await renderPage({ ...session, state: 'Live', scheduledAt: '2026-01-06T09:00:00Z' });
+    await renderPage({
+      ...session,
+      state: 'Finished',
+      scheduledAt: '2026-01-06T09:00:00Z',
+      tasks: [{ ...session.tasks[0], state: 'Done' }, session.tasks[1]],
+    });
 
     // Assert
-    expect(await screen.findByText('Live')).toBeTruthy();
+    expect(await screen.findByText('Finished')).toBeTruthy();
+    expect(screen.getAllByText('Done').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Not reached').length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: 'Add to queue' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Finish' })).toBeNull();
     expect(screen.queryByRole('button', { name: /^Move / })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Mark / })).toBeNull();
     expect(screen.queryByLabelText('Date and time')).toBeNull();
   });
 });
