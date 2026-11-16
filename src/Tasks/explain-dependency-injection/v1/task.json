@@ -1,0 +1,51 @@
+{
+  "taskType": "open-question",
+  "title": "Explain dependency injection",
+  "summary": "Explain what dependency injection is, why it helps and how service lifetimes work in .NET.",
+  "level": "Mid",
+  "estimatedMinutes": 15,
+  "tags": ["csharp", "dotnet", "design"],
+  "referenceAnswer": { "$file": "reference-answer.md" },
+  "interviewerNotes": { "$file": "interviewer-notes.md" },
+  "rubric": {
+    "criteria": [
+      {
+        "type": "scale",
+        "id": "concept",
+        "title": "Concept",
+        "description": "Explains what dependency injection is and how it differs from creating dependencies inside a class.",
+        "weight": 3,
+        "levels": [
+          { "score": 0, "description": "No answer or a wrong idea of the concept." },
+          { "score": 2, "description": "Describes passing dependencies in, but can't say what problem it solves." },
+          { "score": 4, "description": "Clear definition, inversion of control named, constructor injection explained with an example." }
+        ]
+      },
+      {
+        "type": "scale",
+        "id": "benefits-and-trade-offs",
+        "title": "Benefits and trade-offs",
+        "description": "Names concrete benefits (testability, loose coupling, one place to configure) and at least one cost.",
+        "weight": 2
+      },
+      {
+        "type": "scale",
+        "id": "lifetimes",
+        "title": "Service lifetimes",
+        "description": "Knows transient, scoped and singleton, and when each one fits.",
+        "weight": 2
+      },
+      {
+        "type": "check",
+        "id": "captive-dependency",
+        "title": "Captive dependency",
+        "description": "Mentions that a singleton must not depend on a scoped service, or explains the problem when asked.",
+        "expected": "yes"
+      }
+    ]
+  },
+  "candidateContent": {
+    "prompt": { "$file": "prompt.md" }
+  },
+  "staffContent": {}
+}

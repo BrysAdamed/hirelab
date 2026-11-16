@@ -1,4 +1,5 @@
 using HireLab.TaskTypes.Abstractions;
+using HireLab.TaskTypes.OpenQuestion;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace HireLab.TaskTypes.Catalog;
@@ -11,5 +12,5 @@ public static class TaskTypeCatalog
 {
     /// <summary>Registers the task type registry and every shipped task type.</summary>
     public static IServiceCollection AddTaskTypes(this IServiceCollection services) =>
-        services.AddTaskTypeRegistry();
+        services.AddTaskType<OpenQuestionTaskType>();
 }

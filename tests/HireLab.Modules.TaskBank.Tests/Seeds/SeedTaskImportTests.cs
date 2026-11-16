@@ -2,6 +2,8 @@ using HireLab.Modules.TaskBank.Domain;
 using HireLab.Modules.TaskBank.Persistence;
 using HireLab.Modules.TaskBank.Seeds;
 using HireLab.Modules.TaskBank.Tests.Tasks;
+using HireLab.Tasks;
+using HireLab.TaskTypes.OpenQuestion;
 using HireLab.Testing.TaskTypes;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -184,6 +186,23 @@ public sealed class SeedTaskImportTests(HireLabTestHost host) : IntegrationTest(
 
         // Assert
         (await SystemTasksAsync()).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task The_shipped_seed_packages_import_as_system_tasks()
+    {
+        // Arrange
+        var packages = new EmbeddedSeedPackageSource(SeedTaskPackages.Assembly, SeedTaskPackages.ResourcePrefix);
+
+        // Act
+        await SeedImportJob.RunAsync(Host, packages);
+
+        // Assert
+        var tasks = await SystemTasksAsync();
+        var openQuestion = tasks.Single(task => task.Slug == "explain-dependency-injection");
+        openQuestion.TaskTypeKey.ShouldBe(OpenQuestionTaskType.TaskTypeKey);
+        openQuestion.ActiveVersion!.CandidateContent.GetProperty("prompt").GetString().ShouldStartWith("## Dependency injection");
+        openQuestion.ActiveVersion.StaffContent.EnumerateObject().ShouldBeEmpty();
     }
 
     private static string HashOf(FakeSeedPackages packages, string name)
