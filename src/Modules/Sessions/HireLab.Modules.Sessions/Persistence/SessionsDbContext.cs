@@ -34,6 +34,9 @@ internal sealed class SessionsDbContext(DbContextOptions<SessionsDbContext> opti
         modelBuilder.Entity<SessionTask>().HasQueryFilter(
             TeamQueryFilter.Name,
             task => Sessions.Any(session => session.Id == task.SessionId));
+        modelBuilder.Entity<Response>().HasQueryFilter(
+            TeamQueryFilter.Name,
+            response => Sessions.Any(session => session.Id == response.SessionId));
     }
 
     private sealed class InterviewSessionIdConverter() : ValueConverter<InterviewSessionId, Guid>(id => id.Value, value => new InterviewSessionId(value));

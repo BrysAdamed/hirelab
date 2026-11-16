@@ -63,7 +63,9 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **Waiting page** | What the candidate sees while their session is Planned. It moves on to the first task by itself when the session goes Live. In code: `InterviewStage.Waiting`. |
 | **Closing screen** | What the candidate sees once every task of a Live session is Done, until the interviewer finishes the session. In code: `InterviewStage.Closing`. |
 | **Candidate scope** | Code that reads a candidate's own session for the candidate link or cookie, by the token's hash or the cookie's ids instead of a team. The only request code allowed to bypass the team query filter (ADR 0031). In code: `ICandidateScope`. |
-| **Response** | Everything a candidate produced for a session task: comments, files, prompts. It is saved continuously. |
+| **Response** | Everything a candidate produced for a session task: comments, files, prompts. It is saved continuously, at most 1 MB, and only while the task is `Current` and the session `Live`; staff see it read-only through the task type's `review` component (ADR 0031). In code: `Response`. |
+| **Response revision** | The number of saves of a response; 0 before the first one. Every save names the revision it was based on, and a save based on an older one is refused, so a second tab can't overwrite newer work (`Response.StaleRevision`). |
+| **Autosave** | The candidate app saving the whole response about a second after the candidate stops typing, and when the page is hidden. It shows "Saving…", "Saved", or "Updated in another tab" after loading a newer response saved elsewhere. In code: `ResponseAutosave`. |
 | **Evaluation** | One interviewer's rubric scores and notes for a candidate's session. Its author and the manager can see it. |
 | **Decision** | The manager's final hire / no-hire for a candidate, with a summary. |
 | **Admin / Manager / Interviewer** | User roles. See `docs/vision.md#roles`. There is exactly one admin, who has no team. |

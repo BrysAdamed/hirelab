@@ -200,7 +200,7 @@ public sealed class CandidateAccessTests(HireLabTestHost host) : IntegrationTest
         var body = await response.Content.ReadAsStringAsync(CancellationToken);
         using var json = JsonDocument.Parse(body);
         json.RootElement.EnumerateObject().Select(property => property.Name).ShouldBe(["stage", "currentTask"]);
-        json.RootElement.GetProperty("currentTask").EnumerateObject().Select(property => property.Name).ShouldBe(["id", "taskType", "content"]);
+        json.RootElement.GetProperty("currentTask").EnumerateObject().Select(property => property.Name).ShouldBe(["id", "taskType", "content", "response", "revision"]);
         var stored = await Host.StoredTaskAsync(first);
         body.ShouldNotContain(stored.ReferenceAnswer);
         body.ShouldNotContain(stored.InterviewerNotes!);

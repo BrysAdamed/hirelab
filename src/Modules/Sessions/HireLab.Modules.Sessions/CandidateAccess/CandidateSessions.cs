@@ -14,7 +14,10 @@ internal sealed record LinkedSession(InterviewSessionId SessionId, CandidateLink
 /// <summary>A session as its candidate sees it: its state and only the Current task's candidate content.</summary>
 internal sealed record CandidateSessionView(InterviewSessionState State, CurrentTaskView? CurrentTask);
 
-internal sealed record CurrentTaskView(SessionTaskId Id, string TaskTypeKey, JsonElement CandidateContent);
+internal sealed record CurrentTaskView(SessionTaskId Id, string TaskTypeKey, JsonElement CandidateContent, StoredResponse? Response);
+
+/// <summary>A task of the candidate's session, with what decides whether its response may be written.</summary>
+internal sealed record CandidateSessionTask(InterviewSessionState SessionState, SessionTaskState State, string TaskTypeKey);
 
 /// <summary>
 /// The candidate's reads of their own session (ADR 0008, ADR 0009). Candidates have no team, so these bypass the team
@@ -47,16 +50,43 @@ internal sealed class CandidateSessions(SessionsDbContext dbContext) : ICandidat
             .Select(session => (InterviewSessionState?)session.State)
             .SingleOrDefaultAsync(cancellationToken);
 
-    public Task<CandidateSessionView?> FindViewAsync(CandidateCookie cookie, CancellationToken cancellationToken) =>
-        Of(cookie)
+    public async Task<CandidateSessionView?> FindViewAsync(CandidateCookie cookie, CancellationToken cancellationToken)
+    {
+        var view = await Of(cookie)
             .Select(session => new CandidateSessionView(
                 session.State,
                 session.Tasks
                     .Where(task => task.State == SessionTaskState.Current)
-                    .Select(task => new CurrentTaskView(task.Id, task.TaskTypeKey, task.CandidateContent))
+                    .Select(task => new CurrentTaskView(task.Id, task.TaskTypeKey, task.CandidateContent, null))
                     .SingleOrDefault()))
             .SingleOrDefaultAsync(cancellationToken);
+        if (view?.CurrentTask is not { } current)
+        {
+            return view;
+        }
+
+        var response = await ResponsesOf(cookie)
+            .AsNoTracking()
+            .Where(response => response.SessionTaskId == current.Id)
+            .Select(response => new StoredResponse(response.Content, response.Revision))
+            .SingleOrDefaultAsync(cancellationToken);
+        return view with { CurrentTask = current with { Response = response } };
+    }
+
+    public Task<CandidateSessionTask?> FindTaskAsync(CandidateCookie cookie, SessionTaskId sessionTaskId, CancellationToken cancellationToken) =>
+        Of(cookie)
+            .SelectMany(session => session.Tasks
+                .Where(task => task.Id == sessionTaskId)
+                .Select(task => new CandidateSessionTask(session.State, task.State, task.TaskTypeKey)))
+            .SingleOrDefaultAsync(cancellationToken);
+
+    /// <summary>The response to a task of the candidate's session, tracked so that it can be saved; <c>null</c> before the first save.</summary>
+    public Task<Response?> FindResponseToSaveAsync(CandidateCookie cookie, SessionTaskId sessionTaskId, CancellationToken cancellationToken) =>
+        ResponsesOf(cookie).SingleOrDefaultAsync(response => response.SessionTaskId == sessionTaskId, cancellationToken);
 
     private IQueryable<InterviewSession> Of(CandidateCookie cookie) =>
         Sessions.Where(session => session.Id == cookie.SessionId && session.CandidateLink!.Id == cookie.CandidateLinkId);
+
+    private IQueryable<Response> ResponsesOf(CandidateCookie cookie) =>
+        dbContext.Set<Response>().IgnoreQueryFilters([TeamQueryFilter.Name]).Where(response => response.SessionId == cookie.SessionId);
 }

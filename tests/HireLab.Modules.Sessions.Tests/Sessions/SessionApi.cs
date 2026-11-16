@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using HireLab.Modules.Positions.Contracts;
 using HireLab.Modules.Sessions.Contracts;
 using HireLab.Modules.Sessions.Domain;
@@ -174,7 +175,11 @@ internal sealed record SessionTaskDetailView(
     string Title,
     string Summary,
     string ReferenceAnswer,
-    string? InterviewerNotes);
+    string? InterviewerNotes,
+    JsonElement CandidateContent,
+    JsonElement StaffContent,
+    JsonElement? Response,
+    int ResponseRevision);
 
 internal sealed record CandidateSessionView(
     Guid Id,

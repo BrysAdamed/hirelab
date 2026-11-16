@@ -1,7 +1,18 @@
-import { ChangeDetectionStrategy, Component, effect, inject, input, signal, untracked } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+  untracked,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideCircleAlert, lucideExternalLink } from '@ng-icons/lucide';
+import { lucideCircleAlert, lucideExternalLink, lucideRotateCw } from '@ng-icons/lucide';
+import type { TaskContent } from '@hirelab/tasks/framework';
+import { ReviewTaskOutlet, type ReviewTaskOutletState } from '@hirelab/tasks/review';
 import { HlmButton } from '@hirelab/ui/helm/button';
 import { HlmCardImports } from '@hirelab/ui/helm/card';
 import { MarkdownViewer } from '@hirelab/ui/markdown';
@@ -9,11 +20,23 @@ import type { SessionTaskDetail } from '../api/staff-api';
 import { SessionTaskStateBadge } from './session-task-state-badge';
 import { SessionsService } from './sessions.service';
 
-/** The staff material of one session task, from the version it pins: reference answer and interviewer notes. */
+/**
+ * One session task as the interviewer sees it: the candidate's response, read-only, through its task type's `review`
+ * component, with the reference answer and interviewer notes of the version it pins. A task type without a `review`
+ * component shows the reference answer and notes alone.
+ */
 @Component({
   selector: 'hl-session-task-pane',
-  imports: [RouterLink, NgIcon, HlmButton, HlmCardImports, MarkdownViewer, SessionTaskStateBadge],
-  providers: [provideIcons({ lucideCircleAlert, lucideExternalLink })],
+  imports: [
+    RouterLink,
+    NgIcon,
+    HlmButton,
+    HlmCardImports,
+    MarkdownViewer,
+    ReviewTaskOutlet,
+    SessionTaskStateBadge,
+  ],
+  providers: [provideIcons({ lucideCircleAlert, lucideExternalLink, lucideRotateCw })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section hlmCard aria-labelledby="session-task-title">
@@ -24,23 +47,61 @@ import { SessionsService } from './sessions.service';
             <span class="font-mono text-muted-foreground">v{{ task.versionNumber }}</span>
             <hl-session-task-state-badge [state]="task.state" [sessionFinished]="sessionFinished()" />
           </div>
-          <a hlmBtn variant="link" size="sm" class="px-0" [routerLink]="['/tasks', task.taskId]">
-            <ng-icon name="lucideExternalLink" aria-hidden="true" />
-            Task bank
-          </a>
+          <div class="flex items-center gap-2">
+            @if (live()) {
+              <button hlmBtn type="button" variant="outline" size="sm" (click)="reload()">
+                <ng-icon name="lucideRotateCw" aria-hidden="true" />
+                Refresh response
+              </button>
+            }
+            <a hlmBtn variant="link" size="sm" class="px-0" [routerLink]="['/tasks', task.taskId]">
+              <ng-icon name="lucideExternalLink" aria-hidden="true" />
+              Task bank
+            </a>
+          </div>
         </div>
         <div hlmCardContent class="flex flex-col gap-4">
           <p class="whitespace-pre-line text-muted-foreground">{{ task.summary }}</p>
-          <section aria-labelledby="session-task-reference-answer">
-            <h3 id="session-task-reference-answer" class="font-semibold">Reference answer</h3>
-            <hl-markdown class="mt-1" [markdown]="task.referenceAnswer" />
-          </section>
-          @if (task.interviewerNotes) {
-            <section aria-labelledby="session-task-interviewer-notes">
-              <h3 id="session-task-interviewer-notes" class="font-semibold">Interviewer notes</h3>
-              <hl-markdown class="mt-1" [markdown]="task.interviewerNotes" />
-            </section>
+          @switch (reviewState()) {
+            @case ('loading') {
+              <p role="status" class="text-muted-foreground">Loading the response…</p>
+            }
+            @case ('failed') {
+              <p role="alert" class="flex items-center gap-2 rounded-md border border-destructive p-2">
+                <ng-icon
+                  name="lucideCircleAlert"
+                  size="16"
+                  class="shrink-0 text-destructive"
+                  aria-hidden="true"
+                />
+                The response view could not be loaded. Reload the page to try again.
+              </p>
+            }
           }
+          @if (reviewState() === 'unavailable' || reviewState() === 'failed') {
+            <p class="text-muted-foreground">This task type has no response view here.</p>
+            <section aria-labelledby="session-task-reference-answer">
+              <h3 id="session-task-reference-answer" class="font-semibold">Reference answer</h3>
+              <hl-markdown class="mt-1" [markdown]="task.referenceAnswer" />
+            </section>
+            @if (task.interviewerNotes) {
+              <section aria-labelledby="session-task-interviewer-notes">
+                <h3 id="session-task-interviewer-notes" class="font-semibold">Interviewer notes</h3>
+                <hl-markdown class="mt-1" [markdown]="task.interviewerNotes" />
+              </section>
+            }
+          }
+          <div [class.hidden]="reviewState() !== 'ready'">
+            <hl-review-task-outlet
+              [taskType]="task.taskType"
+              [content]="content()!"
+              [response]="task.response ?? null"
+              [referenceAnswer]="task.referenceAnswer"
+              [interviewerNotes]="task.interviewerNotes ?? undefined"
+              [live]="live()"
+              (stateChange)="reviewState.set($event)"
+            />
+          </div>
         </div>
       } @else if (error(); as message) {
         <div hlmCardContent>
@@ -70,10 +131,20 @@ export class SessionTaskPane {
   readonly sessionTaskId = input.required<string>();
   /** The session's queue revision: a new one refetches the task, whose state or pin may have changed. */
   readonly queueRevision = input.required<number>();
+  readonly sessionLive = input(false);
   readonly sessionFinished = input(false);
 
   protected readonly task = signal<SessionTaskDetail | null>(null);
   protected readonly error = signal<string | null>(null);
+  protected readonly reviewState = signal<ReviewTaskOutletState>('loading');
+  protected readonly content = computed<TaskContent<unknown, unknown> | null>(() => {
+    const task = this.task();
+    return task ? { candidate: task.candidateContent, staff: task.staffContent } : null;
+  });
+  /** Whether the candidate may still be changing the response. */
+  protected readonly live = computed(
+    () => this.sessionLive() && this.task()?.state === 'Current',
+  );
 
   constructor() {
     effect(() => {
@@ -82,6 +153,10 @@ export class SessionTaskPane {
       this.queueRevision();
       untracked(() => void this.load(sessionId, sessionTaskId));
     });
+  }
+
+  protected reload(): void {
+    void this.load(this.sessionId(), this.sessionTaskId());
   }
 
   private async load(sessionId: string, sessionTaskId: string): Promise<void> {

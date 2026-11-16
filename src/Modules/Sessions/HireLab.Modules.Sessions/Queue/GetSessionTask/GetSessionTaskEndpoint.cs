@@ -21,5 +21,7 @@ internal static class GetSessionTaskEndpoint
                 return result.ToHttpResult(TypedResults.Ok);
             })
             .WithName("GetSessionTask")
-            .WithSummary("Gets a task of a session's queue with the reference answer and interviewer notes of the version it pins.");
+            .WithSummary(
+                "Gets a task of a session's queue with the content, reference answer and interviewer notes of the version it "
+                + "pins, and the candidate's response with its revision.");
 }

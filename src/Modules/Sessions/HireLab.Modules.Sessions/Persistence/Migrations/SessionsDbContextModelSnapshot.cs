@@ -87,6 +87,46 @@ namespace HireLab.Modules.Sessions.Persistence.Migrations
                     b.ToTable("interview_sessions", "sessions");
                 });
 
+            modelBuilder.Entity("HireLab.Modules.Sessions.Domain.Response", b =>
+                {
+                    b.Property<Guid>("SessionTaskId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("session_task_id");
+
+                    b.Property<JsonElement>("Content")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("content");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("ResponseSchemaVersion")
+                        .HasColumnType("integer")
+                        .HasColumnName("response_schema_version");
+
+                    b.Property<int>("Revision")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer")
+                        .HasColumnName("revision");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("session_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("SessionTaskId")
+                        .HasName("pk_responses");
+
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("ix_responses_session_id");
+
+                    b.ToTable("responses", "sessions");
+                });
+
             modelBuilder.Entity("HireLab.Modules.Sessions.Domain.SessionTask", b =>
                 {
                     b.Property<Guid>("Id")
@@ -223,6 +263,16 @@ namespace HireLab.Modules.Sessions.Persistence.Migrations
                         });
 
                     b.Navigation("CandidateLink");
+                });
+
+            modelBuilder.Entity("HireLab.Modules.Sessions.Domain.Response", b =>
+                {
+                    b.HasOne("HireLab.Modules.Sessions.Domain.SessionTask", null)
+                        .WithOne()
+                        .HasForeignKey("HireLab.Modules.Sessions.Domain.Response", "SessionTaskId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_responses_session_task_session_task_id");
                 });
 
             modelBuilder.Entity("HireLab.Modules.Sessions.Domain.SessionTask", b =>

@@ -13,6 +13,7 @@ import { CANDIDATE_API_FETCH, type Interview } from '../api/candidate-api';
 import { routes } from '../app.routes';
 import { FakeFetch, json, noContent } from '../testing/fake-fetch';
 import { InterviewUpdates } from './interview-updates';
+import { RESPONSE_AUTOSAVE_DELAY, RESPONSE_AUTOSAVE_RETRY_DELAY } from './response-autosave';
 
 interface StubContent {
   readonly phrase: string;
@@ -20,6 +21,12 @@ interface StubContent {
 
 interface StubResponse {
   readonly echo: string;
+}
+
+interface SaveBody {
+  readonly sessionTaskId: string;
+  readonly response: StubResponse;
+  readonly revision: number;
 }
 
 @Component({
@@ -62,28 +69,59 @@ class ManualUpdates {
 const waiting: Interview = { stage: 'Waiting', currentTask: null };
 const closing: Interview = { stage: 'Closing', currentTask: null };
 
-function currentTask(id: string, phrase: string): Interview {
-  return { stage: 'CurrentTask', currentTask: { id, taskType: 'stub-type', content: { phrase } } };
+function currentTask(
+  id: string,
+  phrase: string,
+  response: StubResponse | null = null,
+  revision = 0,
+): Interview {
+  return {
+    stage: 'CurrentTask',
+    currentTask: { id, taskType: 'stub-type', content: { phrase }, response, revision },
+  };
 }
 
 describe('InterviewPage', () => {
   let fake: FakeFetch;
   let updates: ManualUpdates;
   let interview: () => Response;
+  let save: (request: Request) => Promise<Response>;
+
+  async function saved(request: Request): Promise<Response> {
+    const body = (await request.clone().json()) as SaveBody;
+    return json(200, { revision: body.revision + 1 });
+  }
+
+  async function savesTo(): Promise<SaveBody[]> {
+    return Promise.all(
+      requestsTo('PUT', '/api/candidate/session/response').map(
+        async (request) => (await request.clone().json()) as SaveBody,
+      ),
+    );
+  }
+
+  async function typeEcho(harness: RouterTestingHarness, echo: string): Promise<void> {
+    fireEvent.input(await screen.findByLabelText('Echo'), { target: { value: echo } });
+    await settle(harness);
+  }
 
   beforeEach(() => {
     fake = new FakeFetch();
     updates = new ManualUpdates();
     interview = () => json(200, waiting);
+    save = (request) => saved(request);
     fake
       .on('GET', '/api/candidate/access/antiforgery', noContent)
       .on('POST', '/api/candidate/access', noContent)
-      .on('GET', '/api/candidate/session', () => interview());
+      .on('GET', '/api/candidate/session', () => interview())
+      .on('PUT', '/api/candidate/session/response', (request) => save(request));
     TestBed.configureTestingModule({
       providers: [
         provideRouter(routes),
         { provide: CANDIDATE_API_FETCH, useValue: fake.fetch },
         { provide: InterviewUpdates, useValue: updates },
+        { provide: RESPONSE_AUTOSAVE_DELAY, useValue: 0 },
+        { provide: RESPONSE_AUTOSAVE_RETRY_DELAY, useValue: 60_000 },
         {
           provide: CANDIDATE_TASK_TYPES,
           useValue: new TaskTypeRegistry<AnyCandidateTaskComponent>({
@@ -170,6 +208,91 @@ describe('InterviewPage', () => {
     expect(kept).toBe('fake echo');
     expect(await screen.findByText('Say: Second fake phrase')).toBeTruthy();
     expect((screen.getByLabelText('Echo') as HTMLInputElement).value).toBe('');
+  });
+
+  it('opens the current task with its saved response', async () => {
+    // Arrange
+    interview = () => json(200, currentTask('task-1', 'Fake phrase', { echo: 'fake saved' }, 3));
+
+    // Act
+    await open('/');
+
+    // Assert
+    expect(((await screen.findByLabelText('Echo')) as HTMLInputElement).value).toBe('fake saved');
+  });
+
+  it('autosaves the whole response with the revision of the previous save', async () => {
+    // Arrange
+    interview = () => json(200, currentTask('task-1', 'Fake phrase', { echo: 'fake saved' }, 3));
+    const harness = await open('/');
+
+    // Act
+    await typeEcho(harness, 'fake first edit');
+    await typeEcho(harness, 'fake second edit');
+
+    // Assert
+    expect(await savesTo()).toEqual([
+      { sessionTaskId: 'task-1', response: { echo: 'fake first edit' }, revision: 3 },
+      { sessionTaskId: 'task-1', response: { echo: 'fake second edit' }, revision: 4 },
+    ]);
+    expect(screen.getByRole('status').textContent).toContain('Saved');
+  });
+
+  it('loads the newer response and says so when another tab saved first', async () => {
+    // Arrange
+    interview = () => json(200, currentTask('task-1', 'Fake phrase', null, 1));
+    const harness = await open('/');
+    save = () => Promise.resolve(json(409, { status: 409, code: 'Response.StaleRevision' }));
+    interview = () => json(200, currentTask('task-1', 'Fake phrase', { echo: 'fake other tab' }, 2));
+
+    // Act
+    await typeEcho(harness, 'fake stale edit');
+
+    // Assert
+    expect((screen.getByLabelText('Echo') as HTMLInputElement).value).toBe('fake other tab');
+    expect(screen.getByRole('status').textContent).toContain('Updated in another tab');
+    save = (request) => saved(request);
+    await typeEcho(harness, 'fake next edit');
+    expect((await savesTo()).at(-1)).toEqual({
+      sessionTaskId: 'task-1',
+      response: { echo: 'fake next edit' },
+      revision: 2,
+    });
+  });
+
+  it('gets a new antiforgery token and saves again when the token is refused', async () => {
+    // Arrange
+    interview = () => json(200, currentTask('task-1', 'Fake phrase'));
+    const harness = await open('/');
+    const antiforgeryBefore = requestsTo('GET', '/api/candidate/access/antiforgery').length;
+    let attempts = 0;
+    save = (request) =>
+      ++attempts === 1
+        ? Promise.resolve(json(400, { status: 400, code: 'Antiforgery.InvalidToken' }))
+        : saved(request);
+
+    // Act
+    await typeEcho(harness, 'fake edit');
+
+    // Assert
+    expect(requestsTo('GET', '/api/candidate/access/antiforgery')).toHaveLength(
+      antiforgeryBefore + 1,
+    );
+    expect(await savesTo()).toHaveLength(2);
+    expect(screen.getByRole('status').textContent).toContain('Saved');
+  });
+
+  it('says the answer wasn’t saved when the save fails', async () => {
+    // Arrange
+    interview = () => json(200, currentTask('task-1', 'Fake phrase'));
+    const harness = await open('/');
+    save = () => Promise.resolve(json(500, { status: 500 }));
+
+    // Act
+    await typeEcho(harness, 'fake edit');
+
+    // Assert
+    expect(screen.getByRole('status').textContent).toContain('Not saved yet');
   });
 
   it('shows the closing screen after the last task', async () => {

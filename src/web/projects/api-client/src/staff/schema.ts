@@ -787,7 +787,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Gets a task of a session's queue with the reference answer and interviewer notes of the version it pins. */
+        /** Gets a task of a session's queue with the content, reference answer and interviewer notes of the version it pins, and the candidate's response with its revision. */
         get: operations["GetSessionTask"];
         put?: never;
         post?: never;
@@ -1193,6 +1193,11 @@ export interface components {
             summary: string;
             referenceAnswer: string;
             interviewerNotes: null | string;
+            candidateContent: components["schemas"]["JsonElement"];
+            staffContent: components["schemas"]["JsonElement"];
+            response: null | components["schemas"]["JsonElement"];
+            /** Format: int32 */
+            responseRevision: number;
         };
         SessionTaskResponse: {
             /** Format: uuid */
