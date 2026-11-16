@@ -1,11 +1,20 @@
 using System.Net;
+using HireLab.SharedKernel.Modules;
+using HireLab.SharedKernel.Persistence;
 using HireLab.SharedKernel.Users;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace HireLab.Api.Tests.Auth;
 
 public sealed class AuthSweepTests(ApiTestHost host) : IntegrationTest(host)
 {
     private static readonly HttpStatusCode[] _rejected = [HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden];
+
+    private static readonly HashSet<string?> _teamDataExceptions = ["HireLab.Modules.Identity.Domain.User"];
 
     private static readonly string[] _anonymousEndpoints =
     [
@@ -98,19 +107,86 @@ public sealed class AuthSweepTests(ApiTestHost host) : IntegrationTest(host)
             .ShouldBeEmpty("These candidate endpoints accept the staff cookie");
     }
 
-    [Fact(Skip = "TODO: needs teams and staff users from HLB-3. Sweep every staff endpoint with a resource id of another team and expect 404.")]
-    public void Every_staff_endpoint_hides_other_teams_resources()
+    [Fact]
+    public void Every_entity_with_a_team_is_team_owned_and_filtered_by_team()
     {
+        // Arrange
+        using var scope = Host.Services.CreateScope();
+
+        // Act
+        var entityTypes = ModuleDbContextTypes()
+            .SelectMany(type => ((DbContext)scope.ServiceProvider.GetRequiredService(type)).Model.GetEntityTypes())
+            .ToList();
+        var teamOwned = entityTypes.Where(entityType => entityType.ClrType.IsAssignableTo(typeof(ITeamOwned))).ToList();
+
+        // Assert
+        teamOwned.ShouldContain(entityType => entityType.ClrType == typeof(TeamNote));
+        teamOwned.Where(entityType => entityType.GetRootType().FindDeclaredQueryFilter(TeamQueryFilter.Name) is null)
+            .ShouldBeEmpty("These team-owned entities have no team query filter");
+        entityTypes.Where(entityType => HasTeam(entityType)
+                && !teamOwned.Contains(entityType)
+                && !_teamDataExceptions.Contains(entityType.ClrType.FullName))
+            .Select(entityType => entityType.ClrType.FullName)
+            .ShouldBeEmpty($"These entities store a team but aren't {nameof(ITeamOwned)}, so other teams and the admin would see them");
     }
 
-    [Fact(Skip = "TODO: needs the admin role from HLB-3. Sweep every endpoint that returns candidate data as the admin and expect no candidate data.")]
-    public void Admin_gets_no_candidate_data()
+    [Theory]
+    [InlineData(StaffRole.Admin)]
+    [InlineData(StaffRole.Manager)]
+    [InlineData(StaffRole.Interviewer)]
+    public async Task Every_endpoint_behind_a_role_policy_rejects_the_other_roles_with_403(StaffRole role)
     {
+        // Arrange
+        using var client = Host.CreateClient((await SignInAsAsync(role)).Cookies);
+        var forbidden = new List<GroupEndpoint>();
+        foreach (var endpoint in GroupEndpoint.InGroup(Host.Services, GroupEndpoint.StaffGroup))
+        {
+            if (await AllowedRolesAsync(endpoint) is { } allowed && !allowed.Contains(role.ToString()))
+            {
+                forbidden.Add(endpoint);
+            }
+        }
+
+        // Act
+        var responses = await SendAsync(client, forbidden);
+
+        // Assert
+        responses.Where(response => response.Status != HttpStatusCode.Forbidden)
+            .ShouldBeEmpty($"These endpoints don't answer 403 to the {role}");
     }
 
-    private async Task<IReadOnlyList<SweepResponse>> SendToEveryEndpointAsync(HttpClient client, string group)
+    private IEnumerable<Type> ModuleDbContextTypes() =>
+        Host.Services.GetServices<IModule>()
+            .Select(module => module.GetType().Assembly)
+            .Distinct()
+            .SelectMany(assembly => assembly.GetTypes())
+            .Where(type => type is { IsClass: true, IsAbstract: false } && type.IsAssignableTo(typeof(IModuleDbContext)));
+
+    private static bool HasTeam(IEntityType entityType) =>
+        entityType.GetProperties().Any(property => !property.IsPrimaryKey() && (property.ClrType == typeof(TeamId) || property.ClrType == typeof(TeamId?)));
+
+    private async Task<IReadOnlySet<string>?> AllowedRolesAsync(GroupEndpoint endpoint)
     {
-        var endpoints = GroupEndpoint.InGroup(Host.Services, group).Where(endpoint => !endpoint.AllowsAnonymous).ToList();
+        var policyProvider = Host.Services.GetRequiredService<IAuthorizationPolicyProvider>();
+        HashSet<string>? allowed = null;
+        foreach (var policyName in endpoint.Policies)
+        {
+            var policy = await policyProvider.GetPolicyAsync(policyName)
+                ?? throw new InvalidOperationException($"{endpoint} requires the unknown policy {policyName}.");
+            foreach (var roles in policy.Requirements.OfType<RolesAuthorizationRequirement>())
+            {
+                allowed = allowed is null ? [.. roles.AllowedRoles] : [.. allowed.Intersect(roles.AllowedRoles)];
+            }
+        }
+
+        return allowed;
+    }
+
+    private async Task<IReadOnlyList<SweepResponse>> SendToEveryEndpointAsync(HttpClient client, string group) =>
+        await SendAsync(client, GroupEndpoint.InGroup(Host.Services, group).Where(endpoint => !endpoint.AllowsAnonymous).ToList());
+
+    private static async Task<IReadOnlyList<SweepResponse>> SendAsync(HttpClient client, IReadOnlyList<GroupEndpoint> endpoints)
+    {
         endpoints.ShouldNotBeEmpty();
 
         var responses = new List<SweepResponse>();

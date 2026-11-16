@@ -12,5 +12,6 @@ internal sealed class ModuleModelCustomizer<TContext>(ModelCustomizerDependencie
         modelBuilder.HasDefaultSchema(TContext.Schema);
         base.Customize(modelBuilder, context);
         AuditTimestamps.AddTo(modelBuilder);
+        TeamQueryFilter.AddTo(modelBuilder, context);
     }
 }

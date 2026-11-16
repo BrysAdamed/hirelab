@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace HireLab.Api.Tests.Auth;
 
-internal sealed record GroupEndpoint(string Method, string Pattern, Uri Uri, bool AllowsAnonymous)
+internal sealed record GroupEndpoint(string Method, string Pattern, Uri Uri, IReadOnlyList<string> Policies, bool AllowsAnonymous)
 {
     public const string StaffGroup = "/api/staff";
     public const string CandidateGroup = "/api/candidate";
@@ -21,6 +21,7 @@ internal sealed record GroupEndpoint(string Method, string Pattern, Uri Uri, boo
                 method,
                 endpoint.RoutePattern.RawText ?? string.Empty,
                 ToUri(endpoint.RoutePattern),
+                PoliciesOf(endpoint),
                 endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null)))
             .ToList();
 
@@ -37,6 +38,9 @@ internal sealed record GroupEndpoint(string Method, string Pattern, Uri Uri, boo
         endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods is { Count: > 0 } methods
             ? methods
             : [HttpMethods.Get];
+
+    private static List<string> PoliciesOf(RouteEndpoint endpoint) =>
+        endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Select(data => data.Policy).OfType<string>().ToList();
 
     private static Uri ToUri(RoutePattern pattern)
     {

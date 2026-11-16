@@ -1,3 +1,4 @@
+using HireLab.SharedKernel.Users;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -33,7 +34,8 @@ internal static class AuthenticationSetup
                 .RequireAuthenticatedUser())
             .AddPolicy(AuthPolicies.Candidate, policy => policy
                 .AddAuthenticationSchemes(AuthSchemes.Candidate)
-                .RequireAuthenticatedUser());
+                .RequireAuthenticatedUser())
+            .AddStaffPolicies();
 
         return services;
     }
