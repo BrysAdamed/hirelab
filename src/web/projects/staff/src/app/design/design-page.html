@@ -136,6 +136,32 @@
             </ng-template>
           </hlm-dialog>
         </div>
+
+        <div class="flex flex-col gap-2">
+          <h3 class="font-semibold">Dropdown menu</h3>
+          <div>
+            <button hlmBtn type="button" variant="outline" [hlmDropdownMenuTrigger]="menu">
+              Ada Example
+              <ng-icon name="lucideChevronDown" aria-hidden="true" />
+            </button>
+          </div>
+          <ng-template #menu>
+            <div [class]="theme">
+              <hlm-dropdown-menu class="w-56">
+                <div hlmDropdownMenuLabel>ada@example.com</div>
+                <hlm-dropdown-menu-separator />
+                <button hlmDropdownMenuItem type="button">
+                  <ng-icon name="lucideKeyRound" aria-hidden="true" />
+                  Change password
+                </button>
+                <button hlmDropdownMenuItem type="button">
+                  <ng-icon name="lucideLogOut" aria-hidden="true" />
+                  Log out
+                </button>
+              </hlm-dropdown-menu>
+            </div>
+          </ng-template>
+        </div>
       </section>
     }
   </div>

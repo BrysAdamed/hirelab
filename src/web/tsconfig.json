@@ -24,7 +24,8 @@
       "@hirelab/ui/helm/label": ["./projects/ui/src/helm/label/src/index.ts"],
       "@hirelab/ui/helm/card": ["./projects/ui/src/helm/card/src/index.ts"],
       "@hirelab/ui/helm/badge": ["./projects/ui/src/helm/badge/src/index.ts"],
-      "@hirelab/ui/helm/dialog": ["./projects/ui/src/helm/dialog/src/index.ts"]
+      "@hirelab/ui/helm/dialog": ["./projects/ui/src/helm/dialog/src/index.ts"],
+      "@hirelab/ui/helm/dropdown-menu": ["./projects/ui/src/helm/dropdown-menu/src/index.ts"]
     }
   },
   "angularCompilerOptions": {
