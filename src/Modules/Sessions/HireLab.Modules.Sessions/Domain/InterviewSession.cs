@@ -54,6 +54,11 @@ internal sealed class InterviewSession : ITeamOwned
 
     public bool IsPlanned => State == InterviewSessionState.Planned;
 
+    public bool IsLive => State == InterviewSessionState.Live;
+
+    /// <summary>The Pending task that becomes Current next: the first one in the queue, or <c>null</c> when none is left.</summary>
+    public SessionTask? NextTask => Queue.FirstOrDefault(task => task.IsPending);
+
     public static InterviewSession Plan(TeamId teamId, CandidateId candidateId, int number, DateTimeOffset? scheduledAt, UserId createdBy) =>
         new()
         {
@@ -78,6 +83,71 @@ internal sealed class InterviewSession : ITeamOwned
     }
 
     public Result EnsureCanBeDeleted() => IsPlanned ? Result.Success() : InterviewSessionErrors.NotPlanned;
+
+    /// <summary>Starts a planned session with at least one queued task: the first task becomes Current.</summary>
+    public Result GoLive()
+    {
+        if (!IsPlanned)
+        {
+            return InterviewSessionErrors.NotPlanned;
+        }
+
+        if (NextTask is not { } first)
+        {
+            return InterviewSessionErrors.EmptyQueue;
+        }
+
+        State = InterviewSessionState.Live;
+        first.Start();
+        QueueRevision++;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Marks the Current task done and makes the next Pending one Current. After the last task none is Current and the
+    /// session stays Live until it is finished.
+    /// </summary>
+    public Result MarkDone(SessionTaskId sessionTaskId)
+    {
+        if (!IsLive)
+        {
+            return InterviewSessionErrors.NotLive;
+        }
+
+        var task = _tasks.SingleOrDefault(task => task.Id == sessionTaskId);
+        if (task is null)
+        {
+            return InterviewSessionErrors.SessionTaskNotFound;
+        }
+
+        if (!task.IsCurrent)
+        {
+            return InterviewSessionErrors.TaskNotCurrent;
+        }
+
+        task.Complete();
+        NextTask?.Start();
+        QueueRevision++;
+        return Result.Success();
+    }
+
+    /// <summary>Finishes a Live session for good: the Current task becomes Done and Pending tasks are never reached.</summary>
+    public Result Finish()
+    {
+        if (!IsLive)
+        {
+            return InterviewSessionErrors.NotLive;
+        }
+
+        State = InterviewSessionState.Finished;
+        if (_tasks.SingleOrDefault(task => task.IsCurrent) is { } current)
+        {
+            current.Complete();
+            QueueRevision++;
+        }
+
+        return Result.Success();
+    }
 
     /// <summary>Adds the task whose active version is <paramref name="snapshot"/> to the end of the queue.</summary>
     public Result<SessionTask> AddTask(TaskVersionSnapshot snapshot)
@@ -120,13 +190,21 @@ internal sealed class InterviewSession : ITeamOwned
             return InterviewSessionErrors.SessionTaskNotFound;
         }
 
+        if (!removed.IsPending)
+        {
+            return InterviewSessionErrors.TaskStarted;
+        }
+
         var remaining = Queue.Where(task => task != removed).ToList();
         _tasks.Remove(removed);
         Renumber(remaining);
         return Result.Success();
     }
 
-    /// <summary>Puts the queue in <paramref name="order"/>, which must list every session task exactly once.</summary>
+    /// <summary>
+    /// Puts the queue in <paramref name="order"/>, which must list every session task exactly once. Tasks that have
+    /// started keep their places at the front of the queue.
+    /// </summary>
     public Result Reorder(IReadOnlyList<SessionTaskId> order)
     {
         ArgumentNullException.ThrowIfNull(order);
@@ -148,6 +226,12 @@ internal sealed class InterviewSession : ITeamOwned
             return InterviewSessionErrors.OrderMismatch;
         }
 
+        var started = Queue.Where(task => !task.IsPending).Select(task => task.Id).ToList();
+        if (!order.Take(started.Count).SequenceEqual(started))
+        {
+            return InterviewSessionErrors.TaskStarted;
+        }
+
         Renumber([.. order.Select(id => byId[id])]);
         return Result.Success();
     }
@@ -163,7 +247,8 @@ internal sealed class InterviewSession : ITeamOwned
         return task.Repin(snapshot);
     }
 
-    private Result EnsureQueueEditable() => IsPlanned ? Result.Success() : InterviewSessionErrors.NotPlanned;
+    private Result EnsureQueueEditable() =>
+        State == InterviewSessionState.Finished ? InterviewSessionErrors.Finished : Result.Success();
 
     private void Renumber(List<SessionTask> ordered)
     {

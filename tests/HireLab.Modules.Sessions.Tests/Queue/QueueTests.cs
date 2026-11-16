@@ -97,25 +97,161 @@ public sealed class QueueTests(HireLabTestHost host) : IntegrationTest(host)
         await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "InterviewSession.TaskAlreadyQueued");
     }
 
-    [Theory]
-    [InlineData("Live")]
-    [InlineData("Finished")]
-    public async Task The_queue_of_a_started_session_can_not_be_changed_yet(string state)
+    [Fact]
+    public async Task The_queue_of_a_finished_session_can_not_be_changed()
     {
         // Arrange
         var (browser, sessionId, teamId) = await PlanSessionAsync();
-        var queuedId = await browser.AddedTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
-        await Host.SetStateAsync(sessionId, Enum.Parse<InterviewSessionState>(state));
+        var doneId = await browser.AddedTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
+        var notReachedId = await browser.AddedTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
+        await browser.WentLiveAsync(sessionId);
+        await browser.FinishedAsync(sessionId);
 
         // Act
         using var add = await browser.AddTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
-        using var remove = await browser.DeleteAsync(SessionApi.QueuedTask(sessionId, queuedId));
-        using var reorder = await browser.ReorderAsync(sessionId, queuedId);
+        using var remove = await browser.DeleteAsync(SessionApi.QueuedTask(sessionId, notReachedId));
+        using var reorder = await browser.ReorderAsync(sessionId, doneId, notReachedId);
 
         // Assert
-        await add.ShouldBeProblemAsync(HttpStatusCode.Conflict, "InterviewSession.NotPlanned");
-        await remove.ShouldBeProblemAsync(HttpStatusCode.Conflict, "InterviewSession.NotPlanned");
-        await reorder.ShouldBeProblemAsync(HttpStatusCode.Conflict, "InterviewSession.NotPlanned");
+        await add.ShouldBeProblemAsync(HttpStatusCode.Conflict, "InterviewSession.Finished");
+        await remove.ShouldBeProblemAsync(HttpStatusCode.Conflict, "InterviewSession.Finished");
+        await reorder.ShouldBeProblemAsync(HttpStatusCode.Conflict, "InterviewSession.Finished");
+        (await browser.SessionAsync(sessionId)).Tasks.Select(task => task.Id).ShouldBe([doneId, notReachedId]);
+    }
+
+    [Fact]
+    public async Task While_live_a_task_is_added_after_the_others()
+    {
+        // Arrange
+        var (browser, sessionId, teamId) = await PlanSessionAsync();
+        var first = await browser.AddedTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
+        await browser.WentLiveAsync(sessionId);
+        await browser.MarkedDoneAsync(sessionId, first);
+
+        // Act
+        var added = await browser.AddedTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
+
+        // Assert
+        var session = await browser.SessionAsync(sessionId);
+        session.Tasks.Select(task => (task.Id, task.State)).ShouldBe([(first, SessionTaskState.Done), (added, SessionTaskState.Pending)]);
+    }
+
+    [Fact]
+    public async Task While_live_only_a_task_that_has_not_started_can_be_removed()
+    {
+        // Arrange
+        var (browser, sessionId, teamId) = await PlanSessionAsync();
+        var done = await browser.AddedTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
+        var current = await browser.AddedTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
+        var pending = await browser.AddedTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
+        await browser.WentLiveAsync(sessionId);
+        await browser.MarkedDoneAsync(sessionId, done);
+
+        // Act
+        using var removeDone = await browser.DeleteAsync(SessionApi.QueuedTask(sessionId, done));
+        using var removeCurrent = await browser.DeleteAsync(SessionApi.QueuedTask(sessionId, current));
+        using var removePending = await browser.DeleteAsync(SessionApi.QueuedTask(sessionId, pending));
+
+        // Assert
+        await removeDone.ShouldBeProblemAsync(HttpStatusCode.Conflict, "InterviewSession.TaskStarted");
+        await removeCurrent.ShouldBeProblemAsync(HttpStatusCode.Conflict, "InterviewSession.TaskStarted");
+        removePending.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        (await browser.SessionAsync(sessionId)).Tasks.Select(task => task.Id).ShouldBe([done, current]);
+    }
+
+    [Fact]
+    public async Task While_live_tasks_that_have_not_started_are_reordered_behind_the_started_ones()
+    {
+        // Arrange
+        var (browser, sessionId, teamId) = await PlanSessionAsync();
+        var current = await browser.AddedTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
+        var second = await browser.AddedTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
+        var third = await browser.AddedTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
+        await browser.WentLiveAsync(sessionId);
+
+        // Act
+        using var reorderPending = await browser.ReorderAsync(sessionId, current, third, second);
+        using var moveCurrent = await browser.ReorderAsync(sessionId, second, current, third);
+
+        // Assert
+        reorderPending.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await moveCurrent.ShouldBeProblemAsync(HttpStatusCode.Conflict, "InterviewSession.TaskStarted");
+        (await browser.SessionAsync(sessionId)).Tasks.Select(task => task.Id).ShouldBe([current, third, second]);
+    }
+
+    [Fact]
+    public async Task Every_queue_change_raises_the_queue_changed_event_with_the_new_revision()
+    {
+        // Arrange
+        var (browser, sessionId, teamId) = await PlanSessionAsync();
+
+        // Act
+        var first = await browser.AddedTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
+        var second = await browser.AddedTaskAsync(sessionId, await Host.AddBankTaskAsync(teamId));
+        using var reorder = await browser.ReorderAsync(sessionId, second, first);
+        using var remove = await browser.DeleteAsync(SessionApi.QueuedTask(sessionId, first));
+
+        // Assert
+        Host.IntegrationEvents.OfType<Contracts.TaskQueueChanged>().Select(raised => raised.QueueRevision).ShouldBe([1, 2, 3, 4]);
+        Host.IntegrationEvents.OfType<Contracts.TaskQueueChanged>().ShouldAllBe(raised => raised.SessionId == sessionId);
+    }
+
+    [Fact]
+    public async Task A_refused_queue_change_raises_no_event()
+    {
+        // Arrange
+        var (browser, sessionId, teamId) = await PlanSessionAsync();
+        var taskId = await Host.AddBankTaskAsync(teamId);
+        await browser.AddedTaskAsync(sessionId, taskId);
+        Host.IntegrationEvents.Reset();
+
+        // Act
+        using var response = await browser.AddTaskAsync(sessionId, taskId);
+
+        // Assert
+        await response.ShouldBeProblemAsync(HttpStatusCode.Conflict, "InterviewSession.TaskAlreadyQueued");
+        Host.IntegrationEvents.OfType<Contracts.TaskQueueChanged>().ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task A_queued_task_is_read_with_the_staff_material_of_its_pinned_version()
+    {
+        // Arrange
+        var (browser, sessionId, teamId) = await PlanSessionAsync();
+        var taskId = await Host.AddBankTaskAsync(teamId, "Fake Echo Task");
+        var sessionTaskId = await browser.AddedTaskAsync(sessionId, taskId);
+        var stored = await Host.StoredTaskAsync(sessionTaskId);
+
+        // Act
+        var task = await browser.SessionTaskAsync(sessionId, sessionTaskId);
+
+        // Assert
+        task.Id.ShouldBe(sessionTaskId);
+        task.TaskId.ShouldBe(taskId.Value);
+        task.State.ShouldBe(SessionTaskState.Pending);
+        task.VersionNumber.ShouldBe(1);
+        task.TaskType.ShouldBe(TestEchoTaskType.TaskTypeKey);
+        task.Title.ShouldBe("Fake Echo Task");
+        task.Summary.ShouldBe(stored.Summary);
+        task.ReferenceAnswer.ShouldBe(stored.ReferenceAnswer);
+        task.InterviewerNotes.ShouldBe(stored.InterviewerNotes);
+    }
+
+    [Fact]
+    public async Task A_task_of_another_session_or_team_is_not_found()
+    {
+        // Arrange
+        var (otherBrowser, otherSessionId, otherTeamId) = await PlanSessionAsync();
+        var otherTaskId = await otherBrowser.AddedTaskAsync(otherSessionId, await Host.AddBankTaskAsync(otherTeamId));
+        var (browser, sessionId, _) = await PlanSessionAsync();
+
+        // Act
+        using var otherTeam = await browser.GetAsync(SessionApi.QueuedTask(otherSessionId, otherTaskId));
+        using var otherSession = await browser.GetAsync(SessionApi.QueuedTask(sessionId, otherTaskId));
+
+        // Assert
+        await otherTeam.ShouldBeProblemAsync(HttpStatusCode.NotFound, "InterviewSession.NotFound");
+        await otherSession.ShouldBeProblemAsync(HttpStatusCode.NotFound, "InterviewSession.SessionTaskNotFound");
     }
 
     [Fact]
@@ -270,8 +406,8 @@ public sealed class QueueTests(HireLabTestHost host) : IntegrationTest(host)
         // Arrange
         var (browser, sessionId, teamId) = await PlanSessionAsync();
         var taskId = await Host.AddBankTaskAsync(teamId, "Fake Echo v1");
-        var sessionTaskId = await browser.AddedTaskAsync(sessionId, taskId);
-        await Host.ExecuteSessionsSqlAsync($"UPDATE sessions.session_tasks SET state = 'Current' WHERE id = {sessionTaskId}");
+        await browser.AddedTaskAsync(sessionId, taskId);
+        await browser.WentLiveAsync(sessionId);
         await Host.PublishNewVersionAsync(taskId, "Fake Echo v2");
 
         // Act

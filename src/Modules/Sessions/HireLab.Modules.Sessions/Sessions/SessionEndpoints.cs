@@ -1,6 +1,10 @@
 using HireLab.Modules.Sessions.Queue.AddSessionTask;
+using HireLab.Modules.Sessions.Queue.GetSessionTask;
 using HireLab.Modules.Sessions.Queue.RemoveSessionTask;
 using HireLab.Modules.Sessions.Queue.ReorderSessionTasks;
+using HireLab.Modules.Sessions.Running.FinishSession;
+using HireLab.Modules.Sessions.Running.GoLive;
+using HireLab.Modules.Sessions.Running.MarkSessionTaskDone;
 using HireLab.Modules.Sessions.Sessions.CreateSession;
 using HireLab.Modules.Sessions.Sessions.DeleteSession;
 using HireLab.Modules.Sessions.Sessions.GetSession;
@@ -31,10 +35,14 @@ internal static class SessionEndpoints
         sessions.MapGetSession();
         sessions.MapDeleteSession();
         sessions.MapRescheduleSession();
+        sessions.MapGoLive();
+        sessions.MapFinishSession();
 
         var queue = sessions.MapGroup("/{sessionId:guid}/tasks");
         queue.MapAddSessionTask();
         queue.MapRemoveSessionTask();
         queue.MapReorderSessionTasks();
+        queue.MapGetSessionTask();
+        queue.MapMarkSessionTaskDone();
     }
 }

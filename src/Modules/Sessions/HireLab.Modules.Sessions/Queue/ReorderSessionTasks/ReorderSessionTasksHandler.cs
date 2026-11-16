@@ -2,6 +2,8 @@ using FluentValidation;
 using HireLab.Modules.Sessions.Contracts;
 using HireLab.Modules.Sessions.Domain;
 using HireLab.Modules.Sessions.Persistence;
+using HireLab.Modules.Sessions.Sessions;
+using HireLab.SharedKernel.Events;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Results;
 using Microsoft.EntityFrameworkCore;
@@ -20,13 +22,28 @@ internal sealed class ReorderSessionTasksValidator : AbstractValidator<ReorderSe
     }
 }
 
-/// <summary>Puts a planned session's queue in a new order, which must list every task in the queue exactly once.</summary>
-internal sealed class ReorderSessionTasksHandler(SessionsDbContext dbContext) : ICommandHandler<ReorderSessionTasksCommand, Result>
+/// <summary>
+/// Puts a session's queue in a new order, which must list every task in the queue exactly once and keep the tasks that
+/// have started where they are. Refused once the session has finished.
+/// </summary>
+internal sealed class ReorderSessionTasksHandler(SessionsDbContext dbContext, IIntegrationEventQueue events)
+    : ICommandHandler<ReorderSessionTasksCommand, Result>
 {
     public async Task<Result> HandleAsync(ReorderSessionTasksCommand command, CancellationToken cancellationToken)
     {
         var session = await dbContext.Sessions.Include(session => session.Tasks)
             .SingleOrDefaultAsync(session => session.Id == command.SessionId, cancellationToken);
-        return session is null ? InterviewSessionErrors.NotFound : session.Reorder(command.Order);
+        if (session is null)
+        {
+            return InterviewSessionErrors.NotFound;
+        }
+
+        var reordered = session.Reorder(command.Order);
+        if (reordered.IsSuccess)
+        {
+            events.RaiseQueueChanged(session);
+        }
+
+        return reordered;
     }
 }

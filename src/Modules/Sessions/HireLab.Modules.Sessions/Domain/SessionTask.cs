@@ -51,6 +51,8 @@ internal sealed class SessionTask
 
     public bool IsPending => State == SessionTaskState.Pending;
 
+    public bool IsCurrent => State == SessionTaskState.Current;
+
     internal static SessionTask Queue(InterviewSessionId sessionId, int position, TaskVersionSnapshot snapshot)
     {
         var task = new SessionTask
@@ -66,6 +68,26 @@ internal sealed class SessionTask
     }
 
     internal void MoveTo(int position) => Position = position;
+
+    internal void Start()
+    {
+        if (!IsPending)
+        {
+            throw new InvalidOperationException("Only a Pending session task can start.");
+        }
+
+        State = SessionTaskState.Current;
+    }
+
+    internal void Complete()
+    {
+        if (!IsCurrent)
+        {
+            throw new InvalidOperationException("Only the Current session task can be done.");
+        }
+
+        State = SessionTaskState.Done;
+    }
 
     /// <summary>
     /// Pins <paramref name="snapshot"/> when it is another version of this task and the task hasn't started. Returns
