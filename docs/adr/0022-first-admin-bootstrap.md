@@ -14,11 +14,11 @@
 | No admin, an admin invite is pending | Nothing. It logs when the pending invite expires. |
 | No admin, no pending admin invite | Revokes any open admin invite, issues an admin invite (24 hours) and logs its link. |
 | `--issue-admin-link`, no admin | Revokes every open admin invite, whatever its email, then issues a new one and logs its link. |
-| `--issue-admin-link`, an admin exists | Fails without issuing anything. An invite can never create a second admin. |
+| `--issue-admin-link`, an admin exists | Issues a reset link (24 hours) for the admin through the same issuer as other reset links, revoking the admin's previous one, and logs it. This is the recovery for a locked-out admin. No invite is issued, so there is never a second admin. |
 
 A repeated deployment doesn't replace a link someone may be opening. In Development the seed creates the admin first, so the step does nothing.
 
-**The link is the one log line allowed to carry a secret.** It is a single warning from the `HireLab.Modules.Identity.Bootstrap.AdminBootstrap` category with the link in the `AdminInviteLink` field. It reaches the job's console log and Application Insights. Nothing else may log a link, token or email ([0012](0012-observability.md)).
+**The admin's link is the one log line allowed to carry a secret.** It is a warning from the `HireLab.Modules.Identity.Bootstrap.AdminBootstrap` category with the link in the `AdminInviteLink` field (`/invite#<token>`), or in the `AdminResetLink` field (`/reset#<token>`) for a reset. It reaches the job's console log and Application Insights. Nothing else may log a link, token or email ([0012](0012-observability.md)).
 
 **Settings.**
 
@@ -27,7 +27,7 @@ A repeated deployment doesn't replace a link someone may be opening. In Developm
 | `HireLab:PublicBaseUrl` | The origin of the staff app, such as `https://hirelab.example.com`, with no path. The link is built on it. | The AppHost, from the API's HTTPS endpoint (`https://api.<environment domain>`) |
 | `AdminBootstrap:Email` | The email the first admin logs in with. | The AppHost parameter `admin-email`, which `azd up` asks for |
 | `AdminBootstrap:DisplayName` | The admin's display name. Defaults to `Administrator`. | Optional |
-| `AdminBootstrap:IssueNewLink` | Issue a new link in this run. | The `--issue-admin-link` argument |
+| `AdminBootstrap:IssueNewLink` | Issue a new admin link in this run: an invite, or a reset link once the admin exists. | The `--issue-admin-link` argument |
 
 Outside Development the job refuses to start without a valid `HireLab:PublicBaseUrl` and `AdminBootstrap:Email`, so a wrong configuration shows at the first deployment, not on the day the link is needed. In Development neither is required.
 
@@ -37,7 +37,7 @@ Outside Development the job refuses to start without a valid `HireLab:PublicBase
 
 - Anyone who can read the job's logs or Application Insights during those 24 hours can claim the admin account ([0007](0007-staff-authentication.md)). Redeeming it closes that window.
 - A custom domain needs `HireLab:PublicBaseUrl` changed with it, or the printed link points at the default address (which still works).
-- An admin who exists but has lost their password can't recover through the invite. The manual run then needs to issue a reset link for the admin instead; until that exists it fails clearly.
+- Anyone who can read the job's logs while an admin reset link is open can take over the admin account, the same exposure as the invite. The manual run is started only when the admin asks for it.
 - Another module can add its own bootstrap step without touching the job.
 
 ## Status

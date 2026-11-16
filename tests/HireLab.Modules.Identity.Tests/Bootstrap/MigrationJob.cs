@@ -66,11 +66,23 @@ internal sealed class MigrationJob : IAsyncDisposable
         await new IdentityModule().BootstrapAsync(scope.ServiceProvider, TestContext.Current.CancellationToken);
     }
 
-    /// <summary>The link the run wrote to its log, or <c>null</c> when it wrote none.</summary>
-    public string? AdminInviteLink() => Logs.GetSnapshot()
+    public static async Task<string?> RunForResetLinkAsync(HireLabTestHost host)
+    {
+        await using var job = Create(host, DefaultSettings(issueNewLink: true));
+        await job.BootstrapAsync();
+        return job.AdminResetLink();
+    }
+
+    /// <summary>The invite link the run wrote to its log, or <c>null</c> when it wrote none.</summary>
+    public string? AdminInviteLink() => LoggedLink("AdminInviteLink");
+
+    /// <summary>The reset link the run wrote to its log, or <c>null</c> when it wrote none.</summary>
+    public string? AdminResetLink() => LoggedLink("AdminResetLink");
+
+    private string? LoggedLink(string field) => Logs.GetSnapshot()
         .Where(record => record.Category == typeof(AdminBootstrap).FullName && record.Level == LogLevel.Warning)
-        .Select(record => record.StructuredState?.SingleOrDefault(pair => pair.Key == "AdminInviteLink").Value)
-        .SingleOrDefault();
+        .Select(record => record.StructuredState?.SingleOrDefault(pair => pair.Key == field).Value)
+        .SingleOrDefault(link => link is not null);
 
     public T GetRequiredService<T>()
         where T : notnull => _services.GetRequiredService<T>();

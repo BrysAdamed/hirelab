@@ -1,6 +1,7 @@
 using HireLab.Modules.Identity.Domain;
 using HireLab.Modules.Identity.Invites;
 using HireLab.Modules.Identity.Persistence;
+using HireLab.Modules.Identity.ResetLinks;
 using HireLab.SharedKernel.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -11,11 +12,12 @@ namespace HireLab.Modules.Identity.Bootstrap;
 /// <summary>
 /// Makes sure the single admin can come to exist (ADR 0022): while there is no admin, the migration job issues a
 /// bootstrap invite and writes its link to the log. A manual run with <see cref="AdminBootstrapOptions.IssueNewLink"/>
-/// replaces a pending invite.
+/// replaces a pending invite or, once the admin exists, issues a reset link for them.
 /// </summary>
 internal sealed partial class AdminBootstrap(
     IdentityModuleDbContext dbContext,
     InviteIssuer inviteIssuer,
+    ResetLinkIssuer resetLinkIssuer,
     IOptions<AdminBootstrapOptions> options,
     IOptions<StaffAppOptions> staffApp,
     TimeProvider timeProvider,
@@ -25,14 +27,22 @@ internal sealed partial class AdminBootstrap(
     {
         var settings = options.Value;
 
-        if (await dbContext.Users.AnyAsync(user => user.Role == StaffRole.Admin, cancellationToken))
+        var adminId = await dbContext.Users
+            .Where(user => user.Role == StaffRole.Admin)
+            .Select(user => (UserId?)user.Id)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (adminId is { } existingAdmin)
         {
             if (settings.IssueNewLink)
             {
-                throw new InvalidOperationException("An admin already exists, so no admin invite link was issued.");
+                await IssueResetLinkAsync(existingAdmin, cancellationToken);
+            }
+            else
+            {
+                LogAdminExists();
             }
 
-            LogAdminExists();
             return;
         }
 
@@ -74,7 +84,18 @@ internal sealed partial class AdminBootstrap(
         LogInviteLink(issued.Value.Invite.ExpiresAt, link);
     }
 
-    [LoggerMessage(Level = LogLevel.Debug, Message = "An admin exists, so no admin invite is needed")]
+    private async Task IssueResetLinkAsync(UserId adminId, CancellationToken cancellationToken)
+    {
+        var issued = await resetLinkIssuer.IssueAsync(adminId, issuedBy: null, cancellationToken);
+        if (issued.IsFailure)
+        {
+            throw new InvalidOperationException($"The admin's reset link could not be issued: {issued.Error.Code}. {issued.Error.Description}");
+        }
+
+        LogResetLink(issued.Value.Link.ExpiresAt, staffApp.Value.LinkTo(issued.Value.LinkPath));
+    }
+
+    [LoggerMessage(Level = LogLevel.Debug,Message = "An admin exists, so no admin invite is needed")]
     private partial void LogAdminExists();
 
     [LoggerMessage(
@@ -82,10 +103,15 @@ internal sealed partial class AdminBootstrap(
         Message = "No admin exists yet and an admin invite is pending until {ExpiresAt}. Run the job with --issue-admin-link to replace it")]
     private partial void LogInvitePending(DateTimeOffset expiresAt);
 
-    // The one log line allowed to carry a link (ADR 0007, ADR 0022): with no email delivery, the job log is how the
-    // first admin's invite reaches a person.
+    // This and LogResetLink are the only log lines allowed to carry a link (ADR 0007, ADR 0022): with no email
+    // delivery, the job log is how the admin's link reaches a person.
     [LoggerMessage(
         Level = LogLevel.Warning,
         Message = "No admin exists yet. Open this one-time admin invite link before {ExpiresAt} to create the admin: {AdminInviteLink}")]
     private partial void LogInviteLink(DateTimeOffset expiresAt, Uri adminInviteLink);
+
+    [LoggerMessage(
+        Level = LogLevel.Warning,
+        Message = "The admin exists. Open this one-time reset link before {ExpiresAt} to set the admin's password: {AdminResetLink}")]
+    private partial void LogResetLink(DateTimeOffset expiresAt, Uri adminResetLink);
 }

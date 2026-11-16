@@ -3,6 +3,8 @@ using HireLab.Modules.Identity.Domain;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.Modules.Identity.Tests.Auth;
 using HireLab.Modules.Identity.Tests.Invites;
+using HireLab.Modules.Identity.Tests.ResetLinks;
+using Microsoft.AspNetCore.Identity;
 using HireLab.SharedKernel.Users;
 using HireLab.Testing.Staff;
 using Microsoft.EntityFrameworkCore;
@@ -106,19 +108,59 @@ public sealed class AdminBootstrapTests(HireLabTestHost host) : IntegrationTest(
     }
 
     [Fact]
-    public async Task The_manual_option_never_creates_a_second_admin()
+    public async Task The_manual_option_issues_a_reset_link_for_an_existing_admin_instead_of_an_invite()
     {
         // Arrange
         await Host.CreateUserAsync(UserBuilder.Admin());
         await using var job = MigrationJob.Create(Host, MigrationJob.DefaultSettings(issueNewLink: true));
 
         // Act
-        var exception = await Should.ThrowAsync<InvalidOperationException>(job.BootstrapAsync());
+        await job.BootstrapAsync();
 
         // Assert
-        exception.Message.ShouldContain("An admin already exists");
+        job.AdminResetLink().ShouldNotBeNull().ShouldStartWith($"{MigrationJob.PublicBaseUrl}/reset#");
         job.AdminInviteLink().ShouldBeNull();
         (await AdminInvitesAsync()).ShouldBeEmpty();
+        (await AdminCountAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task A_locked_out_admin_recovers_with_the_reset_link()
+    {
+        // Arrange
+        var admin = await Host.CreateUserAsync(UserBuilder.Admin());
+        await LockOutAsync(admin.Id);
+        var link = (await MigrationJob.RunForResetLinkAsync(Host)).ShouldNotBeNull();
+        using var browser = await CreateBrowserAsync();
+
+        // Act
+        using var reset = await browser.RedeemResetLinkAsync(TokenOf(link));
+
+        // Assert
+        reset.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        await using var scope = Host.Services.CreateAsyncScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var user = (await userManager.FindByIdAsync(admin.Id.ToString())).ShouldNotBeNull();
+        (await userManager.IsLockedOutAsync(user)).ShouldBeFalse();
+        (await userManager.CheckPasswordAsync(user, ResetLinkApi.NewPassword)).ShouldBeTrue();
+        (await AdminCountAsync()).ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task A_second_manual_run_revokes_the_admins_previous_reset_link()
+    {
+        // Arrange
+        await Host.CreateUserAsync(UserBuilder.Admin());
+        var oldLink = (await MigrationJob.RunForResetLinkAsync(Host)).ShouldNotBeNull();
+
+        // Act
+        var newLink = await MigrationJob.RunForResetLinkAsync(Host);
+
+        // Assert
+        newLink.ShouldNotBeNull().ShouldNotBe(oldLink);
+        using var browser = await CreateBrowserAsync();
+        using var redeemed = await browser.RedeemResetLinkAsync(TokenOf(oldLink));
+        await redeemed.ShouldBeProblemAsync(HttpStatusCode.Conflict, "ResetLink.Revoked");
     }
 
     [Fact]
@@ -159,6 +201,15 @@ public sealed class AdminBootstrapTests(HireLabTestHost host) : IntegrationTest(
     }
 
     private static string TokenOf(string link) => new Uri(link).Fragment.TrimStart('#');
+
+    private async Task LockOutAsync(UserId userId)
+    {
+        await using var scope = Host.Services.CreateAsyncScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var user = (await userManager.FindByIdAsync(userId.ToString())).ShouldNotBeNull();
+        await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddHours(1));
+        (await userManager.IsLockedOutAsync(user)).ShouldBeTrue();
+    }
 
     private async Task<List<Invite>> AdminInvitesAsync()
     {

@@ -27,7 +27,7 @@ The database enforces these rules, so two concurrent requests can't break them. 
 - A deactivated user can't log in, and their open sessions end at the next security stamp validation (at most 5 minutes). The sign-in manager refuses inactive users both at login and at that validation.
 - Reactivating a manager is refused while their team has another active manager.
 
-**Every change that affects access updates the security stamp**: deactivation, reactivation, a role change, moving an interviewer to another team, and a password reset. The new stamp ends existing sessions within the validation window, so a reassigned interviewer loses the old team's data at once ([0009](0009-authorisation-model.md)).
+**Every change that affects access updates the security stamp**: deactivation, reactivation, a role change, moving an interviewer to another team, and a password reset. The new stamp ends existing sessions at the next stamp check, so a reassigned or deactivated user loses access within 5 minutes ([0007](0007-staff-authentication.md), [0009](0009-authorisation-model.md)).
 
 **Handover.** To give a team a new manager, the admin deactivates the old manager (the team then shows "No manager") and invites a new manager into the existing team. The team keeps its id, so its data stays with it. The admin can also move interviewers between teams.
 

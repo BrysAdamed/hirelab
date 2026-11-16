@@ -10,19 +10,20 @@ There is no admin in a new environment. The migration job creates one invite for
 2. The first run of the migration job (from `azd up` or the deploy workflow) writes a warning with a one-time link: `No admin exists yet. Open this one-time admin invite link before <time> ...`. Find it in the job execution's console logs, or in Application Insights by searching traces for `AdminInviteLink`.
 3. Open the link within 24 hours and set the admin's password. The admin is then logged in.
 
-This log line is the only one allowed to carry a link. Until the link is redeemed, anyone who can read those logs can claim the admin account, so redeem it straight away.
+The admin's invite and reset links are the only links allowed in logs. Until the link is redeemed, anyone who can read those logs can claim the admin account, so redeem it straight away.
 
 Later runs leave a pending link alone and log only when it expires. After it expires, the next run issues a new one.
 
 ## A new admin link
 
-If the link was lost or expired before anyone redeemed it, start one execution of the job with the `--issue-admin-link` argument:
+Start one execution of the job with the `--issue-admin-link` argument:
 
 ```bash
 az containerapp job start --name migrations --resource-group <group> --args "--issue-admin-link"
 ```
 
-It revokes every open admin invite and writes a new link to that execution's log. If an admin already exists, the run fails and issues nothing.
+- **No admin yet** (the invite was lost or expired): it revokes every open admin invite and logs a new invite link (`AdminInviteLink`).
+- **The admin exists but is locked out** or has lost their password: it logs a one-time reset link (`AdminResetLink`, `/reset#<token>`), valid for 24 hours, and revokes the admin's previous reset link. Opening it sets a new password, clears the lockout and ends the admin's other sessions; the admin then logs in. It never creates a second admin.
 
 Locally, against a database without an admin: `dotnet run --project src/HireLab.MigrationService -- --issue-admin-link`, with `DOTNET_ENVIRONMENT`, `ConnectionStrings__hirelab`, `HireLab__PublicBaseUrl` and `AdminBootstrap__Email` set.
 

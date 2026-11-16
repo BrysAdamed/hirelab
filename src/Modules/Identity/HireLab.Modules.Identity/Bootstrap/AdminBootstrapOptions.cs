@@ -13,7 +13,8 @@ internal sealed class AdminBootstrapOptions
     public string DisplayName { get; set; } = DefaultDisplayName;
 
     /// <summary>
-    /// Issues a fresh invite even when one is pending, revoking it. Set for a single manual run of the migration job
+    /// Issues a fresh invite even when one is pending, revoking it, or a reset link when the admin exists. Set for a
+    /// single manual run of the migration job
     /// (<c>--issue-admin-link</c>), never permanently.
     /// </summary>
     public bool IssueNewLink { get; set; }

@@ -22,7 +22,8 @@ namespace HireLab.Modules.Identity;
 public sealed class IdentityModule : IModule, IModuleMigrator
 {
     /// <summary>
-    /// The setting that makes one migration run issue a fresh admin invite link, replacing a pending one (ADR 0022).
+    /// The setting that makes one migration run issue a fresh admin link (ADR 0022): an invite replacing a pending one, or
+    /// a reset link when the admin exists.
     /// </summary>
     public const string IssueAdminLinkSetting = AdminBootstrapOptions.Section + ":" + nameof(AdminBootstrapOptions.IssueNewLink);
 
