@@ -23,4 +23,5 @@ Playwright starts the AppHost with `dotnet run --project ../../src/HireLab.AppHo
 ## Notes
 
 - On Linux and macOS, Playwright stops the AppHost with `SIGINT`, so Aspire removes its containers. On Windows it can only kill the process tree, which leaves the AppHost's PostgreSQL and Azurite containers running; the next AppHost start removes them.
+- Staff tests log in as the development seed users (`src/Modules/Identity/HireLab.Modules.Identity/Seed/development-seed.json`), which `staff-users.ts` reads. Tests that need other users create them.
 - The AppHost keeps PostgreSQL data in a named volume, so data survives between runs. Tests must create the data they need and not rely on an empty database.

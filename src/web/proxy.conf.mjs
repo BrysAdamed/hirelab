@@ -1,4 +1,4 @@
-const target = process.env['API_URL'] ?? 'http://localhost:5291';
+const target = process.env['API_URL'] ?? 'https://localhost:7291';
 
 export default {
   '/api': { target, secure: false },

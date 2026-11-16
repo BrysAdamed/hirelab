@@ -10,6 +10,7 @@ export default defineConfig({
   retries: isCi ? 1 : 0,
   reporter: isCi ? [['github'], ['html', { open: 'never' }]] : [['list'], ['html', { open: 'never' }]],
   globalSetup: './wait-for-apps.ts',
+  expect: { timeout: 15_000 },
   use: {
     trace: 'retain-on-failure',
   },

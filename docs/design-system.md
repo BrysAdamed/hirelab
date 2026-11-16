@@ -88,11 +88,11 @@ Lucide through `@ng-icons/lucide`, 16 px in dense staff UI and 20 px in the cand
 
 All of these live in the `ui` lib and appear on `/design`.
 
-Spartan helm components are generated with `npx ng g @spartan-ng/cli:ui <name>` (settings in `src/web/components.json`) into `projects/ui/src/helm/` and imported as `@hirelab/ui/helm/<name>`. Generated so far: button, input, label, card, badge, dialog. After regenerating, re-apply and review the local changes listed under Colour tokens.
+Spartan helm components are generated with `npx ng g @spartan-ng/cli:ui <name>` (settings in `src/web/components.json`) into `projects/ui/src/helm/` and imported as `@hirelab/ui/helm/<name>`. Generated so far: button, input, label, card, badge, dialog, dropdown-menu. After regenerating, re-apply and review the local changes listed under Colour tokens.
 
 | Component | Notes |
 |---|---|
-| App shell | Navigation, header, theme and high-contrast switches. The candidate variant has no navigation. |
+| App shell | Header with the theme and high-contrast switches and the user menu (a dropdown menu), and a navigation sidebar built from the routes: a page declares its roles and nav item with `staffPage(...)` in `shell.routes.ts`. The candidate variant has no navigation. |
 | Page header | Title, breadcrumbs, primary actions |
 | Data table | Helm table + TanStack Table: sorting, filtering, pagination, empty state |
 | Form fields | Input, textarea, select, checkbox, radio, switch, with label, hint and error text |

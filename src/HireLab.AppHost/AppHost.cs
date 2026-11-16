@@ -24,7 +24,7 @@ var migrations = builder.AddProject<Projects.HireLab_MigrationService>("migratio
     .WithReference(database)
     .WaitFor(database);
 
-var api = builder.AddProject<Projects.HireLab_Api>("api")
+var api = builder.AddProject<Projects.HireLab_Api>("api", launchProfileName: "https")
     .WithReference(database)
     .WaitFor(database)
     .WaitForCompletion(migrations)
