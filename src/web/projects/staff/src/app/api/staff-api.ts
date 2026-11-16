@@ -38,6 +38,7 @@ export type CheckCriterion = components['schemas']['RubricCriterionCheckCriterio
 export type ScaleCriterion = components['schemas']['RubricCriterionScaleCriterion'];
 export type InterviewSession = components['schemas']['SessionResponse'];
 export type SessionTask = components['schemas']['SessionTaskResponse'];
+export type SessionTaskDetail = components['schemas']['SessionTaskDetailResponse'];
 export type CandidateSession = components['schemas']['CandidateSessionResponse'];
 export type TeamSession = components['schemas']['TeamSessionResponse'];
 export type CreatedSession = components['schemas']['CreatedSessionResponse'];

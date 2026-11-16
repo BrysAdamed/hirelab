@@ -712,6 +712,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/sessions/{sessionId}/go-live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Starts a planned session: its first task becomes Current, re-pinned to its task's active version. Refused for a session that has started (409 InterviewSession.NotPlanned), an empty queue (409 InterviewSession.EmptyQueue), a closed position (409 InterviewSession.PositionClosed) and an anonymised candidate (409 InterviewSession.CandidateAnonymised). */
+        post: operations["GoLive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/sessions/{sessionId}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finishes a live session for good: the Current task becomes Done and Pending tasks stay Pending (not reached). Refused for a session that isn't Live (409 InterviewSession.NotLive). */
+        post: operations["FinishSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/staff/sessions/{sessionId}/tasks": {
         parameters: {
             query?: never;
@@ -721,7 +755,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Adds a task from the task bank to the end of a planned session's queue, pinning its active version. A task is queued at most once (409 InterviewSession.TaskAlreadyQueued). */
+        /** Adds a task from the task bank to the end of a session's queue, pinning its active version. A task is queued at most once (409 InterviewSession.TaskAlreadyQueued); a finished session's queue can't change (409 InterviewSession.Finished). */
         post: operations["AddSessionTask"];
         delete?: never;
         options?: never;
@@ -736,10 +770,11 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** Gets a task of a session's queue with the reference answer and interviewer notes of the version it pins. */
+        get: operations["GetSessionTask"];
         put?: never;
         post?: never;
-        /** Removes a task from a planned session's queue. */
+        /** Removes a task that hasn't started from a session's queue (409 InterviewSession.TaskStarted for a Current or Done task, 409 InterviewSession.Finished once the session has finished). */
         delete: operations["RemoveSessionTask"];
         options?: never;
         head?: never;
@@ -754,9 +789,26 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Puts a planned session's queue in the given order. It must list every task in the queue exactly once; a stale list is refused with 409 InterviewSession.OrderMismatch. */
+        /** Puts a session's queue in the given order. It must list every task in the queue exactly once and keep the tasks that have started in their places (409 InterviewSession.TaskStarted); a stale list is refused with 409 InterviewSession.OrderMismatch. */
         put: operations["ReorderSessionTasks"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/sessions/{sessionId}/tasks/{sessionTaskId}/done": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Marks a live session's Current task done; the next Pending task becomes Current, re-pinned to its task's active version. Refused for a session that isn't Live (409 InterviewSession.NotLive) and a task that isn't Current (409 InterviewSession.TaskNotCurrent). */
+        post: operations["MarkSessionTaskDone"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1103,6 +1155,20 @@ export interface components {
             /** Format: int32 */
             queueRevision: number;
             tasks: components["schemas"]["SessionTaskResponse"][];
+        };
+        SessionTaskDetailResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            taskId: string;
+            state: components["schemas"]["SessionTaskState"];
+            /** Format: int32 */
+            versionNumber: number;
+            taskType: string;
+            title: string;
+            summary: string;
+            referenceAnswer: string;
+            interviewerNotes: null | string;
         };
         SessionTaskResponse: {
             /** Format: uuid */
@@ -2830,6 +2896,64 @@ export interface operations {
             };
         };
     };
+    GoLive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    FinishSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     AddSessionTask: {
         parameters: {
             query?: never;
@@ -2852,6 +2976,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AddedSessionTaskResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetSessionTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+                sessionTaskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionTaskDetailResponse"];
                 };
             };
             /** @description The request failed. The body describes the problem. */
@@ -2909,6 +3065,36 @@ export interface operations {
                 "application/json": components["schemas"]["ReorderSessionTasksRequest"];
             };
         };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    MarkSessionTaskDone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+                sessionTaskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description No Content */
             204: {
