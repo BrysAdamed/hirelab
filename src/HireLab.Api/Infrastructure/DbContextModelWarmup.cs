@@ -1,3 +1,4 @@
+using HireLab.Api.OpenApi;
 using HireLab.SharedKernel.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,9 +31,17 @@ internal sealed class DbContextModelWarmup(IServiceScopeFactory scopeFactory, IR
 
 internal static class DbContextModelWarmupExtensions
 {
-    /// <summary>Warms up the module DbContexts registered so far; call it after the modules add their services.</summary>
+    /// <summary>
+    /// Warms up the module DbContexts registered so far; call it after the modules add their services. Skipped while the
+    /// build generates the OpenAPI documents, which runs the host without a database.
+    /// </summary>
     public static IServiceCollection AddDbContextModelWarmup(this IServiceCollection services)
     {
+        if (BuildTimeDocumentGeneration.IsRunning)
+        {
+            return services;
+        }
+
         Type[] contextTypes =
         [
             .. services
