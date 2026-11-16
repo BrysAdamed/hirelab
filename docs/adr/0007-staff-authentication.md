@@ -28,6 +28,8 @@ We compared an HttpOnly cookie with bearer tokens held by the SPA. Bearer tokens
 **Passwords.**
 - At least 12 characters, with no composition rules.
 - A 15-minute lockout after 5 failed attempts.
+- A login for an unknown email verifies the password against a throwaway hash, so it takes about as long as a wrong password and the response time doesn't reveal which emails have accounts.
+- A signed-in user changes their own password with the current one. Their other sessions end; the current one is signed in again with the new security stamp.
 - No breached-password check, which would need an external service.
 - No MFA for now. Identity's TOTP support leaves room for it.
 
