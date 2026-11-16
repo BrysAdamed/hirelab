@@ -1182,6 +1182,51 @@
         }
       }
     },
+    "/api/staff/positions/{positionId}/close": {
+      "post": {
+        "tags": [
+          "JobPositions"
+        ],
+        "summary": "Closes an open job position for good and anonymises all its candidates: contact details are cleared and attachments deleted. Refused while a candidate's interview session isn't finished (409 JobPosition.UnfinishedSessions) and when already closed (409 JobPosition.Closed). Send the version it was read with (409 Concurrency.ChangedMeanwhile when it changed since).",
+        "operationId": "CloseJobPosition",
+        "parameters": [
+          {
+            "name": "positionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseJobPositionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/staff/positions/{positionId}/candidates": {
       "get": {
         "tags": [
@@ -1340,6 +1385,51 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/EditCandidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/candidates/{candidateId}/anonymise": {
+      "post": {
+        "tags": [
+          "Candidates"
+        ],
+        "summary": "Anonymises a candidate of an open position for good: contact details are cleared and attachments deleted. Refused while their interview session isn't finished (409 Candidate.UnfinishedSessions) and when already anonymised (409 Candidate.Anonymised). Send the version it was read with (409 Concurrency.ChangedMeanwhile when it changed since).",
+        "operationId": "AnonymiseCandidate",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnonymiseCandidateRequest"
               }
             }
           },
@@ -1613,6 +1703,18 @@
           }
         }
       },
+      "AnonymiseCandidateRequest": {
+        "required": [
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "AttachmentResponse": {
         "required": [
           "id",
@@ -1668,6 +1770,9 @@
           "phone",
           "links",
           "isAnonymised",
+          "anonymisedAt",
+          "anonymisedById",
+          "anonymisedByName",
           "createdAt",
           "version"
         ],
@@ -1721,6 +1826,26 @@
           "isAnonymised": {
             "type": "boolean"
           },
+          "anonymisedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "anonymisedById": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "anonymisedByName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -1743,6 +1868,18 @@
           },
           "newPassword": {
             "type": "string"
+          }
+        }
+      },
+      "CloseJobPositionRequest": {
+        "required": [
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -2123,6 +2260,9 @@
           "interviewerNotes",
           "state",
           "createdAt",
+          "closedAt",
+          "closedById",
+          "closedByName",
           "version"
         ],
         "type": "object",
@@ -2161,6 +2301,26 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "closedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "closedById": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "closedByName": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "version": {
             "type": "integer",

@@ -468,6 +468,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/positions/{positionId}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Closes an open job position for good and anonymises all its candidates: contact details are cleared and attachments deleted. Refused while a candidate's interview session isn't finished (409 JobPosition.UnfinishedSessions) and when already closed (409 JobPosition.Closed). Send the version it was read with (409 Concurrency.ChangedMeanwhile when it changed since). */
+        post: operations["CloseJobPosition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/staff/positions/{positionId}/candidates": {
         parameters: {
             query?: never;
@@ -498,6 +515,23 @@ export interface paths {
         /** Edits a candidate's contact details while their position is open (409 JobPosition.Closed otherwise). Send the version it was read with: when someone else changed it since, the edit is refused with 409 Concurrency.ChangedMeanwhile. */
         put: operations["EditCandidate"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/candidates/{candidateId}/anonymise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Anonymises a candidate of an open position for good: contact details are cleared and attachments deleted. Refused while their interview session isn't finished (409 Candidate.UnfinishedSessions) and when already anonymised (409 Candidate.Anonymised). Send the version it was read with (409 Concurrency.ChangedMeanwhile when it changed since). */
+        post: operations["AnonymiseCandidate"];
         delete?: never;
         options?: never;
         head?: never;
@@ -556,6 +590,10 @@ export interface components {
             /** Format: int32 */
             number: number;
         };
+        AnonymiseCandidateRequest: {
+            /** Format: uint32 */
+            version: number;
+        };
         AttachmentResponse: {
             /** Format: uuid */
             id: string;
@@ -585,6 +623,11 @@ export interface components {
             links: string[];
             isAnonymised: boolean;
             /** Format: date-time */
+            anonymisedAt: null | string;
+            /** Format: uuid */
+            anonymisedById: null | string;
+            anonymisedByName: null | string;
+            /** Format: date-time */
             createdAt: string;
             /** Format: uint32 */
             version: number;
@@ -592,6 +635,10 @@ export interface components {
         ChangePasswordRequest: {
             currentPassword: string;
             newPassword: string;
+        };
+        CloseJobPositionRequest: {
+            /** Format: uint32 */
+            version: number;
         };
         CreateInterviewerInviteRequest: {
             email: string;
@@ -695,6 +742,11 @@ export interface components {
             state: components["schemas"]["JobPositionState"];
             /** Format: date-time */
             createdAt: string;
+            /** Format: date-time */
+            closedAt: null | string;
+            /** Format: uuid */
+            closedById: null | string;
+            closedByName: null | string;
             /** Format: uint32 */
             version: number;
         };
@@ -1787,6 +1839,39 @@ export interface operations {
             };
         };
     };
+    CloseJobPosition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                positionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CloseJobPositionRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
     ListCandidates: {
         parameters: {
             query?: never;
@@ -1896,6 +1981,39 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["EditCandidateRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    AnonymiseCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnonymiseCandidateRequest"];
             };
         };
         responses: {
