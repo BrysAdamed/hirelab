@@ -1,7 +1,11 @@
+using HireLab.Modules.TaskBank.Contracts;
+using HireLab.Modules.TaskBank.Domain;
 using HireLab.Modules.TaskBank.Persistence;
+using HireLab.Modules.TaskBank.Tasks;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Modules;
 using HireLab.SharedKernel.Persistence;
+using HireLab.TaskTypes.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -18,6 +22,9 @@ public sealed class TaskBankModule : IModule, IModuleMigrator
 
         builder.Services.AddModuleDbContext<TaskBankDbContext>();
         builder.Services.AddHandlers<TaskBankDbContext>(typeof(TaskBankModule).Assembly);
+        builder.Services.AddTaskTypeRegistry();
+        builder.Services.AddSingleton<TaskVersionValidator>();
+        builder.Services.AddScoped<IActiveTaskVersionQuery, ActiveTaskVersionQuery>();
     }
 
     /// <inheritdoc />
