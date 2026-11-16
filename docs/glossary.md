@@ -24,6 +24,11 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **Duplicate** | A team's draft copy of another task. It remembers its source, which is then hidden from the team's bank. |
 | **Hidden task** | A Global task a team's manager has hidden from that team's bank. Reachable through "Show hidden". |
 | **Task type** | The kind of task and the code that comes with it: content and response models, a candidate UI, a review UI and an editor. Code review, AI assistant, live coding. |
+| **Task type key** | A task type's stable kebab-case name, such as `code-review`. Tasks, seed packages, candidate routes (`/api/candidate/tasks/<key>`) and the frontend registries use it; it is never renamed (ADR 0028). In code: `ITaskType.Key`. |
+| **Task type registry** | The task types the host knows, by key. In the backend it fails startup on a duplicate key; in the frontend there is one per entry point (`candidate`, `review`, `editor`) mapping the key to a lazily loaded component. In code: `ITaskTypeRegistry`, `TaskTypeRegistry`. |
+| **Candidate content / Staff content** | The two parts of a task version's content. The candidate part is what the candidate's UI renders; the staff part (planted secrets, expected findings …) never reaches the candidate API. Stored in two columns. In code: `TaskContent`, `candidate_content`, `staff_content`. |
+| **Content schema version** | The version of a task type's content models, stored with every task version. A mismatch with the registered type fails loudly. In code: `ITaskType.ContentSchemaVersion`; responses have a `ResponseSchemaVersion`. |
+| **Criterion suggestion** | A task type's proposed value for one rubric criterion, with a reason, which the interviewer confirms or overrides. In code: `CriterionSuggestion`. |
 | **Task bank** | The catalogue of all tasks, filterable by tag and level. |
 | **Level** | A task's difficulty: `Junior`, `Mid` or `Senior`. |
 | **Tag** | A free label on a task, such as `csharp`, `cqrs`, `security` or `role:qa`. |
