@@ -8,7 +8,7 @@ import { classes } from '@hirelab/ui/helm/utils';
   exportAs: 'hlmInput',
   hostDirectives: [
     { directive: BrnInput, inputs: ['id', 'forceInvalid'] },
-    BrnFieldControlDescribedBy,
+    { directive: BrnFieldControlDescribedBy, inputs: ['aria-describedby'] },
   ],
   host: { 'data-slot': 'input' },
 })
