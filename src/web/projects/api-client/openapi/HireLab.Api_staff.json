@@ -125,6 +125,40 @@
         }
       }
     },
+    "/api/staff/auth/change-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Changes the signed-in user's password. Their other sessions end; this one continues.",
+        "operationId": "ChangePassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/staff/invites/managers": {
       "get": {
         "tags": [
@@ -456,10 +490,184 @@
           }
         }
       }
+    },
+    "/api/staff/reset-links/managers/{userId}": {
+      "post": {
+        "tags": [
+          "ResetLinks"
+        ],
+        "summary": "Generates a reset link for the user. Revokes the user's previous unused link and returns the new one, which is shown only once.",
+        "operationId": "GenerateManagerResetLink",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedResetLinkResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/reset-links/interviewers/{userId}": {
+      "post": {
+        "tags": [
+          "ResetLinks"
+        ],
+        "summary": "Generates a reset link for the user. Revokes the user's previous unused link and returns the new one, which is shown only once.",
+        "operationId": "GenerateInterviewerResetLink",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedResetLinkResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/reset-links/preview": {
+      "post": {
+        "tags": [
+          "ResetLinks"
+        ],
+        "summary": "Returns whose password a pending reset link sets.",
+        "operationId": "PreviewResetLink",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewResetLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetLinkPreviewResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/reset-links/redeem": {
+      "post": {
+        "tags": [
+          "ResetLinks"
+        ],
+        "summary": "Redeems a reset link with the user's new password: clears the lockout and ends the user's existing sessions. The user then logs in with the new password.",
+        "operationId": "RedeemResetLink",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "ChangePasswordRequest": {
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string"
+          }
+        }
+      },
       "CreateInterviewerInviteRequest": {
         "required": [
           "email",
@@ -673,6 +881,27 @@
           }
         }
       },
+      "IssuedResetLinkResponse": {
+        "required": [
+          "userId",
+          "expiresAt",
+          "linkPath"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "linkPath": {
+            "type": "string"
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "email",
@@ -697,6 +926,17 @@
         ]
       },
       "PreviewInviteRequest": {
+        "required": [
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "PreviewResetLinkRequest": {
         "required": [
           "token"
         ],
@@ -758,6 +998,41 @@
           }
         }
       },
+      "ResetLinkPreviewResponse": {
+        "required": [
+          "email",
+          "displayName",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ResetPasswordRequest": {
+        "required": [
+          "token",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
       "StaffRole": {
         "enum": [
           "Admin",
@@ -790,6 +1065,9 @@
     },
     {
       "name": "Invites"
+    },
+    {
+      "name": "ResetLinks"
     }
   ]
 }

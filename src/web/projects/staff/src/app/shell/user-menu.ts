@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideChevronDown, lucideLogOut, lucideUserRound } from '@ng-icons/lucide';
+import { lucideChevronDown, lucideKeyRound, lucideLogOut, lucideUserRound } from '@ng-icons/lucide';
 import { HlmButton } from '@hirelab/ui/helm/button';
 import { HlmDropdownMenuImports } from '@hirelab/ui/helm/dropdown-menu';
 import { AuthService } from '../auth/auth.service';
@@ -9,7 +10,7 @@ import { AuthService } from '../auth/auth.service';
 @Component({
   selector: 'hl-user-menu',
   imports: [NgIcon, HlmButton, HlmDropdownMenuImports],
-  providers: [provideIcons({ lucideChevronDown, lucideLogOut, lucideUserRound })],
+  providers: [provideIcons({ lucideChevronDown, lucideKeyRound, lucideLogOut, lucideUserRound })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (auth.user(); as user) {
@@ -38,6 +39,10 @@ import { AuthService } from '../auth/auth.service';
             </span>
           </div>
           <hlm-dropdown-menu-separator />
+          <button hlmDropdownMenuItem type="button" (triggered)="changePassword()">
+            <ng-icon name="lucideKeyRound" aria-hidden="true" />
+            Change password
+          </button>
           <button hlmDropdownMenuItem type="button" (triggered)="auth.logout()">
             <ng-icon name="lucideLogOut" aria-hidden="true" />
             Log out
@@ -49,4 +54,9 @@ import { AuthService } from '../auth/auth.service';
 })
 export class UserMenu {
   protected readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+
+  protected changePassword(): void {
+    void this.router.navigateByUrl('/account/password');
+  }
 }

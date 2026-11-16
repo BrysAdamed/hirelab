@@ -16,6 +16,11 @@ export const routes: Routes = [
     title: 'Accept your invite - HireLab',
     loadComponent: () => import('./invites/invite-page').then((m) => m.InvitePage),
   },
+  {
+    path: 'reset',
+    title: 'Set a new password - HireLab',
+    loadComponent: () => import('./reset-links/reset-page').then((m) => m.ResetPage),
+  },
   ...designRoutes,
   {
     path: '',

@@ -41,6 +41,19 @@ export class AuthService {
     return { ok: false, message: problemMessage(error, genericFailure) };
   }
 
+  /** Changes the signed-in user's password. This session continues; the user's other sessions end. */
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ ok: true } | { ok: false; message: string }> {
+    const { error, response } = await this.api.POST('/api/staff/auth/change-password', {
+      body: { currentPassword, newPassword },
+    });
+    return response.ok
+      ? { ok: true }
+      : { ok: false, message: problemMessage(error, 'Changing the password failed. Try again.') };
+  }
+
   /** Records a user the API has just signed in another way, for example by redeeming an invite. */
   signedIn(user: CurrentUser): void {
     this.setUser(user);

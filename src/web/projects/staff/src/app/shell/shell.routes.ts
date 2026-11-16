@@ -58,4 +58,11 @@ export const shellRoutes: Routes = [
     loadComponent: placeholder,
     data: staffPage({ roles: ['Admin'], nav: { label: 'Users', icon: lucideUsers } }),
   },
+  {
+    path: 'account/password',
+    title: 'Change password - HireLab',
+    loadComponent: () =>
+      import('../account/change-password-page').then((m) => m.ChangePasswordPage),
+    data: staffPage({ roles: ALL_ROLES }),
+  },
 ];

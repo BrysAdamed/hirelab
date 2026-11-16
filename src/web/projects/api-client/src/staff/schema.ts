@@ -72,6 +72,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/auth/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Changes the signed-in user's password. Their other sessions end; this one continues. */
+        post: operations["ChangePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/staff/invites/managers": {
         parameters: {
             query?: never;
@@ -193,10 +210,82 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/reset-links/managers/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generates a reset link for the user. Revokes the user's previous unused link and returns the new one, which is shown only once. */
+        post: operations["GenerateManagerResetLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/reset-links/interviewers/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generates a reset link for the user. Revokes the user's previous unused link and returns the new one, which is shown only once. */
+        post: operations["GenerateInterviewerResetLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/reset-links/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Returns whose password a pending reset link sets. */
+        post: operations["PreviewResetLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/reset-links/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Redeems a reset link with the user's new password: clears the lockout and ends the user's existing sessions. The user then logs in with the new password. */
+        post: operations["RedeemResetLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        ChangePasswordRequest: {
+            currentPassword: string;
+            newPassword: string;
+        };
         CreateInterviewerInviteRequest: {
             email: string;
             displayName: string;
@@ -251,6 +340,13 @@ export interface components {
             invite: components["schemas"]["InviteResponse"];
             linkPath: string;
         };
+        IssuedResetLinkResponse: {
+            /** Format: uuid */
+            userId: string;
+            /** Format: date-time */
+            expiresAt: string;
+            linkPath: string;
+        };
         LoginRequest: {
             email: string;
             password: string;
@@ -258,6 +354,9 @@ export interface components {
         /** @enum {unknown} */
         OneTimeLinkState: "Pending" | "Used" | "Revoked" | "Expired";
         PreviewInviteRequest: {
+            token: string;
+        };
+        PreviewResetLinkRequest: {
             token: string;
         };
         ProblemDetails: {
@@ -269,6 +368,16 @@ export interface components {
             instance?: null | string;
         };
         RedeemInviteRequest: {
+            token: string;
+            password: string;
+        };
+        ResetLinkPreviewResponse: {
+            email: string;
+            displayName: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        ResetPasswordRequest: {
             token: string;
             password: string;
         };
@@ -395,6 +504,37 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CurrentUserResponse"];
                 };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ChangePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description The request failed. The body describes the problem. */
             default: {
@@ -672,6 +812,132 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["CurrentUserResponse"];
                 };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GenerateManagerResetLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedResetLinkResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GenerateInterviewerResetLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedResetLinkResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PreviewResetLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewResetLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResetLinkPreviewResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RedeemResetLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description The request failed. The body describes the problem. */
             default: {
