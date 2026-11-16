@@ -7,7 +7,7 @@ import {
   REVIEW_TASK_TYPES,
   type ReviewTaskComponent,
 } from '@hirelab/tasks/review';
-import { fireEvent, render, screen } from '@testing-library/angular';
+import { render, screen } from '@testing-library/angular';
 import { STAFF_API_FETCH, type SessionTaskDetail } from '../api/staff-api';
 import { FakeFetch, json } from '../testing/fake-fetch';
 import { SessionTaskPane } from './session-task-pane';
@@ -61,7 +61,7 @@ describe('SessionTaskPane', () => {
 
   async function renderPane(options: { sessionLive?: boolean } = {}) {
     fake = new FakeFetch().on('GET', path, () => json(200, shown));
-    await render(SessionTaskPane, {
+    return render(SessionTaskPane, {
       inputs: {
         sessionId,
         sessionTaskId: task.id,
@@ -106,20 +106,50 @@ describe('SessionTaskPane', () => {
     // Assert
     expect(await screen.findByText('Echo: fake first echo')).toBeTruthy();
     expect(screen.getByText('Not live')).toBeTruthy();
-    expect(screen.queryByRole('button', { name: 'Refresh response' })).toBeNull();
   });
 
-  it('refetches the response on refresh', async () => {
+  it('refetches the response when the hub announces a newer revision of it', async () => {
     // Arrange
-    await renderPane();
+    const pane = await renderPane();
     await screen.findByText('Echo: fake first echo');
     shown = { ...task, response: { echo: 'fake newer echo' }, responseRevision: 2 };
 
     // Act
-    fireEvent.click(screen.getByRole('button', { name: 'Refresh response' }));
+    pane.fixture.componentRef.setInput('responseUpdate', { sessionTaskId: task.id, revision: 2 });
 
     // Assert
     expect(await screen.findByText('Echo: fake newer echo')).toBeTruthy();
+  });
+
+  it('ignores an announced revision it already shows and other tasks’ revisions', async () => {
+    // Arrange
+    const pane = await renderPane();
+    await screen.findByText('Echo: fake first echo');
+    const reads = fake.requests.length;
+
+    // Act
+    pane.fixture.componentRef.setInput('responseUpdate', { sessionTaskId: task.id, revision: 1 });
+    pane.fixture.componentRef.setInput('responseUpdate', {
+      sessionTaskId: 'other-task',
+      revision: 5,
+    });
+    await pane.fixture.whenStable();
+
+    // Assert
+    expect(fake.requests).toHaveLength(reads);
+  });
+
+  it('refetches the task after the live connection resubscribed', async () => {
+    // Arrange
+    const pane = await renderPane();
+    await screen.findByText('Echo: fake first echo');
+    shown = { ...task, response: { echo: 'fake missed echo' }, responseRevision: 3 };
+
+    // Act
+    pane.fixture.componentRef.setInput('resync', 1);
+
+    // Assert
+    expect(await screen.findByText('Echo: fake missed echo')).toBeTruthy();
   });
 
   it('shows the reference answer alone for a task type without a review component', async () => {

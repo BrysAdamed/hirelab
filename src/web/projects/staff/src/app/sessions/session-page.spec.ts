@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { FakeLiveHubConnection, provideFakeLiveHub } from '@hirelab/core/testing';
 import { fireEvent, render, screen, within } from '@testing-library/angular';
 import {
   type InterviewSession,
@@ -65,6 +66,7 @@ describe('SessionPage', () => {
   const path = `/api/staff/sessions/${session.id}`;
 
   let fake: FakeFetch;
+  let hub: FakeLiveHubConnection;
 
   function detailOf(task: SessionTask): SessionTaskDetail {
     return {
@@ -87,9 +89,18 @@ describe('SessionPage', () => {
       .on('GET', '/api/staff/tasks', () => json(200, [bankTask]))
       .on('GET', '/api/staff/tasks/tags', () => json(200, ['fake']))
       .on('GET', '/api/staff/tasks/types', () => json(200, ['fake-echo']));
-    await render(SessionPage, {
+    hub = new FakeLiveHubConnection().answer('SubscribeToSession', () => ({
+      connected: true,
+      connections: 1,
+      lastSeenAt: '2026-01-06T09:30:00Z',
+    }));
+    return render(SessionPage, {
       inputs: { sessionId: shown.id },
-      providers: [provideRouter([]), { provide: STAFF_API_FETCH, useValue: fake.fetch }],
+      providers: [
+        provideRouter([]),
+        { provide: STAFF_API_FETCH, useValue: fake.fetch },
+        provideFakeLiveHub(hub),
+      ],
     });
   }
 
@@ -146,6 +157,62 @@ describe('SessionPage', () => {
     expect(
       screen.getByRole('button', { name: /Fake review task\s*v1/ }).getAttribute('aria-current'),
     ).toBe('true');
+  });
+
+  it('follows the session live and shows the candidate’s presence', async () => {
+    // Act
+    await renderPage(liveSession);
+
+    // Assert
+    expect(await screen.findByText(/Candidate online/)).toBeTruthy();
+    expect(hub.paths).toEqual(['/hubs/staff']);
+    expect(hub.invocations).toEqual([{ method: 'SubscribeToSession', args: [session.id] }]);
+  });
+
+  it('refetches the session when the hub says it changed', async () => {
+    // Arrange
+    await renderPage(liveSession);
+    await screen.findByText(/Candidate online/);
+    const reads = fake.requests.filter((request) => new URL(request.url).pathname === path).length;
+
+    // Act
+    hub.send('TaskQueueChanged', session.id, 4);
+    hub.send('TaskQueueChanged', 'another-session', 9);
+
+    // Assert
+    await vi.waitFor(() =>
+      expect(
+        fake.requests.filter((request) => new URL(request.url).pathname === path),
+      ).toHaveLength(reads + 1),
+    );
+  });
+
+  it('shows presence changes the hub sends', async () => {
+    // Arrange
+    await renderPage(liveSession);
+    await screen.findByText(/Candidate online/);
+
+    // Act
+    hub.send('CandidatePresenceChanged', session.id, {
+      connected: false,
+      connections: 0,
+      lastSeenAt: '2026-01-06T09:45:00Z',
+    });
+
+    // Assert
+    expect(await screen.findByText(/Candidate offline · last seen/)).toBeTruthy();
+  });
+
+  it('says it is reconnecting while the live connection is down', async () => {
+    // Arrange
+    await renderPage(liveSession);
+    await screen.findByText(/Candidate online/);
+
+    // Act
+    hub.drop();
+
+    // Assert
+    expect(await screen.findByText(/Reconnecting…/)).toBeTruthy();
   });
 
   it('goes live', async () => {

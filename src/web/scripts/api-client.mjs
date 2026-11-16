@@ -76,26 +76,34 @@ async function generateClient() {
 function hubTypeScript(entryPoint, contract) {
   const prefix = `${entryPoint[0].toUpperCase()}${entryPoint.slice(1)}Hub`;
   const parameters = (parameterTypes) =>
-    Object.entries(parameterTypes).map(([name, type]) => `${name}: ${type}`).join(', ');
+    Object.entries(parameterTypes)
+      .map(([name, type]) => `${name}: ${type}`)
+      .join(', ');
   const shape = (name, members) =>
     members.length === 0
       ? `export type ${name} = Record<never, never>;\n`
       : `export interface ${name} {\n${members.map((member) => `  ${member};\n`).join('')}}\n`;
 
   const types = Object.entries(contract.types).map(([name, properties]) =>
-    shape(name, Object.entries(properties).map(([property, type]) => `${property}: ${type}`)),
+    shape(
+      name,
+      Object.entries(properties).map(([property, type]) => `${property}: ${type}`),
+    ),
   );
   const methods = shape(
     `${prefix}Methods`,
     Object.entries(contract.serverMethods).map(
-      ([name, method]) => `${name}: { args: [${parameters(method.parameters)}]; returns: ${method.returns} }`,
+      ([name, method]) =>
+        `${name}: { args: [${parameters(method.parameters)}]; returns: ${method.returns} }`,
     ),
   );
   const events = shape(
     `${prefix}Events`,
     Object.entries(contract.clientMethods).map(([name, args]) => `${name}: [${parameters(args)}]`),
   );
-  const eventNames = Object.keys(contract.clientMethods).map((name) => `'${name}'`).join(', ');
+  const eventNames = Object.keys(contract.clientMethods)
+    .map((name) => `'${name}'`)
+    .join(', ');
 
   return [
     `/**\n * This file was generated from hubs/${entryPoint}.json by scripts/api-client.mjs.\n * Do not make direct changes to the file.\n */\n`,

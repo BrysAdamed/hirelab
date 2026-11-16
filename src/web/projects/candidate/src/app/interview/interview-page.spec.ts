@@ -1,4 +1,4 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -12,7 +12,8 @@ import { fireEvent, screen } from '@testing-library/angular';
 import { CANDIDATE_API_FETCH, type Interview } from '../api/candidate-api';
 import { routes } from '../app.routes';
 import { FakeFetch, json, noContent } from '../testing/fake-fetch';
-import { InterviewUpdates } from './interview-updates';
+import type { LiveHubStatus } from '@hirelab/core/live';
+import { InterviewUpdates, type InterviewWatch, type InterviewWatcher } from './interview-updates';
 import { RESPONSE_AUTOSAVE_DELAY, RESPONSE_AUTOSAVE_RETRY_DELAY } from './response-autosave';
 
 interface StubContent {
@@ -50,19 +51,24 @@ class StubCandidateTask implements CandidateTaskComponent<StubContent, StubRespo
 }
 
 class ManualUpdates {
-  private onChange: (() => void) | null = null;
+  private watcher: InterviewWatcher | null = null;
+  readonly status = signal<LiveHubStatus>('connected');
 
-  watch(onChange: () => void): () => void {
-    this.onChange = onChange;
-    return () => (this.onChange = null);
+  watch(watcher: InterviewWatcher): InterviewWatch {
+    this.watcher = watcher;
+    return { status: this.status, stop: () => (this.watcher = null) };
   }
 
   get watching(): boolean {
-    return this.onChange !== null;
+    return this.watcher !== null;
   }
 
   change(): void {
-    this.onChange?.();
+    this.watcher?.changed();
+  }
+
+  responseSaved(sessionTaskId: string, revision: number): void {
+    this.watcher?.responseSaved(sessionTaskId, revision);
   }
 }
 
@@ -210,6 +216,48 @@ describe('InterviewPage', () => {
     expect((screen.getByLabelText('Echo') as HTMLInputElement).value).toBe('');
   });
 
+  it('takes a response saved in another tab when nothing here is unsaved', async () => {
+    // Arrange
+    interview = () => json(200, currentTask('task-1', 'Fake phrase', { echo: 'fake first' }, 1));
+    const harness = await open('/');
+    interview = () =>
+      json(200, currentTask('task-1', 'Fake phrase', { echo: 'fake other tab' }, 2));
+
+    // Act
+    updates.responseSaved('task-1', 2);
+    await settle(harness);
+
+    // Assert
+    expect((screen.getByLabelText('Echo') as HTMLInputElement).value).toBe('fake other tab');
+  });
+
+  it('doesn’t refetch for its own save', async () => {
+    // Arrange
+    interview = () => json(200, currentTask('task-1', 'Fake phrase', null, 0));
+    const harness = await open('/');
+    await typeEcho(harness, 'fake edit');
+    const readsBefore = requestsTo('GET', '/api/candidate/session').length;
+
+    // Act
+    updates.responseSaved('task-1', 1);
+    await settle(harness);
+
+    // Assert
+    expect(requestsTo('GET', '/api/candidate/session')).toHaveLength(readsBefore);
+  });
+
+  it('says it is reconnecting while the live connection is down', async () => {
+    // Arrange
+    const harness = await open('/');
+
+    // Act
+    updates.status.set('reconnecting');
+    harness.detectChanges();
+
+    // Assert
+    expect(screen.getByText(/Reconnecting…/)).toBeTruthy();
+  });
+
   it('opens the current task with its saved response', async () => {
     // Arrange
     interview = () => json(200, currentTask('task-1', 'Fake phrase', { echo: 'fake saved' }, 3));
@@ -243,7 +291,8 @@ describe('InterviewPage', () => {
     interview = () => json(200, currentTask('task-1', 'Fake phrase', null, 1));
     const harness = await open('/');
     save = () => Promise.resolve(json(409, { status: 409, code: 'Response.StaleRevision' }));
-    interview = () => json(200, currentTask('task-1', 'Fake phrase', { echo: 'fake other tab' }, 2));
+    interview = () =>
+      json(200, currentTask('task-1', 'Fake phrase', { echo: 'fake other tab' }, 2));
 
     // Act
     await typeEcho(harness, 'fake stale edit');
