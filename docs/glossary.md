@@ -34,7 +34,9 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **Candidate content / Staff content** | The two parts of a task version's content. The candidate part is what the candidate's UI renders; the staff part (planted secrets, expected findings …) never reaches the candidate API. Stored in two columns. In code: `TaskContent`, `candidate_content`, `staff_content`. |
 | **Content schema version** | The version of a task type's content models, stored with every task version. A mismatch with the registered type fails loudly. In code: `ITaskType.ContentSchemaVersion`; responses have a `ResponseSchemaVersion`. |
 | **Criterion suggestion** | A task type's proposed value for one rubric criterion, with a reason, which the interviewer confirms or overrides. In code: `CriterionSuggestion`. |
-| **Task bank** | The catalogue of all tasks, filterable by tag and level. |
+| **Task bank** | The catalogue of the tasks a manager or interviewer can see (their team's and every Global one, system tasks included), each shown by its active version. Filterable by tags (all of them), level, task type and text in the title or summary. Archived tasks and tasks whose task type is no longer registered are left out. |
+| **Bank visibility** | The badge the task bank shows on a task: `Team` (a team task only its team sees), `Global` (a team task every team sees) or `System` (a system task). In code: `BankVisibility`. |
+| **Candidate preview** | The task's `candidate` component rendered for staff with a throwaway response that is never saved. A task type without a registered component shows "No preview". In code: `TaskPreview` (`hl-task-preview`). |
 | **Level** | A task's difficulty: `Junior`, `Mid` or `Senior`. |
 | **Tag** | A free label on a task, such as `csharp`, `cqrs`, `security` or `role:qa`. |
 | **Reference answer** | Markdown describing what a strong answer contains. It is shown next to the candidate's response, never to the candidate. |
