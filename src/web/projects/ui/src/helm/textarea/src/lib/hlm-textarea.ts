@@ -8,7 +8,7 @@ import { classes } from '@hirelab/ui/helm/utils';
   exportAs: 'hlmTextarea',
   hostDirectives: [
     { directive: BrnTextarea, inputs: ['id', 'forceInvalid'] },
-    BrnFieldControlDescribedBy,
+    { directive: BrnFieldControlDescribedBy, inputs: ['aria-describedby'] },
   ],
   host: { 'data-slot': 'textarea' },
 })
