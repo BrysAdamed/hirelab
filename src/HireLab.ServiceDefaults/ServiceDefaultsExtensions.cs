@@ -56,7 +56,7 @@ public static class ServiceDefaultsExtensions
 
     /// <summary>
     /// Configures logs, metrics and traces exported over OTLP, and to Application Insights (sampled) when its
-    /// connection string is set. Request bodies and query strings are never recorded.
+    /// connection string is set. Request bodies, query strings and candidate link tokens are never recorded.
     /// </summary>
     public static TBuilder ConfigureOpenTelemetry<TBuilder>(this TBuilder builder)
         where TBuilder : IHostApplicationBuilder
@@ -81,7 +81,7 @@ public static class ServiceDefaultsExtensions
                 .AddSource(builder.Environment.ApplicationName)
                 .AddAspNetCoreInstrumentation(options => options.Filter = context => !IsHealthEndpoint(context.Request.Path))
                 .AddHttpClientInstrumentation()
-                .AddProcessor(new QueryStringRedactionProcessor()));
+                .AddProcessor(new UrlRedactionProcessor()));
 
         if (!string.IsNullOrWhiteSpace(builder.Configuration["OTEL_EXPORTER_OTLP_ENDPOINT"]))
         {

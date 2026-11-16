@@ -183,6 +183,48 @@ namespace HireLab.Modules.Sessions.Persistence.Migrations
                     b.ToTable("session_tasks", "sessions");
                 });
 
+            modelBuilder.Entity("HireLab.Modules.Sessions.Domain.InterviewSession", b =>
+                {
+                    b.OwnsOne("HireLab.Modules.Sessions.Domain.CandidateLink", "CandidateLink", b1 =>
+                        {
+                            b1.Property<Guid>("InterviewSessionId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<DateTimeOffset>("CreatedAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("candidate_link_created_at");
+
+                            b1.Property<Guid>("CreatedBy")
+                                .HasColumnType("uuid")
+                                .HasColumnName("candidate_link_created_by");
+
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uuid")
+                                .HasColumnName("candidate_link_id");
+
+                            b1.Property<string>("TokenHash")
+                                .IsRequired()
+                                .HasMaxLength(64)
+                                .HasColumnType("character varying(64)")
+                                .HasColumnName("candidate_link_token_hash");
+
+                            b1.HasKey("InterviewSessionId");
+
+                            b1.HasIndex("TokenHash")
+                                .IsUnique()
+                                .HasDatabaseName("ix_interview_sessions_candidate_link_token_hash");
+
+                            b1.ToTable("interview_sessions", "sessions");
+
+                            b1.WithOwner()
+                                .HasForeignKey("InterviewSessionId")
+                                .HasConstraintName("fk_interview_sessions_interview_sessions_id");
+                        });
+
+                    b.Navigation("CandidateLink");
+                });
+
             modelBuilder.Entity("HireLab.Modules.Sessions.Domain.SessionTask", b =>
                 {
                     b.HasOne("HireLab.Modules.Sessions.Domain.InterviewSession", null)

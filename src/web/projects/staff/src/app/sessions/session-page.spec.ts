@@ -23,6 +23,7 @@ describe('SessionPage', () => {
     createdByName: 'Fake Interviewer',
     createdAt: '2026-01-06T09:00:00Z',
     queueRevision: 2,
+    candidateLinkCreatedAt: null,
     tasks: [
       {
         id: '0190a5c4-7e3d-7b8a-9f21-000000000091',
@@ -113,7 +114,10 @@ describe('SessionPage', () => {
     ]);
     expect(within(items[0]).getByText('v3')).toBeTruthy();
     expect(within(items[0]).getByText('Pending')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Move Fake echo task up' })).toHaveProperty('disabled', true);
+    expect(screen.getByRole('button', { name: 'Move Fake echo task up' })).toHaveProperty(
+      'disabled',
+      true,
+    );
   });
 
   it('shows the selected task’s reference answer and interviewer notes, the first one at first', async () => {
@@ -122,7 +126,9 @@ describe('SessionPage', () => {
 
     // Assert
     expect(await screen.findByRole('heading', { name: 'Fake echo task' })).toBeTruthy();
-    expect((await screen.findByText('Fake echo task', { selector: 'strong' })).tagName).toBe('STRONG');
+    expect((await screen.findByText('Fake echo task', { selector: 'strong' })).tagName).toBe(
+      'STRONG',
+    );
     expect(screen.getByText('imaginary', { selector: 'em' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Task bank' }).getAttribute('href')).toBe(
       `/tasks/${session.tasks[0].taskId}`,
@@ -133,7 +139,9 @@ describe('SessionPage', () => {
 
     // Assert
     expect(await screen.findByRole('heading', { name: 'Fake review task' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Fake review task\s*v1/ }).getAttribute('aria-current')).toBe('true');
+    expect(
+      screen.getByRole('button', { name: /Fake review task\s*v1/ }).getAttribute('aria-current'),
+    ).toBe('true');
   });
 
   it('goes live', async () => {
@@ -168,12 +176,21 @@ describe('SessionPage', () => {
 
     // Assert
     await vi.waitFor(() =>
-      expect(new URL(lastRequest('POST')!.url).pathname).toBe(`${path}/tasks/${liveSession.tasks[0].id}/done`),
+      expect(new URL(lastRequest('POST')!.url).pathname).toBe(
+        `${path}/tasks/${liveSession.tasks[0].id}/done`,
+      ),
     );
     expect(screen.getAllByText('Current').length).toBeGreaterThan(0);
-    expect(screen.queryByRole('button', { name: 'Remove Fake echo task from the queue' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Remove Fake review task from the queue' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Move Fake review task up' })).toHaveProperty('disabled', true);
+    expect(
+      screen.queryByRole('button', { name: 'Remove Fake echo task from the queue' }),
+    ).toBeNull();
+    expect(
+      screen.getByRole('button', { name: 'Remove Fake review task from the queue' }),
+    ).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Move Fake review task up' })).toHaveProperty(
+      'disabled',
+      true,
+    );
     expect(screen.getByRole('button', { name: 'Add to queue' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
     expect(screen.queryByLabelText('Date and time')).toBeNull();
@@ -196,7 +213,9 @@ describe('SessionPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Finish session' }));
 
     // Assert
-    await vi.waitFor(() => expect(new URL(lastRequest('POST')!.url).pathname).toBe(`${path}/finish`));
+    await vi.waitFor(() =>
+      expect(new URL(lastRequest('POST')!.url).pathname).toBe(`${path}/finish`),
+    );
   });
 
   it('moves a task down by sending the new order', async () => {
@@ -226,14 +245,18 @@ describe('SessionPage', () => {
 
     // Assert
     await vi.waitFor(() =>
-      expect(new URL(lastRequest('DELETE')!.url).pathname).toBe(`${path}/tasks/${session.tasks[1].id}`),
+      expect(new URL(lastRequest('DELETE')!.url).pathname).toBe(
+        `${path}/tasks/${session.tasks[1].id}`,
+      ),
     );
   });
 
   it('adds a task picked from the task bank and marks queued tasks', async () => {
     // Arrange
     await renderPage({ ...session, tasks: [{ ...session.tasks[0], taskId: bankTask.id }] });
-    fake.on('POST', `${path}/tasks`, () => json(201, { id: '0190a5c4-7e3d-7b8a-9f21-000000000093' }));
+    fake.on('POST', `${path}/tasks`, () =>
+      json(201, { id: '0190a5c4-7e3d-7b8a-9f21-000000000093' }),
+    );
 
     // Act
     fireEvent.click(await screen.findByRole('button', { name: 'Add to queue' }));
@@ -251,7 +274,11 @@ describe('SessionPage', () => {
     // Arrange
     await renderPage();
     fake.on('PUT', `${path}/tasks/order`, () =>
-      json(409, { status: 409, detail: 'The new order is stale.', code: 'InterviewSession.OrderMismatch' }),
+      json(409, {
+        status: 409,
+        detail: 'The new order is stale.',
+        code: 'InterviewSession.OrderMismatch',
+      }),
     );
 
     // Act
@@ -296,5 +323,31 @@ describe('SessionPage', () => {
     expect(screen.queryByRole('button', { name: /^Move / })).toBeNull();
     expect(screen.queryByRole('button', { name: /^Mark / })).toBeNull();
     expect(screen.queryByLabelText('Date and time')).toBeNull();
+    expect(screen.queryByRole('button', { name: /candidate link|Regenerate link/ })).toBeNull();
+    expect(screen.getByText(/stopped working when the session finished/)).toBeTruthy();
+  });
+
+  it('creates the candidate link and shows when it was created once the dialog closes', async () => {
+    // Arrange
+    await renderPage();
+    fake.on('POST', `${path}/candidate-link`, () =>
+      json(200, { linkPath: '/s/fake-link-token', createdAt: '2026-01-07T10:00:00Z' }),
+    );
+    fake.on('GET', path, () =>
+      json(200, { ...session, candidateLinkCreatedAt: '2026-01-07T10:00:00Z' }),
+    );
+
+    // Act
+    fireEvent.click(await screen.findByRole('button', { name: 'Create candidate link' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Create link' }));
+    const link = (await screen.findByRole('textbox', {
+      name: 'Candidate link',
+    })) as HTMLInputElement;
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }));
+
+    // Assert
+    expect(link.value).toBe(`${location.origin}/s/fake-link-token`);
+    expect(await screen.findByRole('button', { name: 'Regenerate link' })).toBeTruthy();
+    expect(screen.getByText(/can’t be shown again/)).toBeTruthy();
   });
 });

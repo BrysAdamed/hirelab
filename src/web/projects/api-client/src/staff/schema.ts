@@ -746,6 +746,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/sessions/{sessionId}/candidate-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creates the session's candidate link, or regenerates it, which revokes the old link and the candidate cookies issued from it. Returns the link's path once: it can't be shown again. Refused for a finished session (409 InterviewSession.Finished), a closed position (409 InterviewSession.PositionClosed) and an anonymised candidate (409 InterviewSession.CandidateAnonymised). */
+        post: operations["IssueCandidateLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/staff/sessions/{sessionId}/tasks": {
         parameters: {
             query?: never;
@@ -1001,6 +1018,11 @@ export interface components {
             name: string;
             isNew: boolean;
         };
+        IssuedCandidateLinkResponse: {
+            linkPath: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
         IssuedInviteResponse: {
             invite: components["schemas"]["InviteResponse"];
             linkPath: string;
@@ -1154,6 +1176,8 @@ export interface components {
             createdAt: string;
             /** Format: int32 */
             queueRevision: number;
+            /** Format: date-time */
+            candidateLinkCreatedAt: null | string;
             tasks: components["schemas"]["SessionTaskResponse"][];
         };
         SessionTaskDetailResponse: {
@@ -2942,6 +2966,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    IssueCandidateLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedCandidateLinkResponse"];
+                };
             };
             /** @description The request failed. The body describes the problem. */
             default: {

@@ -8,6 +8,8 @@ internal sealed class InterviewSessionConfiguration : IEntityTypeConfiguration<I
 {
     public const string NumberIndex = "ix_interview_sessions_candidate_id_number";
 
+    public const string CandidateLinkTokenHashIndex = "ix_interview_sessions_candidate_link_token_hash";
+
     public void Configure(EntityTypeBuilder<InterviewSession> builder)
     {
         builder.ToTable("interview_sessions");
@@ -25,6 +27,15 @@ internal sealed class InterviewSessionConfiguration : IEntityTypeConfiguration<I
             .HasForeignKey(task => task.SessionId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(session => session.Tasks).HasField("_tasks");
+
+        builder.OwnsOne(session => session.CandidateLink, link =>
+        {
+            link.Property(candidateLink => candidateLink.Id).HasColumnName("candidate_link_id");
+            link.Property(candidateLink => candidateLink.TokenHash).HasColumnName("candidate_link_token_hash").HasMaxLength(64);
+            link.Property(candidateLink => candidateLink.CreatedAt).HasColumnName("candidate_link_created_at");
+            link.Property(candidateLink => candidateLink.CreatedBy).HasColumnName("candidate_link_created_by");
+            link.HasIndex(candidateLink => candidateLink.TokenHash).IsUnique().HasDatabaseName(CandidateLinkTokenHashIndex);
+        });
 
         builder.HasIndex(session => new { session.CandidateId, session.Number }).IsUnique().HasDatabaseName(NumberIndex);
         builder.HasIndex(session => new { session.TeamId, session.State }).HasDatabaseName("ix_interview_sessions_team_id_state");

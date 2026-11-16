@@ -34,6 +34,8 @@ public sealed class AuthSweepTests(ApiTestHost host) : IntegrationTest(host)
         "POST /api/staff/invites/redeem",
         "POST /api/staff/reset-links/preview",
         "POST /api/staff/reset-links/redeem",
+        "GET /api/candidate/access/antiforgery",
+        "POST /api/candidate/access",
     ];
 
     [Theory]

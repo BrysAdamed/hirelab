@@ -1,3 +1,4 @@
+using HireLab.Modules.Sessions.CandidateAccess;
 using HireLab.Modules.Sessions.Contracts;
 using HireLab.Modules.Sessions.Persistence;
 using HireLab.Modules.Sessions.Queue;
@@ -27,10 +28,15 @@ public sealed class SessionsModule : IModule, IModuleMigrator
         builder.Services.AddTaskTypeRegistry();
         builder.Services.AddScoped<IUnfinishedSessionsQuery, UnfinishedSessionsQuery>();
         builder.Services.AddScoped<LazyRepinning>();
+        builder.Services.AddScoped<CandidateSessions>();
+        builder.Services.AddScoped<ICandidateAccessValidator, CandidateAccessValidator>();
     }
 
     /// <inheritdoc />
     public void MapStaffEndpoints(IEndpointRouteBuilder staff) => staff.MapSessionEndpoints();
+
+    /// <inheritdoc />
+    public void MapCandidateEndpoints(IEndpointRouteBuilder candidate) => candidate.MapCandidateAccessEndpoints();
 
     /// <inheritdoc />
     public void AddMigrationServices(IServiceCollection services) =>

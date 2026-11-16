@@ -12,7 +12,8 @@ namespace HireLab.SharedKernel.Persistence;
 /// The global query filter the module conventions add to every <see cref="ITeamOwned"/> entity (ADR 0009): a row is
 /// visible only when its <c>TeamId</c> is the <see cref="ICurrentUser.TeamId"/> of the context's scope. The admin,
 /// candidates, anonymous requests and code outside a request have no team, so they see no rows. Only the migration
-/// worker and system jobs may bypass it with <c>IgnoreQueryFilters</c>.
+/// worker, system jobs and the candidate's own session reads (<see cref="ICandidateScope"/>) may bypass it with
+/// <c>IgnoreQueryFilters</c>.
 /// </summary>
 public static class TeamQueryFilter
 {
