@@ -9,9 +9,9 @@ internal sealed class CandidateDirectory(PositionsDbContext dbContext) : ICandid
 {
     public async Task<CandidateSummary?> FindAsync(CandidateId candidateId, CancellationToken cancellationToken = default)
     {
-        var candidate = await dbContext.Candidates.AsNoTracking()
-            .SingleOrDefaultAsync(candidate => candidate.Id == candidateId, cancellationToken);
-        return candidate is null ? null : Summarise(candidate);
+        var found = await WithPositionState(dbContext.Candidates.Where(candidate => candidate.Id == candidateId))
+            .SingleOrDefaultAsync(cancellationToken);
+        return found is null ? null : Summarise(found.Candidate, found.State);
     }
 
     public async Task<IReadOnlyDictionary<CandidateId, CandidateSummary>> FindManyAsync(
@@ -24,12 +24,20 @@ internal sealed class CandidateDirectory(PositionsDbContext dbContext) : ICandid
             return new Dictionary<CandidateId, CandidateSummary>();
         }
 
-        var candidates = await dbContext.Candidates.AsNoTracking()
-            .Where(candidate => candidateIds.Contains(candidate.Id))
+        var found = await WithPositionState(dbContext.Candidates.Where(candidate => candidateIds.Contains(candidate.Id)))
             .ToListAsync(cancellationToken);
-        return candidates.ToDictionary(candidate => candidate.Id, Summarise);
+        return found.ToDictionary(item => item.Candidate.Id, item => Summarise(item.Candidate, item.State));
     }
 
-    private static CandidateSummary Summarise(Candidate candidate) =>
-        new(candidate.Id, candidate.JobPositionId, candidate.DisplayName, candidate.IsAnonymised);
+    private IQueryable<CandidateWithPositionState> WithPositionState(IQueryable<Candidate> candidates) =>
+        candidates.AsNoTracking().Join(
+            dbContext.JobPositions,
+            candidate => candidate.JobPositionId,
+            position => position.Id,
+            (candidate, position) => new CandidateWithPositionState(candidate, position.State));
+
+    private static CandidateSummary Summarise(Candidate candidate, JobPositionState positionState) =>
+        new(candidate.Id, candidate.JobPositionId, candidate.DisplayName, candidate.IsAnonymised, positionState == JobPositionState.Closed);
+
+    private sealed record CandidateWithPositionState(Candidate Candidate, JobPositionState State);
 }

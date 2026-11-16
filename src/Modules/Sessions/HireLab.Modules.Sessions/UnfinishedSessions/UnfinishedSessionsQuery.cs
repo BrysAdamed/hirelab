@@ -1,14 +1,23 @@
 using HireLab.Modules.Positions.Contracts;
 using HireLab.Modules.Sessions.Contracts;
+using HireLab.Modules.Sessions.Domain;
+using HireLab.Modules.Sessions.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace HireLab.Modules.Sessions.UnfinishedSessions;
 
-internal sealed class UnfinishedSessionsQuery : IUnfinishedSessionsQuery
+internal sealed class UnfinishedSessionsQuery(SessionsDbContext dbContext) : IUnfinishedSessionsQuery
 {
-    // TODO HLB-6: query the candidates' sessions once interview sessions exist; until then no candidate has one.
-    public Task<bool> AnyForCandidatesAsync(IReadOnlyCollection<CandidateId> candidateIds, CancellationToken cancellationToken = default)
+    public async Task<bool> AnyForCandidatesAsync(IReadOnlyCollection<CandidateId> candidateIds, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(candidateIds);
-        return Task.FromResult(false);
+        if (candidateIds.Count == 0)
+        {
+            return false;
+        }
+
+        return await dbContext.Sessions.AnyAsync(
+            session => candidateIds.Contains(session.CandidateId) && session.State != InterviewSessionState.Finished,
+            cancellationToken);
     }
 }

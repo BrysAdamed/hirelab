@@ -47,9 +47,12 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **Rubric** | The scoring criteria of a task, defined with the task. |
 | **Criterion** | One rubric item. A `scale` criterion is scored 0–4 and weighted; a `check` criterion is Yes / No with an expected answer. Any criterion can be "not assessed". |
 | **Critical check** | A `check` criterion whose failure is highlighted above the score. |
-| **Interview session** | One meeting with a candidate. It has a task queue and a state: `Planned` → `Live` → `Finished`. |
-| **Task queue** | The ordered tasks of a session. Tasks that haven't started can be added, removed or reordered while the session is Live. |
-| **Session task** | One task in a queue. When queued, it pins a task version and stores a snapshot of its content, reference answer, interviewer notes and rubric. Its state is `Pending`, `Current` or `Done`. |
+| **Interview session** | One meeting with a candidate, planned from their profile by any manager or interviewer of the team, who all control it. It has an optional schedule, a task queue and a state: `Planned` → `Live` → `Finished`. Only a planned session can be deleted; a finished one can't be reopened. Refused for an anonymised candidate or a closed position (ADR 0031). In code: `InterviewSession`. |
+| **Session N** | How a session is shown: N is its number among its candidate's sessions (1, 2, 3 …). Sessions have no title. In code: `InterviewSession.Number`. |
+| **Sessions page** | The team's `Planned` and `Live` sessions, soonest first: Live ones, then by schedule, unscheduled ones last. |
+| **Task queue** | The ordered tasks of a session, at most 30, each task at most once. Tasks are added from the task bank, removed or reordered while the session is Planned, and those that haven't started also while it is Live. Every change raises the session's queue revision. |
+| **Session task** | One task in a queue. When queued, it pins the task's active version and stores a task version snapshot. Its state is `Pending`, `Current` or `Done`. In code: `SessionTask`. |
+| **Re-pin** | A `Pending` session task following its task's active version: when the queue is opened or the task becomes `Current`, a changed active version is pinned with a fresh snapshot. An archived task, or one whose task type is no longer registered, keeps its pin (ADR 0028, ADR 0031). In code: `LazyRepinning`. |
 | **Candidate link** | An unguessable URL that gives the candidate access to one session. Before Live it shows a waiting page; after Finished it stops working. The interviewer can regenerate it, which revokes the old one. |
 | **Response** | Everything a candidate produced for a session task: comments, files, prompts. It is saved continuously. |
 | **Evaluation** | One interviewer's rubric scores and notes for a candidate's session. Its author and the manager can see it. |

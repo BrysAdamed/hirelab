@@ -70,7 +70,7 @@ public sealed class ClosePositionTests(HireLabTestHost host) : IntegrationTest(h
         var summary = await directory.FindAsync(candidateId, CancellationToken);
 
         // Assert
-        summary.ShouldBe(new CandidateSummary(candidateId, positionId, "Candidate #1", IsAnonymised: true));
+        summary.ShouldBe(new CandidateSummary(candidateId, positionId, "Candidate #1", IsAnonymised: true, IsJobPositionClosed: true));
     }
 
     [Theory]
