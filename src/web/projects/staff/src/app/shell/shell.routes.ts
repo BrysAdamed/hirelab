@@ -8,11 +8,9 @@ import {
 } from '@ng-icons/lucide';
 import { ALL_ROLES, staffPage } from './staff-page';
 
-const placeholder = () => import('../pages/placeholder-page').then((m) => m.PlaceholderPage);
-
 /**
  * The pages inside the app shell. The navigation is built from this list: a page with `nav` appears
- * for the roles it allows, in this order. Replace a placeholder's `loadComponent` when its feature lands.
+ * for the roles it allows, in this order.
  */
 export const shellRoutes: Routes = [
   {
@@ -74,11 +72,17 @@ export const shellRoutes: Routes = [
   {
     path: 'tasks',
     title: 'Task bank - HireLab',
-    loadComponent: placeholder,
+    loadComponent: () => import('../task-bank/task-bank-page').then((m) => m.TaskBankPage),
     data: staffPage({
       roles: ['Manager', 'Interviewer'],
       nav: { label: 'Task bank', icon: lucideLibraryBig },
     }),
+  },
+  {
+    path: 'tasks/:taskId',
+    title: 'Task - HireLab',
+    loadComponent: () => import('../task-bank/task-detail-page').then((m) => m.TaskDetailPage),
+    data: staffPage({ roles: ['Manager', 'Interviewer'] }),
   },
   {
     path: 'team',
