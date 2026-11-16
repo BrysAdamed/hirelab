@@ -22,7 +22,7 @@ Staff have three fixed roles. Managers and interviewers work within one team and
 ## Consequences
 
 - Forgetting the team check in a new query is impossible. Forgetting a finer rule is still possible, so those need tests.
-- When an admin reassigns an interviewer to another team, the interviewer loses access to the old team's data at once.
+- When an admin reassigns an interviewer to another team, the interviewer loses access to the old team's data within 5 minutes, when the security stamp is next checked ([0007](0007-staff-authentication.md)).
 - A global query filter is invisible when reading a handler; the convention has to be learned. This rule is also listed in `CLAUDE.md`.
 - Cross-team reporting would need an explicit, tested bypass.
 

@@ -1,7 +1,11 @@
 using HireLab.Api;
 using HireLab.Api.Modules;
+using HireLab.Modules.Identity.Domain;
+using HireLab.Modules.Identity.Persistence;
+using HireLab.Testing.Staff;
 using HireLab.SharedKernel.Modules;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +28,7 @@ namespace HireLab.Testing;
 /// Register it once per assembly with <c>[assembly: AssemblyFixture(typeof(HireLabTestHost))]</c>, disable test
 /// parallelisation, and derive test classes from <see cref="IntegrationTest"/>.
 /// </summary>
-public class HireLabTestHost : IAsyncLifetime
+public partial class HireLabTestHost : IAsyncLifetime
 {
     /// <summary>The PostgreSQL image, on the same major version as the AppHost.</summary>
     public const string PostgresImage = "postgres:17";
@@ -46,6 +50,12 @@ public class HireLabTestHost : IAsyncLifetime
     /// <summary>The clock the API uses. It doesn't move unless a test advances it.</summary>
     public FakeTimeProvider Time { get; } = new(StartTime);
 
+    /// <summary>Counts the password hash verifications the API performs.</summary>
+    public PasswordHashProbe PasswordHashes { get; } = new();
+
+    /// <summary>Runs a change from another request just before one of the API's saves, to reproduce a lost race.</summary>
+    public ConcurrentChange ConcurrentChange { get; } = new();
+
     /// <summary>The running API's root service provider.</summary>
     public IServiceProvider Services => Factory.Services;
 
@@ -60,6 +70,7 @@ public class HireLabTestHost : IAsyncLifetime
         await Task.WhenAll(_postgres.StartAsync(), _azurite.StartAsync());
 
         await MigrateAsync();
+        await CreateTestTablesAsync();
         _respawner = await CreateRespawnerAsync();
 
         _factory = new ApiFactory(this);
@@ -67,7 +78,7 @@ public class HireLabTestHost : IAsyncLifetime
     }
 
     /// <summary>
-    /// Deletes all data except the migrations history; does nothing while no module has tables.
+    /// Deletes all data except the migrations history (nothing while no module has tables) and resets <see cref="PasswordHashes"/>.
     /// <see cref="IntegrationTest"/> calls it before every test.
     /// </summary>
     public async ValueTask ResetAsync()
@@ -76,6 +87,9 @@ public class HireLabTestHost : IAsyncLifetime
         {
             throw new InvalidOperationException("The test host has not been initialised.");
         }
+
+        PasswordHashes.Reset();
+        ConcurrentChange.Reset();
 
         if (_respawner is not { } respawner)
         {
@@ -88,8 +102,8 @@ public class HireLabTestHost : IAsyncLifetime
     }
 
     /// <summary>
-    /// Creates a client for the API over HTTPS that doesn't follow redirects or keep cookies, sending only the given
-    /// cookies.
+    /// Creates a client for the API over HTTPS with its own client IP address that doesn't follow redirects or keep
+    /// cookies, sending only the given cookies.
     /// </summary>
     public HttpClient CreateClient(IEnumerable<SetCookieHeaderValue>? cookies = null)
     {
@@ -100,6 +114,8 @@ public class HireLabTestHost : IAsyncLifetime
             HandleCookies = false,
         });
 
+        client.DefaultRequestHeaders.Add(TestClientAddress.HeaderName, TestClientAddress.Next());
+
         var cookieHeader = string.Join("; ", (cookies ?? []).Select(cookie => $"{cookie.Name}={cookie.Value}"));
         if (cookieHeader.Length > 0)
         {
@@ -109,11 +125,22 @@ public class HireLabTestHost : IAsyncLifetime
         return client;
     }
 
-    /// <summary>Signs in with the staff cookie scheme through a test-only endpoint and returns the issued cookies.</summary>
-    public Task<IReadOnlyList<SetCookieHeaderValue>> SignInAsStaffAsync() => SignInAsync(TestSignIn.Staff);
+    /// <summary>
+    /// Creates a <see cref="BrowserSession"/> that starts with <paramref name="cookies"/> (for example a signed-in staff
+    /// user's) and holds an antiforgery token for that user, so it can call unsafe endpoints.
+    /// </summary>
+    public async Task<BrowserSession> CreateBrowserAsync(IEnumerable<SetCookieHeaderValue>? cookies = null)
+    {
+        var browser = CreateBrowser(cookies);
+        await browser.RefreshAntiforgeryTokenAsync();
+        return browser;
+    }
+
+    /// <summary>Creates a <see cref="BrowserSession"/> that starts with <paramref name="cookies"/> and no antiforgery token.</summary>
+    public BrowserSession CreateBrowser(IEnumerable<SetCookieHeaderValue>? cookies = null) => new(CreateClient(), cookies ?? []);
 
     /// <summary>Signs in with the candidate cookie scheme through a test-only endpoint and returns the issued cookies.</summary>
-    public Task<IReadOnlyList<SetCookieHeaderValue>> SignInAsCandidateAsync() => SignInAsync(TestSignIn.Candidate);
+    public Task<IReadOnlyList<SetCookieHeaderValue>> SignInAsCandidateAsync() => SignInAsync(TestSignIn.CandidateUri);
 
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
@@ -132,6 +159,12 @@ public class HireLabTestHost : IAsyncLifetime
     protected virtual void ConfigureWebHost(IWebHostBuilder builder)
     {
     }
+
+    /// <summary>
+    /// Lets a test assembly create the tables of its test-only DbContexts in <see cref="DatabaseConnectionString"/>.
+    /// Runs after the module migrations and before Respawn is set up, so those tables are reset between tests too.
+    /// </summary>
+    protected virtual Task CreateTestTablesAsync() => Task.CompletedTask;
 
     private async Task MigrateAsync()
     {
@@ -184,10 +217,10 @@ public class HireLabTestHost : IAsyncLifetime
         return (bool)(await command.ExecuteScalarAsync())!;
     }
 
-    private async Task<IReadOnlyList<SetCookieHeaderValue>> SignInAsync(string scheme)
+    private async Task<IReadOnlyList<SetCookieHeaderValue>> SignInAsync(Uri signInUri)
     {
         using var client = CreateClient();
-        using var response = await client.PostAsync(TestSignIn.UriFor(scheme), content: null, TestContext.Current.CancellationToken);
+        using var response = await client.PostAsync(signInUri, content: null, TestContext.Current.CancellationToken);
         response.EnsureSuccessStatusCode();
 
         return SetCookieHeaderValue.ParseList(response.Headers.GetValues(HeaderNames.SetCookie).ToList()).ToList();
@@ -203,7 +236,11 @@ public class HireLabTestHost : IAsyncLifetime
             builder.ConfigureTestServices(services =>
             {
                 services.Replace(ServiceDescriptor.Singleton<TimeProvider>(host.Time));
+                services.AddSingleton<IStartupFilter, TestClientAddress>();
                 services.AddSingleton<IStartupFilter, TestSignIn>();
+                services.AddSingleton(host.PasswordHashes);
+                services.Replace(ServiceDescriptor.Scoped<IPasswordHasher<User>, ProbingPasswordHasher>());
+                services.ConfigureDbContext<IdentityModuleDbContext>(options => options.AddInterceptors(host.ConcurrentChange));
             });
 
             host.ConfigureWebHost(builder);

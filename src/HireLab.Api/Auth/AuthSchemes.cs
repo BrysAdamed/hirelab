@@ -1,8 +1,10 @@
+using HireLab.SharedKernel.Users;
+
 namespace HireLab.Api.Auth;
 
 internal static class AuthSchemes
 {
-    public const string Staff = "Staff";
+    public const string Staff = StaffAuthentication.Scheme;
     public const string Candidate = "Candidate";
 }
 

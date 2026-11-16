@@ -1,3 +1,5 @@
+using System.Net.Http.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Routing.Patterns;
@@ -5,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace HireLab.Api.Tests.Auth;
 
-internal sealed record GroupEndpoint(string Method, string Pattern, Uri Uri)
+internal sealed record GroupEndpoint(string Method, string Pattern, Uri Uri, IReadOnlyList<string> Policies, bool AllowsAnonymous)
 {
     public const string StaffGroup = "/api/staff";
     public const string CandidateGroup = "/api/candidate";
@@ -19,10 +21,16 @@ internal sealed record GroupEndpoint(string Method, string Pattern, Uri Uri)
             .SelectMany(endpoint => MethodsOf(endpoint).Select(method => new GroupEndpoint(
                 method,
                 endpoint.RoutePattern.RawText ?? string.Empty,
-                ToUri(endpoint.RoutePattern))))
+                ToUri(endpoint.RoutePattern),
+                PoliciesOf(endpoint),
+                endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null)))
             .ToList();
 
-    public HttpRequestMessage CreateRequest() => new(new HttpMethod(Method), Uri);
+    /// <summary>A request to the endpoint; an unsafe method sends an empty JSON object, so endpoints with a body are reached.</summary>
+    public HttpRequestMessage CreateRequest() => new(new HttpMethod(Method), Uri)
+    {
+        Content = HttpMethods.IsGet(Method) || HttpMethods.IsHead(Method) ? null : JsonContent.Create(new { }),
+    };
 
     public override string ToString() => $"{Method} {Pattern}";
 
@@ -35,6 +43,9 @@ internal sealed record GroupEndpoint(string Method, string Pattern, Uri Uri)
         endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods is { Count: > 0 } methods
             ? methods
             : [HttpMethods.Get];
+
+    private static List<string> PoliciesOf(RouteEndpoint endpoint) =>
+        endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Select(data => data.Policy).OfType<string>().ToList();
 
     private static Uri ToUri(RoutePattern pattern)
     {

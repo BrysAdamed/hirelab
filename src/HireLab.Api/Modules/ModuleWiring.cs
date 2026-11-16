@@ -1,4 +1,5 @@
 using HireLab.Api.Auth;
+using HireLab.Api.Infrastructure;
 using HireLab.Api.OpenApi;
 using HireLab.SharedKernel.Modules;
 
@@ -17,6 +18,7 @@ internal static class ModuleWiring
             builder.Services.AddSingleton(module);
         }
 
+        builder.Services.AddDbContextModelWarmup();
         builder.Services.AddGroupDocument(StaffDocument);
         builder.Services.AddGroupDocument(CandidateDocument);
 
@@ -29,10 +31,12 @@ internal static class ModuleWiring
 
         var staff = app.MapGroup("/api/staff")
             .RequireAuthorization(AuthPolicies.Staff)
+            .RequireAntiforgeryOnUnsafeMethods()
             .WithGroupName(StaffDocument);
 
         var candidate = app.MapGroup("/api/candidate")
             .RequireAuthorization(AuthPolicies.Candidate)
+            .RequireAntiforgeryOnUnsafeMethods()
             .WithGroupName(CandidateDocument);
 
         foreach (var module in modules)

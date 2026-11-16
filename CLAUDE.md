@@ -26,7 +26,7 @@ Live technical interview platform: a task bank authored in the app, interview se
 - Attachments go through the API, never SAS links ([ADR 0005](docs/adr/0005-attachment-storage.md)).
 - SignalR hubs are push-only and send thin events (ids plus a revision); clients refetch over HTTP. Modules raise integration events and never reference SignalR ([ADR 0006](docs/adr/0006-real-time-channel.md)).
 - Auth is cookies for staff and candidates; no tokens in JavaScript or URLs ([ADR 0007](docs/adr/0007-staff-authentication.md), [ADR 0008](docs/adr/0008-candidate-access.md)). Candidate endpoints take the session from the cookie, never from the route.
-- Team-owned aggregates carry `TeamId` and are filtered by a global query filter. `IgnoreQueryFilters` is allowed only in the migration worker and system jobs ([ADR 0009](docs/adr/0009-authorisation-model.md)).
+- Team-owned aggregates implement `ITeamOwned`; the module conventions give them the `Team` global query filter (the admin sees none). Staff endpoints that need a role use `StaffPolicies` (`Admin`, `Manager`, `ManagerOrInterviewer`) at group or endpoint level. `IgnoreQueryFilters` is allowed only in the migration worker and system jobs ([ADR 0009](docs/adr/0009-authorisation-model.md)).
 - No Azure deployment until MVP 1 is done; everything runs locally through Aspire ([ADR 0010](docs/adr/0010-hosting-and-environments.md)). Infrastructure is declared in the AppHost ([ADR 0011](docs/adr/0011-iac-and-ci-cd.md)).
 - No personal data in logs or traces; use ids ([ADR 0012](docs/adr/0012-observability.md)).
 
@@ -58,5 +58,6 @@ Commands (from the repo root unless noted; Docker must be running):
 - Build: `dotnet build HireLab.slnx`. Run everything locally: `dotnet run --project src/HireLab.AppHost`.
 - Backend tests and E2E: see Testing above.
 - In `src/web`: `npm ci`, `npm run lint`, `npm test`, `npm run build`, `npm run check:contrast`, `npm run api:update` / `npm run api:check`.
+- Operations in Azure (first admin link, `--issue-admin-link`): `docs/operations.md`.
 - Infrastructure: `eng/validate-infra.sh` (generates the Bicep from the AppHost, then builds and lints it and `infra/`; needs the Bicep CLI or `az`).
 - Container images (local Docker, no push): `dotnet publish src/HireLab.Api -c Release -r linux-x64 -t:PublishContainer` (builds the SPAs unless `-p:SkipSpaBuild=true`), and the same for `src/HireLab.MigrationService`.

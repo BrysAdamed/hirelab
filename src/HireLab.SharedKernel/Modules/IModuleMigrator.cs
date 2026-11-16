@@ -19,4 +19,11 @@ public interface IModuleMigrator
     /// own service scope, and must be idempotent.
     /// </summary>
     Task SeedDevelopmentDataAsync(IServiceProvider services, CancellationToken cancellationToken) => Task.CompletedTask;
+
+    /// <summary>
+    /// Creates what an environment needs before anyone can use it, for example the first admin's invite. Runs in every
+    /// environment after every module is migrated (and, in Development, seeded), in its own service scope, and must be
+    /// idempotent.
+    /// </summary>
+    Task BootstrapAsync(IServiceProvider services, CancellationToken cancellationToken) => Task.CompletedTask;
 }

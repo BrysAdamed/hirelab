@@ -1,0 +1,11 @@
+{
+  "password": "local-dev-password-not-a-secret",
+  "admin": { "email": "admin@example.com", "displayName": "Ada Admin" },
+  "teams": [
+    {
+      "name": "Sample Team",
+      "manager": { "email": "manager@example.com", "displayName": "Morgan Manager" },
+      "interviewers": [{ "email": "interviewer@example.com", "displayName": "Ivy Interviewer" }]
+    }
+  ]
+}

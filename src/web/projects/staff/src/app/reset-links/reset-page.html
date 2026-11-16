@@ -1,0 +1,107 @@
+<div class="flex min-h-dvh flex-col">
+  <header class="flex items-center justify-between gap-3 border-b px-3 py-2">
+    <span class="font-semibold">HireLab</span>
+    <hl-theme-switcher />
+  </header>
+  <main class="flex flex-1 items-start justify-center px-3 pt-16">
+    <section hlmCard class="w-full max-w-sm">
+      <div hlmCardHeader>
+        <h1 hlmCardTitle class="text-lg">Set a new password</h1>
+        @if (link(); as link) {
+          <p hlmCardDescription>
+            {{ link.displayName }}, choose a new password. Your other sessions end.
+          </p>
+        }
+      </div>
+      <div hlmCardContent class="flex flex-col gap-3">
+        @if (loading()) {
+          <p class="flex items-center gap-2 text-muted-foreground" role="status">
+            <ng-icon
+              name="lucideLoaderCircle"
+              class="motion-safe:animate-spin"
+              aria-hidden="true"
+            />
+            Checking your reset link…
+          </p>
+        }
+
+        @if (error() ?? unavailable(); as message) {
+          <div role="alert" class="flex items-start gap-2 rounded-md border border-destructive p-2">
+            <ng-icon
+              name="lucideCircleAlert"
+              size="16"
+              class="mt-0.5 shrink-0 text-destructive"
+              aria-hidden="true"
+            />
+            <p>{{ message }}</p>
+          </div>
+        }
+
+        @if (done()) {
+          <div role="status" class="flex items-start gap-2 rounded-md border p-2">
+            <ng-icon
+              name="lucideCircleCheck"
+              size="16"
+              class="mt-0.5 shrink-0"
+              aria-hidden="true"
+            />
+            <p>Your password is changed. Log in with the new one.</p>
+          </div>
+          <a hlmBtn routerLink="/login" class="w-full">Log in</a>
+        }
+
+        @if (link(); as link) {
+          <form class="flex flex-col gap-3" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            <div class="flex flex-col gap-1.5">
+              <label hlmLabel for="reset-email">Email</label>
+              <input
+                hlmInput
+                id="reset-email"
+                type="email"
+                autocomplete="username"
+                readonly
+                [value]="link.email"
+              />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label hlmLabel for="reset-password">New password</label>
+              <input
+                hlmInput
+                id="reset-password"
+                type="password"
+                autocomplete="new-password"
+                formControlName="password"
+                aria-describedby="reset-password-hint"
+                required
+              />
+              <p id="reset-password-hint" class="text-muted-foreground">
+                At least {{ minimumPasswordLength }} characters.
+              </p>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label hlmLabel for="reset-confirm-password">Confirm new password</label>
+              <input
+                hlmInput
+                id="reset-confirm-password"
+                type="password"
+                autocomplete="new-password"
+                formControlName="confirmPassword"
+                required
+              />
+            </div>
+            <button hlmBtn type="submit" class="mt-1 w-full" [disabled]="pending()">
+              @if (pending()) {
+                <ng-icon
+                  name="lucideLoaderCircle"
+                  class="motion-safe:animate-spin"
+                  aria-hidden="true"
+                />
+              }
+              Set password
+            </button>
+          </form>
+        }
+      </div>
+    </section>
+  </main>
+</div>

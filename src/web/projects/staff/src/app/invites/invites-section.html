@@ -1,0 +1,103 @@
+<section hlmCard [attr.aria-labelledby]="idPrefix() + '-title'">
+  <div hlmCardHeader>
+    <h2 hlmCardTitle [id]="idPrefix() + '-title'">{{ copy().title }}</h2>
+    <p hlmCardDescription>{{ copy().description }}</p>
+  </div>
+  <div hlmCardContent class="flex flex-col gap-3">
+    @if (error(); as message) {
+      <div role="alert" class="flex items-start gap-2 rounded-md border border-destructive p-2">
+        <ng-icon
+          name="lucideCircleAlert"
+          size="16"
+          class="mt-0.5 shrink-0 text-destructive"
+          aria-hidden="true"
+        />
+        <p>{{ message }}</p>
+      </div>
+    }
+
+    @if (issuedLink(); as issued) {
+      <div class="flex flex-col gap-2 rounded-md border p-3" role="status">
+        <p>
+          Invite link for {{ issued.email }}. Copy it now and send it by hand: it isn't shown again.
+        </p>
+        <div class="flex flex-wrap items-center gap-2">
+          <label hlmLabel class="sr-only" [for]="idPrefix() + '-link'">Invite link</label>
+          <input
+            hlmInput
+            readonly
+            class="flex-1 font-mono"
+            [id]="idPrefix() + '-link'"
+            [value]="issued.url"
+          />
+          <hl-copy-button [text]="issued.url" label="Copy link" />
+        </div>
+      </div>
+    }
+
+    <form class="grid gap-3 md:grid-cols-2" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="flex flex-col gap-1.5">
+        <label hlmLabel [for]="idPrefix() + '-email'">Email</label>
+        <input
+          hlmInput
+          type="email"
+          autocomplete="off"
+          formControlName="email"
+          required
+          [id]="idPrefix() + '-email'"
+        />
+      </div>
+      <div class="flex flex-col gap-1.5">
+        <label hlmLabel [for]="idPrefix() + '-display-name'">Display name</label>
+        <input
+          hlmInput
+          autocomplete="off"
+          formControlName="displayName"
+          required
+          [id]="idPrefix() + '-display-name'"
+        />
+      </div>
+      @if (kind() === 'managers') {
+        <div class="flex flex-col gap-1.5">
+          <label hlmLabel [for]="idPrefix() + '-team'">Team</label>
+          <select hlmInput formControlName="teamId" [id]="idPrefix() + '-team'">
+            <option [value]="newTeam">New team</option>
+            @for (team of teams(); track team.id) {
+              <option [value]="team.id">{{ team.name }} (no manager)</option>
+            }
+          </select>
+        </div>
+        @if (isNewTeam()) {
+          <div class="flex flex-col gap-1.5">
+            <label hlmLabel [for]="idPrefix() + '-team-name'">Team name</label>
+            <input
+              hlmInput
+              autocomplete="off"
+              formControlName="newTeamName"
+              [id]="idPrefix() + '-team-name'"
+            />
+          </div>
+        }
+      }
+      <div class="md:col-span-2">
+        <button hlmBtn type="submit" [disabled]="pending()">
+          @if (pending()) {
+            <ng-icon
+              name="lucideLoaderCircle"
+              class="motion-safe:animate-spin"
+              aria-hidden="true"
+            />
+          } @else {
+            <ng-icon name="lucideMailPlus" aria-hidden="true" />
+          }
+          Create invite
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="flex flex-col gap-2" [attr.aria-labelledby]="idPrefix() + '-list-title'">
+  <h2 class="font-semibold" [id]="idPrefix() + '-list-title'">{{ copy().caption }}</h2>
+  <hl-invite-list [invites]="invites()" [caption]="copy().caption" (revoke)="revoke($event)" />
+</section>

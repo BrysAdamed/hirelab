@@ -10,7 +10,7 @@ public sealed class HireLabApiFactory : WebApplicationFactory<Program>
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting(WebHostDefaults.WebRootKey, _testWebRoot);
-        builder.UseSetting("ConnectionStrings:hirelab", "Host=localhost;Database=hirelab-tests");
+        builder.UseSetting("ConnectionStrings:hirelab", "Host=localhost;Database=hirelab-tests;Username=hirelab;Password=not-used");
         builder.UseSetting("ConnectionStrings:blobs", "UseDevelopmentStorage=true");
     }
 }

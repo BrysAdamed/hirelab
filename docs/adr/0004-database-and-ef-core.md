@@ -39,7 +39,7 @@ Options for the host: Azure Database for PostgreSQL Flexible Server (about €18
 
 **Time.** Every timestamp is UTC: `DateTimeOffset` in .NET, `timestamptz` in PostgreSQL. Code gets the time from an injected `TimeProvider`. Conversion to local time happens only in the UI.
 
-**Concurrency.** Aggregate roots use optimistic concurrency on PostgreSQL's `xmin` column. A conflict is returned as `409` `ProblemDetails`.
+**Concurrency.** Aggregate roots use optimistic concurrency on PostgreSQL's `xmin` column. A conflict is returned as `409` `ProblemDetails`: the unit-of-work decorator ([0002](0002-backend-internal-style.md)) turns it into `Concurrency.ChangedMeanwhile` for every command, and a handler that can say more maps it itself. A unique index that a concurrent request can hit is mapped to a readable `409` by the code that writes it.
 
 **Deleting.** No global soft delete. Domain states (`Closed` positions, `Finished` sessions) keep history where it matters. Everything else is a hard delete.
 

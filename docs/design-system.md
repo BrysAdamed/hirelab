@@ -88,11 +88,11 @@ Lucide through `@ng-icons/lucide`, 16 px in dense staff UI and 20 px in the cand
 
 All of these live in the `ui` lib and appear on `/design`.
 
-Spartan helm components are generated with `npx ng g @spartan-ng/cli:ui <name>` (settings in `src/web/components.json`) into `projects/ui/src/helm/` and imported as `@hirelab/ui/helm/<name>`. Generated so far: button, input, label, card, badge, dialog. After regenerating, re-apply and review the local changes listed under Colour tokens.
+Spartan helm components are generated with `npx ng g @spartan-ng/cli:ui <name>` (settings in `src/web/components.json`) into `projects/ui/src/helm/` and imported as `@hirelab/ui/helm/<name>`. Generated so far: button, input, label, card, badge, dialog, dropdown-menu. After regenerating, re-apply and review the local changes listed under Colour tokens.
 
 | Component | Notes |
 |---|---|
-| App shell | Navigation, header, theme and high-contrast switches. The candidate variant has no navigation. |
+| App shell | Header with the theme and high-contrast switches and the user menu (a dropdown menu with the user's details, Change password and Log out), and a navigation sidebar built from the routes: a page declares its roles and nav item with `staffPage(...)` in `shell.routes.ts`. The candidate variant has no navigation. |
 | Page header | Title, breadcrumbs, primary actions |
 | Data table | Helm table + TanStack Table: sorting, filtering, pagination, empty state |
 | Form fields | Input, textarea, select, checkbox, radio, switch, with label, hint and error text |
@@ -107,7 +107,7 @@ Spartan helm components are generated with `npx ng g @spartan-ng/cli:ui <name>` 
 | Rubric scorer | `scale` criteria as 0–4 segmented controls, `check` criteria as Yes / No, "not assessed", suggested values marked as such |
 | Presence indicator | Candidate online or offline and last seen, plus the number of open connections |
 | Reconnecting banner | Shown while SignalR reconnects |
-| Copy-link button | Copies the candidate or invite link and confirms with a toast |
+| Copy-link button | `hl-copy-button` from `@hirelab/ui/copy` (its own entry point, so it stays out of the initial bundle). Copies the candidate, invite or reset link and confirms inline in a polite live region ("Copied"), or asks the user to copy by hand if the clipboard refuses. Switch the confirmation to a toast once toasts exist. |
 
 New components are added here and to `/design` when a feature needs them.
 

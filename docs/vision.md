@@ -38,9 +38,9 @@ The interview call itself still happens on Teams, and the candidate shares their
 
 | Role | Can |
 |---|---|
-| Admin | Manage users: create managers and reassign interviewers. Admins have no access to candidate data. There is one, seeded on first start. |
+| Admin | Manage users and teams: invite managers, reassign interviewers, deactivate users, hand a team over to a new manager. Admins have no access to candidate data. There is exactly one, created on first start. |
 | Manager | Create and close job positions, invite interviewers to their team, see every note and score, record the final decision, publish tasks and manage their visibility |
-| Interviewer | Belongs to one manager. Adds candidates, runs sessions and evaluates on that manager's positions. Drafts tasks. Sees their own notes and the whole team's task results. |
+| Interviewer | Belongs to one team. Adds candidates, runs sessions and evaluates on that team's positions. Drafts tasks. Sees their own notes and the whole team's task results. |
 | Candidate | No account. Opens a session link that works while the session is Live. |
 
 ## Releases

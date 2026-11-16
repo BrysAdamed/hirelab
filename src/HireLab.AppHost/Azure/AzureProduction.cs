@@ -7,6 +7,9 @@ internal static class AzureProduction
 {
     public const string ApiPrincipalNameVariable = "Migrations__ApiPrincipalName";
     public const string ApiPrincipalIdVariable = "Migrations__ApiPrincipalId";
+    public const string PublicBaseUrlVariable = "HireLab__PublicBaseUrl";
+    public const string AdminEmailVariable = "AdminBootstrap__Email";
+    public const string AdminEmailParameter = "admin-email";
 
     public static AzureProductionResources AddAzureProduction(
         this IDistributedApplicationBuilder builder,
@@ -38,7 +41,10 @@ internal static class AzureProduction
             .WithEnvironment(DataProtectionKey.KeyUriEnvironmentVariable, new BicepOutputReference(DataProtectionKey.UriOutput, keyVault.Resource))
             .PublishAsAzureContainerApp((_, app) => app.WithApiSettings());
 
-        return new AzureProductionResources(apiIdentity, migrationsIdentity, insights);
+        var adminEmail = builder.AddParameter(AdminEmailParameter)
+            .WithDescription("The email the first admin logs in with. The migration job issues the admin invite link for it.");
+
+        return new AzureProductionResources(api, apiIdentity, migrationsIdentity, insights, adminEmail);
     }
 
     public static IResourceBuilder<T> PublishAsMigrationJob<T>(
@@ -50,10 +56,14 @@ internal static class AzureProduction
             .WithReference(azure.Insights)
             .WithEnvironment(ApiPrincipalNameVariable, azure.ApiIdentity.Resource.PrincipalName)
             .WithEnvironment(ApiPrincipalIdVariable, azure.ApiIdentity.Resource.PrincipalId)
+            .WithEnvironment(PublicBaseUrlVariable, azure.Api.GetEndpoint("https"))
+            .WithEnvironment(AdminEmailVariable, azure.AdminEmail)
             .PublishAsAzureContainerAppJob();
 }
 
 internal sealed record AzureProductionResources(
+    IResourceBuilder<ProjectResource> Api,
     IResourceBuilder<AzureUserAssignedIdentityResource> ApiIdentity,
     IResourceBuilder<AzureUserAssignedIdentityResource> MigrationsIdentity,
-    IResourceBuilder<AzureApplicationInsightsResource> Insights);
+    IResourceBuilder<AzureApplicationInsightsResource> Insights,
+    IResourceBuilder<ParameterResource> AdminEmail);

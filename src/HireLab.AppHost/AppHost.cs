@@ -1,20 +1,34 @@
 using HireLab.AppHost;
 using HireLab.AppHost.Azure;
+using Microsoft.Extensions.Configuration;
 
 var builder = DistributedApplication.CreateBuilder(args);
+
+var keepsData = !builder.Configuration.GetValue<bool>("HIRELAB_E2E_EPHEMERAL_DATA");
 
 var postgres = builder.AddAzurePostgresFlexibleServer("postgres")
     .WithHireLabSettings()
     .ClearDefaultRoleAssignments()
-    .RunAsContainer(container => container
-        .WithImageTag(AzureResourceSettings.PostgresContainerImageTag)
-        .WithDataVolume(AzureResourceSettings.PostgresDataVolumeName));
+    .RunAsContainer(container =>
+    {
+        container.WithImageTag(AzureResourceSettings.PostgresContainerImageTag);
+        if (keepsData)
+        {
+            container.WithDataVolume(AzureResourceSettings.PostgresDataVolumeName);
+        }
+    });
 
 var database = postgres.AddDatabase("hirelab");
 
 var storage = builder.AddAzureStorage("storage")
     .WithHireLabSettings()
-    .RunAsEmulator(azurite => azurite.WithDataVolume());
+    .RunAsEmulator(azurite =>
+    {
+        if (keepsData)
+        {
+            azurite.WithDataVolume();
+        }
+    });
 
 var blobs = storage.AddBlobs("blobs");
 var dataProtectionKeys = storage.AddBlobContainer("data-protection-keys");
@@ -24,7 +38,7 @@ var migrations = builder.AddProject<Projects.HireLab_MigrationService>("migratio
     .WithReference(database)
     .WaitFor(database);
 
-var api = builder.AddProject<Projects.HireLab_Api>("api")
+var api = builder.AddProject<Projects.HireLab_Api>("api", launchProfileName: "https")
     .WithReference(database)
     .WaitFor(database)
     .WaitForCompletion(migrations)
@@ -32,6 +46,11 @@ var api = builder.AddProject<Projects.HireLab_Api>("api")
     .WaitFor(blobs)
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health");
+
+if (builder.Configuration["HIRELAB_E2E_AUTH_PERMIT_LIMIT"] is { Length: > 0 } e2ePermitLimit)
+{
+    api.WithEnvironment("RateLimiting__AuthenticationPermitLimit", e2ePermitLimit);
+}
 
 if (builder.ExecutionContext.IsRunMode)
 {

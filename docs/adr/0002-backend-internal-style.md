@@ -12,7 +12,7 @@
 
 1. Logging
 2. Validation
-3. Unit of work (commands only): save changes, then dispatch integration events after the commit
+3. Unit of work (commands only): save changes, then dispatch integration events after the commit. A lost optimistic-concurrency race (a `DbUpdateConcurrencyException` from the handler or the save) becomes the `409` error `Concurrency.ChangedMeanwhile`
 
 No mediator library.
 

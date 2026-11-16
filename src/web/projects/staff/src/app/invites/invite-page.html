@@ -1,0 +1,94 @@
+<div class="flex min-h-dvh flex-col">
+  <header class="flex items-center justify-between gap-3 border-b px-3 py-2">
+    <span class="font-semibold">HireLab</span>
+    <hl-theme-switcher />
+  </header>
+  <main class="flex flex-1 items-start justify-center px-3 pt-16">
+    <section hlmCard class="w-full max-w-sm">
+      <div hlmCardHeader>
+        <h1 hlmCardTitle class="text-lg">Accept your invite</h1>
+        @if (invite(); as invite) {
+          <p hlmCardDescription>
+            {{ invite.displayName }}, you're invited to HireLab {{ roleAndTeam(invite) }}.
+          </p>
+        }
+      </div>
+      <div hlmCardContent class="flex flex-col gap-3">
+        @if (loading()) {
+          <p class="flex items-center gap-2 text-muted-foreground" role="status">
+            <ng-icon
+              name="lucideLoaderCircle"
+              class="motion-safe:animate-spin"
+              aria-hidden="true"
+            />
+            Checking your invite…
+          </p>
+        }
+
+        @if (error() ?? unavailable(); as message) {
+          <div role="alert" class="flex items-start gap-2 rounded-md border border-destructive p-2">
+            <ng-icon
+              name="lucideCircleAlert"
+              size="16"
+              class="mt-0.5 shrink-0 text-destructive"
+              aria-hidden="true"
+            />
+            <p>{{ message }}</p>
+          </div>
+        }
+
+        @if (invite(); as invite) {
+          <form class="flex flex-col gap-3" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            <div class="flex flex-col gap-1.5">
+              <label hlmLabel for="invite-email">Email</label>
+              <input
+                hlmInput
+                id="invite-email"
+                type="email"
+                autocomplete="username"
+                readonly
+                [value]="invite.email"
+              />
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label hlmLabel for="invite-password">Password</label>
+              <input
+                hlmInput
+                id="invite-password"
+                type="password"
+                autocomplete="new-password"
+                formControlName="password"
+                aria-describedby="invite-password-hint"
+                required
+              />
+              <p id="invite-password-hint" class="text-muted-foreground">
+                At least {{ minimumPasswordLength }} characters.
+              </p>
+            </div>
+            <div class="flex flex-col gap-1.5">
+              <label hlmLabel for="invite-confirm-password">Confirm password</label>
+              <input
+                hlmInput
+                id="invite-confirm-password"
+                type="password"
+                autocomplete="new-password"
+                formControlName="confirmPassword"
+                required
+              />
+            </div>
+            <button hlmBtn type="submit" class="mt-1 w-full" [disabled]="pending()">
+              @if (pending()) {
+                <ng-icon
+                  name="lucideLoaderCircle"
+                  class="motion-safe:animate-spin"
+                  aria-hidden="true"
+                />
+              }
+              Create account
+            </button>
+          </form>
+        }
+      </div>
+    </section>
+  </main>
+</div>

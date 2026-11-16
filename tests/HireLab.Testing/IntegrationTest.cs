@@ -1,3 +1,5 @@
+using HireLab.SharedKernel.Users;
+using HireLab.Testing.Staff;
 using Xunit;
 
 namespace HireLab.Testing;
@@ -20,4 +22,17 @@ public abstract class IntegrationTest(HireLabTestHost host) : IAsyncLifetime
         GC.SuppressFinalize(this);
         return ValueTask.CompletedTask;
     }
+
+    /// <summary>Creates a user in <paramref name="role"/> (with a team unless they are the admin) and signs them in.</summary>
+    protected Task<SignedInStaff> SignInAsAsync(StaffRole role) => Host.SignInAsAsync(role);
+
+    /// <summary>Creates an API client that sends <paramref name="staff"/>'s staff cookie.</summary>
+    protected HttpClient CreateClient(SignedInStaff staff)
+    {
+        ArgumentNullException.ThrowIfNull(staff);
+        return Host.CreateClient(staff.Cookies);
+    }
+
+    /// <summary>Creates a browser-like session, signed in as <paramref name="staff"/> or anonymous, with an antiforgery token.</summary>
+    protected Task<BrowserSession> CreateBrowserAsync(SignedInStaff? staff = null) => Host.CreateBrowserAsync(staff?.Cookies);
 }

@@ -23,7 +23,10 @@ public static class HandlerRegistration
     /// <summary>
     /// Scans <paramref name="assembly"/> (internal types included) and registers, as scoped services:
     /// <list type="bullet">
-    /// <item>command handlers, decorated as logging → validation → unit of work on <typeparamref name="TUnitOfWork"/>;</item>
+    /// <item>
+    /// command handlers, decorated as logging → validation → unit of work on <typeparamref name="TUnitOfWork"/>, which
+    /// saves a successful command and turns a lost concurrency race into <see cref="Error.ChangedMeanwhile"/>;
+    /// </item>
     /// <item>query handlers, decorated as logging → validation;</item>
     /// <item>FluentValidation validators;</item>
     /// <item>integration event handlers.</item>

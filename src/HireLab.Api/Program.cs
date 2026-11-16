@@ -4,12 +4,13 @@ using HireLab.Api.Auth;
 using HireLab.Api.Infrastructure;
 using HireLab.Api.Modules;
 using HireLab.ServiceDefaults;
+using HireLab.SharedKernel.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.AddAzureNpgsqlDataSource(ResourceNames.Database);
+builder.AddHireLabDatabase(ResourceNames.Database);
 builder.AddAzureBlobServiceClient(ResourceNames.Blobs, settings => settings.DisableHealthChecks = true);
 
 builder.AddHireLabDataProtection();
@@ -19,6 +20,9 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddStaffAndCandidateAuth();
+builder.Services.AddApiAntiforgery();
+builder.Services.AddApiRateLimiting(builder.Configuration);
+builder.Services.AddCurrentUser();
 
 builder.AddModules(ModuleCatalog.All);
 
@@ -27,6 +31,7 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapDefaultEndpoints();
 app.MapModules();
