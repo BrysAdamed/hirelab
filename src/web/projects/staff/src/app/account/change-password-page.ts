@@ -6,7 +6,7 @@ import { HlmButton } from '@hirelab/ui/helm/button';
 import { HlmCardImports } from '@hirelab/ui/helm/card';
 import { HlmInput } from '@hirelab/ui/helm/input';
 import { HlmLabel } from '@hirelab/ui/helm/label';
-import { AuthService } from '../auth/auth.service';
+import { problemMessage, STAFF_API } from '../api/staff-api';
 
 const minimumPasswordLength = 12;
 
@@ -104,7 +104,7 @@ const minimumPasswordLength = 12;
   `,
 })
 export class ChangePasswordPage {
-  private readonly auth = inject(AuthService);
+  private readonly api = inject(STAFF_API);
 
   protected readonly minimumPasswordLength = minimumPasswordLength;
   protected readonly pending = signal(false);
@@ -138,14 +138,16 @@ export class ChangePasswordPage {
 
     this.pending.set(true);
     this.error.set(null);
-    const result = await this.auth.changePassword(currentPassword, newPassword);
+    const { error, response } = await this.api.POST('/api/staff/auth/change-password', {
+      body: { currentPassword, newPassword },
+    });
     this.pending.set(false);
     this.form.reset();
 
-    if (result.ok) {
+    if (response.ok) {
       this.changed.set(true);
     } else {
-      this.error.set(result.message);
+      this.error.set(problemMessage(error, 'Changing the password failed. Try again.'));
     }
   }
 }
