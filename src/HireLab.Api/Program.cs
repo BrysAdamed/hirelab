@@ -4,6 +4,7 @@ using HireLab.Api.Auth;
 using HireLab.Api.Infrastructure;
 using HireLab.Api.Modules;
 using HireLab.ServiceDefaults;
+using HireLab.SharedKernel.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddStaffAndCandidateAuth();
+builder.Services.AddCurrentUser();
 
 builder.AddModules(ModuleCatalog.All);
 

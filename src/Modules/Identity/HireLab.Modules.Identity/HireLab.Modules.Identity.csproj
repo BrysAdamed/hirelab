@@ -1,12 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\HireLab.SharedKernel\HireLab.SharedKernel.csproj" />
     <ProjectReference Include="..\HireLab.Modules.Identity.Contracts\HireLab.Modules.Identity.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Seed\development-seed.json" LogicalName="HireLab.Modules.Identity.Seed.development-seed.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The shared integration host creates staff users and signs them in for every test assembly. -->
+    <InternalsVisibleTo Include="HireLab.Testing" />
   </ItemGroup>
 
 </Project>

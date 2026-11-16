@@ -24,7 +24,7 @@ namespace HireLab.Testing;
 /// Register it once per assembly with <c>[assembly: AssemblyFixture(typeof(HireLabTestHost))]</c>, disable test
 /// parallelisation, and derive test classes from <see cref="IntegrationTest"/>.
 /// </summary>
-public class HireLabTestHost : IAsyncLifetime
+public partial class HireLabTestHost : IAsyncLifetime
 {
     /// <summary>The PostgreSQL image, on the same major version as the AppHost.</summary>
     public const string PostgresImage = "postgres:17";
@@ -109,11 +109,8 @@ public class HireLabTestHost : IAsyncLifetime
         return client;
     }
 
-    /// <summary>Signs in with the staff cookie scheme through a test-only endpoint and returns the issued cookies.</summary>
-    public Task<IReadOnlyList<SetCookieHeaderValue>> SignInAsStaffAsync() => SignInAsync(TestSignIn.Staff);
-
     /// <summary>Signs in with the candidate cookie scheme through a test-only endpoint and returns the issued cookies.</summary>
-    public Task<IReadOnlyList<SetCookieHeaderValue>> SignInAsCandidateAsync() => SignInAsync(TestSignIn.Candidate);
+    public Task<IReadOnlyList<SetCookieHeaderValue>> SignInAsCandidateAsync() => SignInAsync(TestSignIn.CandidateUri);
 
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
@@ -184,10 +181,10 @@ public class HireLabTestHost : IAsyncLifetime
         return (bool)(await command.ExecuteScalarAsync())!;
     }
 
-    private async Task<IReadOnlyList<SetCookieHeaderValue>> SignInAsync(string scheme)
+    private async Task<IReadOnlyList<SetCookieHeaderValue>> SignInAsync(Uri signInUri)
     {
         using var client = CreateClient();
-        using var response = await client.PostAsync(TestSignIn.UriFor(scheme), content: null, TestContext.Current.CancellationToken);
+        using var response = await client.PostAsync(signInUri, content: null, TestContext.Current.CancellationToken);
         response.EnsureSuccessStatusCode();
 
         return SetCookieHeaderValue.ParseList(response.Headers.GetValues(HeaderNames.SetCookie).ToList()).ToList();

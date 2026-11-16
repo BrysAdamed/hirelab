@@ -1,4 +1,6 @@
+using HireLab.Modules.Identity.Authentication;
 using HireLab.Modules.Identity.Persistence;
+using HireLab.Modules.Identity.Seed;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Modules;
 using HireLab.SharedKernel.Persistence;
@@ -18,13 +20,21 @@ public sealed class IdentityModule : IModule, IModuleMigrator
 
         builder.Services.AddModuleDbContext<IdentityModuleDbContext>();
         builder.Services.AddHandlers<IdentityModuleDbContext>(typeof(IdentityModule).Assembly);
+        builder.Services.AddStaffIdentityCore().AddStaffSignIn();
     }
 
     /// <inheritdoc />
-    public void AddMigrationServices(IServiceCollection services) =>
+    public void AddMigrationServices(IServiceCollection services)
+    {
         services.AddModuleDbContext<IdentityModuleDbContext>();
+        services.AddStaffIdentityCore();
+    }
 
     /// <inheritdoc />
     public Task MigrateAsync(IServiceProvider services, CancellationToken cancellationToken) =>
         services.GetRequiredService<IdentityModuleDbContext>().Database.MigrateAsync(cancellationToken);
+
+    /// <inheritdoc />
+    public Task SeedDevelopmentDataAsync(IServiceProvider services, CancellationToken cancellationToken) =>
+        ActivatorUtilities.CreateInstance<DevelopmentSeed>(services).RunAsync(cancellationToken);
 }

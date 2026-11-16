@@ -1,4 +1,5 @@
 using System.Net;
+using HireLab.SharedKernel.Users;
 
 namespace HireLab.Api.Tests.Auth;
 
@@ -22,7 +23,7 @@ public sealed class AuthSweepTests(ApiTestHost host) : IntegrationTest(host)
     public async Task Probe_endpoints_accept_their_own_group_cookie()
     {
         // Arrange
-        using var staffClient = Host.CreateClient(await Host.SignInAsStaffAsync());
+        using var staffClient = Host.CreateClient((await SignInAsAsync(StaffRole.Interviewer)).Cookies);
         using var candidateClient = Host.CreateClient(await Host.SignInAsCandidateAsync());
 
         // Act
@@ -68,7 +69,7 @@ public sealed class AuthSweepTests(ApiTestHost host) : IntegrationTest(host)
     public async Task Every_candidate_endpoint_rejects_the_staff_cookie()
     {
         // Arrange
-        using var client = Host.CreateClient(await Host.SignInAsStaffAsync());
+        using var client = Host.CreateClient((await SignInAsAsync(StaffRole.Interviewer)).Cookies);
 
         // Act
         var responses = await SendToEveryEndpointAsync(client, GroupEndpoint.CandidateGroup);

@@ -6,7 +6,6 @@ namespace HireLab.Api.Auth;
 
 internal static class AuthenticationSetup
 {
-    private static readonly TimeSpan _staffIdleTimeout = TimeSpan.FromHours(8);
     private static readonly TimeSpan _candidateLifetime = TimeSpan.FromHours(12);
 
     public static IServiceCollection AddStaffAndCandidateAuth(this IServiceCollection services)
@@ -15,8 +14,10 @@ internal static class AuthenticationSetup
             .AddCookie(AuthSchemes.Staff, options =>
             {
                 ConfigureApiCookie(options, AuthCookies.Staff);
-                options.ExpireTimeSpan = _staffIdleTimeout;
+                options.ExpireTimeSpan = StaffSessionLifetime.IdleTimeout;
                 options.SlidingExpiration = true;
+                options.Events.OnSigningIn = StaffSessionLifetime.OnSigningInAsync;
+                options.Events.OnValidatePrincipal = StaffSessionLifetime.OnValidatePrincipalAsync;
             })
             .AddCookie(AuthSchemes.Candidate, options =>
             {

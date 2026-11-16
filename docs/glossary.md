@@ -33,7 +33,11 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **Response** | Everything a candidate produced for a session task: comments, files, prompts. It is saved continuously. |
 | **Evaluation** | One interviewer's rubric scores and notes for a candidate's session. Its author and the manager can see it. |
 | **Decision** | The manager's final hire / no-hire for a candidate, with a summary. |
-| **Admin / Manager / Interviewer** | User roles. See `docs/vision.md#roles`. |
-| **Team** | A manager and the interviewers assigned to them. |
+| **Admin / Manager / Interviewer** | User roles. See `docs/vision.md#roles`. There is exactly one admin, who has no team. |
+| **User** | A staff account: email (the login), display name, role, team and an active flag. Candidates are not users. |
+| **Team** | An entity with its own id and name that owns job positions, sessions and evaluations. It has at most one active manager and any number of interviewers, and keeps its data when its manager changes. |
+| **Deactivation** | Switching a user off instead of deleting them: they can't log in and their sessions end within 5 minutes. The admin deactivates anyone but themselves; a manager deactivates their own interviewers. Reversible by reactivation. |
+| **Handover** | Giving a team a new manager: the admin deactivates the old manager, the team shows "No manager", and the admin invites a new manager into the same team. |
+| **Security stamp** | A random value on each user that changes on deactivation, role or team change and password reset. Sessions issued before the change end at the next check, at most 5 minutes later. |
 | **Invite link** | A one-time link with an expiry that creates a user account in a given role and team. |
 | **Reset link** | A one-time link with an expiry that lets a user set a new password. A manager or admin generates it and sends it by hand. |

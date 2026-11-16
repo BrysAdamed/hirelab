@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Npgsql;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 
@@ -10,7 +11,7 @@ namespace HireLab.SharedKernel.Persistence;
 /// <summary>
 /// The conventions every module <c>DbContext</c> shares (ADR 0004): PostgreSQL through the host's
 /// <see cref="NpgsqlDataSource"/>, the module schema as the default schema, <c>__EFMigrationsHistory</c>
-/// in that schema and <c>snake_case</c> names.
+/// in that schema, <c>snake_case</c> names and the <see cref="AuditTimestamps"/> columns.
 /// </summary>
 public static class ModuleDbContextConventions
 {
@@ -23,9 +24,13 @@ public static class ModuleDbContextConventions
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        services.TryAddSingleton(TimeProvider.System);
+
         return services.AddDbContext<TContext>((provider, options) =>
-            options.UseModuleConventions<TContext>(npgsql =>
-                npgsql.UseNpgsql(provider.GetRequiredService<NpgsqlDataSource>(), ConfigureNpgsql<TContext>)));
+            options
+                .UseModuleConventions<TContext>(npgsql =>
+                    npgsql.UseNpgsql(provider.GetRequiredService<NpgsqlDataSource>(), ConfigureNpgsql<TContext>))
+                .AddInterceptors(new AuditTimestamps.Interceptor(provider.GetRequiredService<TimeProvider>())));
     }
 
     /// <summary>Applies the module conventions with a plain connection string, for design-time tooling.</summary>
