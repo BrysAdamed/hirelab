@@ -69,7 +69,21 @@
               <label hlmLabel [for]="'disabled-' + theme">Disabled</label>
               <input hlmInput [id]="'disabled-' + theme" value="Read only value" disabled />
             </div>
+            <div class="flex flex-col gap-1.5 sm:col-span-2">
+              <label hlmLabel [for]="'requirements-' + theme">Requirements</label>
+              <textarea
+                hlmTextarea
+                class="font-mono"
+                [id]="'requirements-' + theme"
+                placeholder="- Three years of backend work"
+              ></textarea>
+            </div>
           </div>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <h3 class="font-semibold">Markdown viewer</h3>
+          <hl-markdown [markdown]="markdownSample" />
         </div>
 
         <div class="flex flex-col gap-2">

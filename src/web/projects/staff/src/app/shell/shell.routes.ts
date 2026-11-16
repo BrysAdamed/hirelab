@@ -25,11 +25,51 @@ export const shellRoutes: Routes = [
   {
     path: 'positions',
     title: 'Job positions - HireLab',
-    loadComponent: placeholder,
+    loadComponent: () => import('../positions/positions-page').then((m) => m.PositionsPage),
     data: staffPage({
       roles: ['Manager', 'Interviewer'],
       nav: { label: 'Job positions', icon: lucideBriefcase },
     }),
+  },
+  {
+    path: 'positions/new',
+    title: 'New job position - HireLab',
+    loadComponent: () => import('../positions/position-form-page').then((m) => m.PositionFormPage),
+    data: staffPage({ roles: ['Manager'] }),
+  },
+  {
+    path: 'positions/:positionId',
+    title: 'Job position - HireLab',
+    loadComponent: () =>
+      import('../positions/position-detail-page').then((m) => m.PositionDetailPage),
+    data: staffPage({ roles: ['Manager', 'Interviewer'] }),
+  },
+  {
+    path: 'positions/:positionId/edit',
+    title: 'Edit job position - HireLab',
+    loadComponent: () => import('../positions/position-form-page').then((m) => m.PositionFormPage),
+    data: staffPage({ roles: ['Manager'] }),
+  },
+  {
+    path: 'positions/:positionId/candidates/new',
+    title: 'Add candidate - HireLab',
+    loadComponent: () =>
+      import('../candidates/candidate-form-page').then((m) => m.CandidateFormPage),
+    data: staffPage({ roles: ['Manager', 'Interviewer'] }),
+  },
+  {
+    path: 'candidates/:candidateId',
+    title: 'Candidate - HireLab',
+    loadComponent: () =>
+      import('../candidates/candidate-profile-page').then((m) => m.CandidateProfilePage),
+    data: staffPage({ roles: ['Manager', 'Interviewer'] }),
+  },
+  {
+    path: 'candidates/:candidateId/edit',
+    title: 'Edit candidate - HireLab',
+    loadComponent: () =>
+      import('../candidates/candidate-form-page').then((m) => m.CandidateFormPage),
+    data: staffPage({ roles: ['Manager', 'Interviewer'] }),
   },
   {
     path: 'tasks',

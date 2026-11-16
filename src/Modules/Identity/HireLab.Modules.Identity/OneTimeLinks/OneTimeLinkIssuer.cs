@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using HireLab.Modules.Identity.Domain;
 using HireLab.Modules.Identity.Persistence;
+using HireLab.SharedKernel.Persistence;
 using HireLab.SharedKernel.Results;
 using Microsoft.EntityFrameworkCore;
 

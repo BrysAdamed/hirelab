@@ -4,6 +4,7 @@ using HireLab.Modules.Identity.OneTimeLinks;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.Modules.Identity.Persistence.Configurations;
 using HireLab.SharedKernel.Handlers;
+using HireLab.SharedKernel.Persistence;
 using HireLab.SharedKernel.Results;
 using HireLab.SharedKernel.Users;
 using Microsoft.AspNetCore.Identity;

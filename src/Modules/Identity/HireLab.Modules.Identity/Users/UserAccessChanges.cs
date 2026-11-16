@@ -1,6 +1,6 @@
 using HireLab.Modules.Identity.Domain;
-using HireLab.Modules.Identity.Persistence;
 using HireLab.Modules.Identity.Persistence.Configurations;
+using HireLab.SharedKernel.Persistence;
 using HireLab.SharedKernel.Results;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

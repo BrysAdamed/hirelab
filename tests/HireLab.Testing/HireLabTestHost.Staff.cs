@@ -47,6 +47,13 @@ public partial class HireLabTestHost
         return SignInAsync(TestSignIn.StaffUri(user.Id));
     }
 
+    /// <summary>Creates a service scope that runs as <paramref name="user"/>, with their team query filter.</summary>
+    public StaffScope CreateScopeAs(TestUser user)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        return new StaffScope(Services, user);
+    }
+
     /// <summary>Gives a user a new security stamp, as deactivation, a role or team change and a password reset do.</summary>
     public async Task ChangeSecurityStampAsync(UserId userId)
     {

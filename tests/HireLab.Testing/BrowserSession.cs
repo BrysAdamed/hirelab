@@ -44,6 +44,11 @@ public sealed class BrowserSession : IDisposable
     public Task<HttpResponseMessage> PostAsJsonAsync<TBody>(Uri uri, TBody body) =>
         SendAsync(new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonContent.Create(body) });
 
+    public Task<HttpResponseMessage> PutAsJsonAsync<TBody>(Uri uri, TBody body) =>
+        SendAsync(new HttpRequestMessage(HttpMethod.Put, uri) { Content = JsonContent.Create(body) });
+
+    public Task<HttpResponseMessage> DeleteAsync(Uri uri) => SendAsync(new HttpRequestMessage(HttpMethod.Delete, uri));
+
     public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
     {
         ArgumentNullException.ThrowIfNull(request);

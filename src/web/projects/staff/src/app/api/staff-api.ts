@@ -18,6 +18,16 @@ export type UserSummary = components['schemas']['UserResponse'];
 export type TeamSummary = components['schemas']['TeamResponse'];
 export type IssuedResetLink = components['schemas']['IssuedResetLinkResponse'];
 export type ResetLinkPreview = components['schemas']['ResetLinkPreviewResponse'];
+export type JobPosition = components['schemas']['JobPositionResponse'];
+export type JobPositionSummary = components['schemas']['JobPositionSummaryResponse'];
+export type JobPositionState = components['schemas']['JobPositionState'];
+export type JobPositionDetails = components['schemas']['CreateJobPositionRequest'];
+export type Candidate = components['schemas']['CandidateResponse'];
+export type PositionCandidate = components['schemas']['PositionCandidateResponse'];
+export type AddedCandidate = components['schemas']['AddedCandidateResponse'];
+export type CandidateDetails = components['schemas']['AddCandidateRequest'];
+export type Attachment = components['schemas']['AttachmentResponse'];
+export type UploadedAttachment = components['schemas']['UploadedAttachmentResponse'];
 
 /** The message of a failed API call: the ProblemDetails detail, or a generic fallback. */
 export function problemMessage(

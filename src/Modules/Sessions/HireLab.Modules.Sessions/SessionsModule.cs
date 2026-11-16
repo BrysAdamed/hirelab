@@ -1,4 +1,6 @@
+using HireLab.Modules.Sessions.Contracts;
 using HireLab.Modules.Sessions.Persistence;
+using HireLab.Modules.Sessions.UnfinishedSessions;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Modules;
 using HireLab.SharedKernel.Persistence;
@@ -18,6 +20,7 @@ public sealed class SessionsModule : IModule, IModuleMigrator
 
         builder.Services.AddModuleDbContext<SessionsDbContext>();
         builder.Services.AddHandlers<SessionsDbContext>(typeof(SessionsModule).Assembly);
+        builder.Services.AddScoped<IUnfinishedSessionsQuery, UnfinishedSessionsQuery>();
     }
 
     /// <inheritdoc />

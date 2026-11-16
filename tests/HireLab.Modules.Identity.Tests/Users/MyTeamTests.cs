@@ -1,6 +1,5 @@
 using System.Net;
 using HireLab.Modules.Identity.Tests.Auth;
-using HireLab.Modules.Identity.Tests.Invites;
 using HireLab.SharedKernel.Users;
 using HireLab.Testing.Staff;
 

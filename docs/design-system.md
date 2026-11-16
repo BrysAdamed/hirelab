@@ -88,7 +88,7 @@ Lucide through `@ng-icons/lucide`, 16 px in dense staff UI and 20 px in the cand
 
 All of these live in the `ui` lib and appear on `/design`.
 
-Spartan helm components are generated with `npx ng g @spartan-ng/cli:ui <name>` (settings in `src/web/components.json`) into `projects/ui/src/helm/` and imported as `@hirelab/ui/helm/<name>`. Generated so far: button, input, label, card, badge, dialog, dropdown-menu. After regenerating, re-apply and review the local changes listed under Colour tokens.
+Spartan helm components are generated with `npx ng g @spartan-ng/cli:ui <name>` (settings in `src/web/components.json`) into `projects/ui/src/helm/` and imported as `@hirelab/ui/helm/<name>`. Generated so far: button, input, label, card, badge, dialog, dropdown-menu, textarea (the textarea uses the input's field classes instead of the generated `spartan-textarea` style class). After regenerating, re-apply and review the local changes listed under Colour tokens.
 
 | Component | Notes |
 |---|---|
@@ -101,7 +101,7 @@ Spartan helm components are generated with `npx ng g @spartan-ng/cli:ui <name>` 
 | Toast | Success, error, info. Errors stay until dismissed. |
 | Empty state | Icon, one sentence, optional action |
 | Status badge | Session (`Planned`, `Live`, `Finished`), session task (`Pending`, `Current`, `Done`), version (`Draft`, `vN`, `Active`), visibility (`Team`, `Global`). Always icon + label. |
-| Markdown viewer | `marked` + DOMPurify. All user-authored markdown goes through it. |
+| Markdown viewer | `hl-markdown` from `@hirelab/ui/markdown` (its own entry point): `marked` (GitHub flavoured) + DOMPurify. All user-authored markdown goes through it. |
 | Markdown editor | Monaco in markdown mode with live preview |
 | Code editor / diff editor | Monaco behind our wrapper, lazy-loaded, theme-synced |
 | Rubric scorer | `scale` criteria as 0–4 segmented controls, `check` criteria as Yes / No, "not assessed", suggested values marked as such |

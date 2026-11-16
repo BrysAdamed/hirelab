@@ -4,10 +4,16 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 
 | Term | Meaning |
 |---|---|
-| **Job position** | An opening the team is hiring for. It holds requirements, nice-to-haves and other information. Its state is `Open` or `Closed`. |
-| **Candidate** | A person applying to exactly one job position. The same person applying again is a new candidate. |
-| **Attachment** | A file on a candidate's profile. The CV is an attachment. |
-| **Anonymisation** | What closing a job position does to its candidates: contact details are replaced with "Candidate #N" and attachments are deleted. Notes, scores and task results stay. It is irreversible. |
+| **Job position** | An opening the team is hiring for: a title and the Markdown sections description, requirements (required), nice-to-haves and interviewer notes. Its state is `Open` or `Closed`; a closed position is read-only. The manager creates, edits and deletes positions (delete only while open and without candidates); interviewers read them. In code: `JobPosition`. |
+| **Version** | The number an editable aggregate is read with (PostgreSQL `xmin`). An edit sends it back; if someone else saved in between, the edit is refused with "changed by someone else, reload". |
+| **Candidate** | A person applying to exactly one job position. The same person applying again is a new candidate. Has a full name, an optional email and phone, up to 3 profile links and a number. The manager and interviewers of the team add and edit candidates while the position is open. Their personal data lives only in Positions; other modules hold the candidate id (ADR 0023). In code: `Candidate`. |
+| **Candidate number** | A candidate's place in their position's sequence (1, 2, 3 …), given when they are added and never changed or reused. |
+| **Candidate #N** | How an anonymised candidate is shown, N being their candidate number. Otherwise a candidate is shown by full name. In code: `Candidate.DisplayName`. |
+| **Attachment** | A file on a candidate's profile. The CV is an attachment. PDF, DOCX, TXT, MD, PNG or JPG, at most 10 MB, at most 10 per candidate. The manager and interviewers of the team upload and delete them while the position is open and download them any time; anonymisation deletes them (ADR 0005, ADR 0024). In code: `Attachment`. |
+| **Anonymisation** | Removing a candidate's personal data: contact details are cleared, attachments are deleted and the candidate is shown as "Candidate #N" everywhere. Who did it and when is recorded (`AnonymisedBy`/`AnonymisedAt`). Closing a job position anonymises all its candidates. Notes, scores and task results stay. It is irreversible. |
+| **Anonymise candidate** | Anonymising a single candidate while their position stays open. Manager only, refused while the candidate has an unfinished session (ADR 0026). |
+| **Close position** | The manager ending hiring for a job position: it becomes `Closed` and read-only, who closed it and when is recorded (`ClosedBy`/`ClosedAt`) and all its candidates are anonymised. Refused while any of its candidates has an unfinished session. Irreversible (ADR 0026). |
+| **Unfinished session** | An interview session that isn't `Finished` yet (`Planned` or `Live`). It blocks closing the position and anonymising the candidate. In code: `IUnfinishedSessionsQuery`. |
 | **Task** | One interview exercise, authored in the app. It has an owning team, a visibility, versions, a task type, title, summary, tags, level, estimated minutes, content, reference answer, interviewer notes and rubric. Its UI comes from its task type. |
 | **Task version** | One revision of a task (`v1`, `v2` …). Published versions are immutable; a change means a new version. |
 | **Draft** | The one unpublished version a task may have. Editable by the team; can be previewed, but queued only in Development. |
@@ -22,7 +28,7 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **Level** | A task's difficulty: `Junior`, `Mid` or `Senior`. |
 | **Tag** | A free label on a task, such as `csharp`, `cqrs`, `security` or `role:qa`. |
 | **Reference answer** | Markdown describing what a strong answer contains. It is shown next to the candidate's response, never to the candidate. |
-| **Interviewer notes** | Markdown on a task with hints for a stuck candidate and follow-up questions. Staff only. |
+| **Interviewer notes** | Markdown on a task or a job position with hints for a stuck candidate and follow-up questions. Staff only. |
 | **Rubric** | The scoring criteria of a task, defined with the task. |
 | **Criterion** | One rubric item. A `scale` criterion is scored 0–4 and weighted; a `check` criterion is Yes / No with an expected answer. Any criterion can be "not assessed". |
 | **Critical check** | A `check` criterion whose failure is highlighted above the score. |
@@ -37,6 +43,8 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **User** | A staff account: email (the login), display name, role, team and an active flag. Candidates are not users. |
 | **Team** | An entity with its own id and name that owns job positions, sessions and evaluations. It has at most one active manager and any number of interviewers, and keeps its data when its manager changes. |
 | **Team-owned** | Data that belongs to one team (job positions, sessions, evaluations …). Only that team's manager and interviewers see it; the admin sees none. In code: `ITeamOwned`. |
+| **System job** | Work that runs outside any user's request, on behalf of no team, such as the migration worker and the orphan sweep. Only system jobs may read across teams by bypassing the team query filter (ADR 0009). In code: hosted services and `ISystemJob`. |
+| **Orphan sweep** | The hourly system job in the API that deletes attachment blobs without an attachment row (orphans) once they are older than the grace period (an hour by default), so an upload still in progress keeps its blob. Blobs whose name it doesn't recognise are kept (ADR 0027). In code: `OrphanAttachmentSweep`. |
 | **Deactivation** | Switching a user off instead of deleting them: they can't log in and their sessions end within 5 minutes. The admin deactivates anyone but themselves; a manager deactivates their own interviewers. It also revokes the pending invite and reset links the user issued and the reset links for them, so a departing manager's links neither create accounts nor take any over. Reversible by reactivation, which is refused for a manager while their team has another active manager. |
 | **Handover** | Giving a team a new manager: the admin deactivates the old manager, the team shows "No manager", and the admin invites a new manager into the same team. |
 | **Reassignment** | The admin moving an interviewer to another team. Their sessions end within 5 minutes, after which they see only the new team's data. Their pending reset links are revoked; invites are not affected. Managers are not reassigned; a team changes manager by handover. |

@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using HireLab.SharedKernel.Users;
-using Microsoft.AspNetCore.Mvc;
 
 namespace HireLab.Modules.Identity.Tests.Auth;
 
@@ -12,11 +11,6 @@ internal static class AuthApi
 
     public static Task<HttpResponseMessage> LoginAsync(this BrowserSession browser, string email, string password) =>
         browser.PostAsJsonAsync(Login, new { email, password });
-
-    public static async Task<ProblemDetails> ProblemAsync(this HttpResponseMessage response) =>
-        (await response.Content.ReadFromJsonAsync<ProblemDetails>(TestContext.Current.CancellationToken)).ShouldNotBeNull();
-
-    public static string? Code(this ProblemDetails problem) => problem.Extensions.TryGetValue("code", out var code) ? code?.ToString() : null;
 
     public static async Task<CurrentUser> CurrentUserAsync(this HttpResponseMessage response) =>
         (await response.Content.ReadFromJsonAsync<CurrentUser>(TestContext.Current.CancellationToken)).ShouldNotBeNull();

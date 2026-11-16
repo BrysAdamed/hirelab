@@ -28,3 +28,8 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0020](0020-teams-and-user-lifecycle.md) | Teams and user lifecycle | Accepted |
 | [0021](0021-one-time-links.md) | One-time links | Accepted |
 | [0022](0022-first-admin-bootstrap.md) | First admin bootstrap | Accepted |
+| [0023](0023-candidate-personal-data-stays-in-positions.md) | Candidate personal data stays in Positions | Accepted |
+| [0024](0024-attachment-aggregate-and-upload-consistency.md) | Attachment aggregate and upload consistency | Accepted |
+| [0025](0025-staff-directory.md) | Staff directory | Accepted |
+| [0026](0026-closing-positions-and-anonymisation.md) | Closing positions and anonymisation | Accepted |
+| [0027](0027-orphan-attachment-sweep.md) | Orphan attachment sweep | Accepted |

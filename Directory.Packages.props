@@ -25,6 +25,10 @@
     <PackageVersion Include="Aspire.Npgsql" Version="13.6.5" />
   </ItemGroup>
 
+  <ItemGroup Label="Attachment storage">
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.29.2" />
+  </ItemGroup>
+
   <ItemGroup Label="Data Protection in Azure">
     <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Blobs" Version="1.5.5" />
     <PackageVersion Include="Azure.Extensions.AspNetCore.DataProtection.Keys" Version="1.6.5" />

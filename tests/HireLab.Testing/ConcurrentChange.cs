@@ -1,5 +1,7 @@
+using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace HireLab.Testing;
 
@@ -9,6 +11,9 @@ namespace HireLab.Testing;
 /// </summary>
 public sealed class ConcurrentChange : SaveChangesInterceptor
 {
+    private static readonly MethodInfo _addTo =
+        typeof(ConcurrentChange).GetMethod(nameof(AddTo), BindingFlags.NonPublic | BindingFlags.Static)!;
+
     private Trigger? _trigger;
 
     /// <summary>
@@ -24,6 +29,25 @@ public sealed class ConcurrentChange : SaveChangesInterceptor
 
     /// <summary>Forgets a change that hasn't run.</summary>
     public void Reset() => _trigger = null;
+
+    internal static void AddToEveryDbContext(IServiceCollection services, ConcurrentChange concurrentChange)
+    {
+        var contextTypes = services
+            .Select(descriptor => descriptor.ServiceType)
+            .Where(type => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(DbContextOptions<>))
+            .Select(type => type.GenericTypeArguments[0])
+            .Distinct()
+            .ToList();
+
+        foreach (var contextType in contextTypes)
+        {
+            _addTo.MakeGenericMethod(contextType).Invoke(null, [services, concurrentChange]);
+        }
+    }
+
+    private static void AddTo<TContext>(IServiceCollection services, ConcurrentChange concurrentChange)
+        where TContext : DbContext =>
+        services.ConfigureDbContext<TContext>(options => options.AddInterceptors(concurrentChange));
 
     /// <inheritdoc />
     public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(

@@ -2,6 +2,7 @@ using HireLab.Modules.Identity.Auth;
 using HireLab.Modules.Identity.Auth.Login;
 using HireLab.Modules.Identity.Authentication;
 using HireLab.Modules.Identity.Bootstrap;
+using HireLab.Modules.Identity.Contracts;
 using HireLab.Modules.Identity.Invites;
 using HireLab.Modules.Identity.OneTimeLinks;
 using HireLab.Modules.Identity.Persistence;
@@ -40,6 +41,7 @@ public sealed class IdentityModule : IModule, IModuleMigrator
         builder.Services.AddScoped<InviteIssuer>();
         builder.Services.AddScoped<ResetLinkIssuer>();
         builder.Services.AddSingleton<UnknownUserPasswordCheck>();
+        builder.Services.AddScoped<IStaffDirectory, StaffDirectory>();
     }
 
     /// <inheritdoc />

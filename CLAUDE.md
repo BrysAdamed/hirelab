@@ -29,6 +29,7 @@ Live technical interview platform: a task bank authored in the app, interview se
 - Team-owned aggregates implement `ITeamOwned`; the module conventions give them the `Team` global query filter (the admin sees none). Staff endpoints that need a role use `StaffPolicies` (`Admin`, `Manager`, `ManagerOrInterviewer`) at group or endpoint level. `IgnoreQueryFilters` is allowed only in the migration worker and system jobs ([ADR 0009](docs/adr/0009-authorisation-model.md)).
 - No Azure deployment until MVP 1 is done; everything runs locally through Aspire ([ADR 0010](docs/adr/0010-hosting-and-environments.md)). Infrastructure is declared in the AppHost ([ADR 0011](docs/adr/0011-iac-and-ci-cd.md)).
 - No personal data in logs or traces; use ids ([ADR 0012](docs/adr/0012-observability.md)).
+- Candidate personal data lives only in Positions. Other modules store `CandidateId` and read names through `ICandidateDirectory` in `Positions.Contracts` each time they show them; never copy a name or contact detail. Show a candidate by `DisplayName` ([ADR 0023](docs/adr/0023-candidate-personal-data-stays-in-positions.md)).
 
 ## Testing
 
