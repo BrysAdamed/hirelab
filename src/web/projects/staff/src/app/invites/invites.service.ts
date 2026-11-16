@@ -3,16 +3,16 @@ import {
   type Invite,
   type InvitePreview,
   type IssuedInvite,
-  problemMessage,
   STAFF_API,
   type TeamWithoutManager,
 } from '../api/staff-api';
+import { type ApiResult, apiFailure } from '../api/api-result';
 import { AuthService } from '../auth/auth.service';
+
+export type { ApiResult } from '../api/api-result';
 
 /** Who a section invites: the admin invites managers, a manager invites interviewers. */
 export type InviteKind = 'managers' | 'interviewers';
-
-export type ApiResult<T> = { ok: true; value: T } | { ok: false; message: string };
 
 export interface InviteeInput {
   email: string;
@@ -20,8 +20,6 @@ export interface InviteeInput {
 }
 
 export type ManagerTeamInput = { teamId: string } | { newTeamName: string };
-
-const genericFailure = 'Something went wrong. Try again in a moment.';
 
 /** The invite endpoints: issuing, listing and revoking invites, and redeeming an invite link. */
 @Injectable({ providedIn: 'root' })
@@ -34,7 +32,7 @@ export class InvitesService {
       kind === 'managers'
         ? await this.api.GET('/api/staff/invites/managers')
         : await this.api.GET('/api/staff/invites/interviewers');
-    return data ? { ok: true, value: data } : failure(error);
+    return data ? { ok: true, value: data } : apiFailure(error);
   }
 
   async inviteManager(
@@ -48,14 +46,14 @@ export class InvitesService {
         newTeamName: 'newTeamName' in team ? team.newTeamName : null,
       },
     });
-    return data ? { ok: true, value: data } : failure(error);
+    return data ? { ok: true, value: data } : apiFailure(error);
   }
 
   async inviteInterviewer(invitee: InviteeInput): Promise<ApiResult<IssuedInvite>> {
     const { data, error } = await this.api.POST('/api/staff/invites/interviewers', {
       body: invitee,
     });
-    return data ? { ok: true, value: data } : failure(error);
+    return data ? { ok: true, value: data } : apiFailure(error);
   }
 
   async revoke(kind: InviteKind, inviteId: string): Promise<ApiResult<void>> {
@@ -64,12 +62,12 @@ export class InvitesService {
       kind === 'managers'
         ? await this.api.POST('/api/staff/invites/managers/{inviteId}/revoke', { params })
         : await this.api.POST('/api/staff/invites/interviewers/{inviteId}/revoke', { params });
-    return response.ok ? { ok: true, value: undefined } : failure(error);
+    return response.ok ? { ok: true, value: undefined } : apiFailure(error);
   }
 
   async teamsWithoutManager(): Promise<ApiResult<TeamWithoutManager[]>> {
     const { data, error } = await this.api.GET('/api/staff/invites/managers/teams-without-manager');
-    return data ? { ok: true, value: data } : failure(error);
+    return data ? { ok: true, value: data } : apiFailure(error);
   }
 
   /** Gets an antiforgery token for the current (usually anonymous) user, which redemption needs. */
@@ -81,7 +79,7 @@ export class InvitesService {
     const { data, error } = await this.api.POST('/api/staff/invites/preview', {
       body: { token },
     });
-    return data ? { ok: true, value: data } : failure(error);
+    return data ? { ok: true, value: data } : apiFailure(error);
   }
 
   /** Redeems the link; on success the API has signed the new user in. */
@@ -90,7 +88,7 @@ export class InvitesService {
       body: { token, password },
     });
     if (!data) {
-      return failure(error);
+      return apiFailure(error);
     }
     this.auth.signedIn(data);
     return { ok: true, value: undefined };
@@ -100,11 +98,4 @@ export class InvitesService {
 /** The full invite link for a link path the API returned. */
 export function inviteLink(linkPath: string, origin: string): string {
   return new URL(linkPath, origin).toString();
-}
-
-function failure(error: { detail?: string | null; title?: string | null } | undefined): {
-  ok: false;
-  message: string;
-} {
-  return { ok: false, message: problemMessage(error, genericFailure) };
 }

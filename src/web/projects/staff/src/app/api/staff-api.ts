@@ -14,6 +14,8 @@ export type InviteState = components['schemas']['OneTimeLinkState'];
 export type IssuedInvite = components['schemas']['IssuedInviteResponse'];
 export type InvitePreview = components['schemas']['InvitePreviewResponse'];
 export type TeamWithoutManager = components['schemas']['TeamWithoutManagerResponse'];
+export type UserSummary = components['schemas']['UserResponse'];
+export type TeamSummary = components['schemas']['TeamResponse'];
 
 /** The message of a failed API call: the ProblemDetails detail, or a generic fallback. */
 export function problemMessage(
