@@ -23,6 +23,65 @@ namespace HireLab.Modules.Positions.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("HireLab.Modules.Positions.Domain.Attachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CandidateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("candidate_id");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("content_type");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("file_name");
+
+                    b.Property<long>("Size")
+                        .HasColumnType("bigint")
+                        .HasColumnName("size");
+
+                    b.Property<int>("Slot")
+                        .HasColumnType("integer")
+                        .HasColumnName("slot");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("team_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<Guid>("UploadedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("uploaded_by");
+
+                    b.HasKey("Id")
+                        .HasName("pk_attachments");
+
+                    b.HasIndex("CandidateId", "Slot")
+                        .IsUnique()
+                        .HasDatabaseName("ix_attachments_candidate_id_slot");
+
+                    b.ToTable("attachments", "positions", t =>
+                        {
+                            t.HasCheckConstraint("ck_attachments_slot_range", "slot BETWEEN 1 AND 10");
+                        });
+                });
+
             modelBuilder.Entity("HireLab.Modules.Positions.Domain.Candidate", b =>
                 {
                     b.Property<Guid>("Id")
@@ -165,6 +224,16 @@ namespace HireLab.Modules.Positions.Persistence.Migrations
                         .HasDatabaseName("ix_job_positions_team_id_state");
 
                     b.ToTable("job_positions", "positions");
+                });
+
+            modelBuilder.Entity("HireLab.Modules.Positions.Domain.Attachment", b =>
+                {
+                    b.HasOne("HireLab.Modules.Positions.Domain.Candidate", null)
+                        .WithMany()
+                        .HasForeignKey("CandidateId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_attachments_candidates_candidate_id");
                 });
 
             modelBuilder.Entity("HireLab.Modules.Positions.Domain.Candidate", b =>

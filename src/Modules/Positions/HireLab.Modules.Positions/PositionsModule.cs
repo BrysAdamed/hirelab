@@ -1,3 +1,5 @@
+using HireLab.Modules.Positions.Attachments;
+using HireLab.Modules.Positions.Attachments.Storage;
 using HireLab.Modules.Positions.Candidates;
 using HireLab.Modules.Positions.Contracts;
 using HireLab.Modules.Positions.JobPositions;
@@ -15,6 +17,12 @@ namespace HireLab.Modules.Positions;
 /// <summary>The Positions module's registration entry point.</summary>
 public sealed class PositionsModule : IModule, IModuleMigrator
 {
+    /// <summary>
+    /// The private blob container that holds candidate attachments (ADR 0005). The host registers a
+    /// <c>BlobServiceClient</c> for the storage account and provisions the container.
+    /// </summary>
+    public const string AttachmentsContainerName = "attachments";
+
     /// <inheritdoc />
     public void AddServices(IHostApplicationBuilder builder)
     {
@@ -23,6 +31,7 @@ public sealed class PositionsModule : IModule, IModuleMigrator
         builder.Services.AddModuleDbContext<PositionsDbContext>();
         builder.Services.AddHandlers<PositionsDbContext>(typeof(PositionsModule).Assembly);
         builder.Services.AddScoped<ICandidateDirectory, CandidateDirectory>();
+        builder.Services.AddSingleton<IAttachmentStore, BlobAttachmentStore>();
     }
 
     /// <inheritdoc />
@@ -30,6 +39,7 @@ public sealed class PositionsModule : IModule, IModuleMigrator
     {
         staff.MapJobPositionEndpoints();
         staff.MapCandidateEndpoints();
+        staff.MapAttachmentEndpoints();
     }
 
     /// <inheritdoc />

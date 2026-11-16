@@ -69,6 +69,22 @@ internal sealed class Candidate : ITeamOwned
     public Result Edit(CandidateDetails details, JobPosition position)
     {
         ArgumentNullException.ThrowIfNull(details);
+
+        var editable = EnsureEditable(position);
+        if (editable.IsFailure)
+        {
+            return editable;
+        }
+
+        Apply(details);
+        return Result.Success();
+    }
+
+    /// <summary>Whether attachments may be uploaded or deleted: only while <paramref name="position"/>, the candidate's position, is open.</summary>
+    public Result EnsureAttachmentsCanChange(JobPosition position) => EnsureEditable(position);
+
+    private Result EnsureEditable(JobPosition position)
+    {
         ArgumentNullException.ThrowIfNull(position);
         if (position.Id != JobPositionId)
         {
@@ -80,13 +96,7 @@ internal sealed class Candidate : ITeamOwned
             return JobPositionErrors.Closed;
         }
 
-        if (IsAnonymised)
-        {
-            return CandidateErrors.Anonymised;
-        }
-
-        Apply(details);
-        return Result.Success();
+        return IsAnonymised ? CandidateErrors.Anonymised : Result.Success();
     }
 
     private void Apply(CandidateDetails details)

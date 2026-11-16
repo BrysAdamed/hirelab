@@ -1,6 +1,8 @@
 using HireLab.Api;
 using HireLab.Api.Modules;
+using Azure.Storage.Blobs;
 using HireLab.Modules.Identity.Domain;
+using HireLab.Modules.Positions;
 using HireLab.Testing.Staff;
 using HireLab.SharedKernel.Modules;
 using Microsoft.AspNetCore.Hosting;
@@ -32,7 +34,7 @@ public partial class HireLabTestHost : IAsyncLifetime
     /// <summary>The PostgreSQL image, on the same major version as the AppHost.</summary>
     public const string PostgresImage = "postgres:17";
 
-    /// <summary>The Azurite image.</summary>
+    /// <summary>The Azurite image. Like the AppHost's, it runs with <c>--skipApiVersionCheck</c>, since the Azure SDK is newer.</summary>
     public const string AzuriteImage = "mcr.microsoft.com/azure-storage/azurite:3.35.0";
 
     /// <summary>The time every test host's clock starts at.</summary>
@@ -42,7 +44,8 @@ public partial class HireLabTestHost : IAsyncLifetime
     private static readonly Uri _baseAddress = new("https://localhost");
 
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder(PostgresImage).WithDatabase(ResourceNames.Database).Build();
-    private readonly AzuriteContainer _azurite = new AzuriteBuilder(AzuriteImage).Build();
+    private readonly AzuriteContainer _azurite = new AzuriteBuilder(AzuriteImage).WithCommand("--skipApiVersionCheck").Build();
+    private BlobContainerClient? _attachmentBlobs;
     private ApiFactory? _factory;
     private Respawner? _respawner;
 
@@ -61,12 +64,19 @@ public partial class HireLabTestHost : IAsyncLifetime
     /// <summary>The connection string of the test database.</summary>
     public string DatabaseConnectionString => _postgres.GetConnectionString();
 
+    /// <summary>The <c>attachments</c> blob container in Azurite, created as the AppHost provisions it. Emptied before every test.</summary>
+    public BlobContainerClient AttachmentBlobs =>
+        _attachmentBlobs ?? throw new InvalidOperationException("The test host has not been initialised.");
+
     private ApiFactory Factory => _factory ?? throw new InvalidOperationException("The test host has not been initialised.");
 
     /// <inheritdoc />
     public async ValueTask InitializeAsync()
     {
         await Task.WhenAll(_postgres.StartAsync(), _azurite.StartAsync());
+
+        _attachmentBlobs = new BlobServiceClient(_azurite.GetConnectionString()).GetBlobContainerClient(PositionsModule.AttachmentsContainerName);
+        await _attachmentBlobs.CreateIfNotExistsAsync();
 
         await MigrateAsync();
         await CreateTestTablesAsync();
@@ -77,7 +87,7 @@ public partial class HireLabTestHost : IAsyncLifetime
     }
 
     /// <summary>
-    /// Deletes all data except the migrations history (nothing while no module has tables) and resets <see cref="PasswordHashes"/>.
+    /// Deletes all data except the migrations history (nothing while no module has tables) and all attachment blobs, and resets <see cref="PasswordHashes"/>.
     /// <see cref="IntegrationTest"/> calls it before every test.
     /// </summary>
     public async ValueTask ResetAsync()
@@ -89,6 +99,11 @@ public partial class HireLabTestHost : IAsyncLifetime
 
         PasswordHashes.Reset();
         ConcurrentChange.Reset();
+
+        await foreach (var blob in AttachmentBlobs.GetBlobsAsync())
+        {
+            await AttachmentBlobs.DeleteBlobIfExistsAsync(blob.Name);
+        }
 
         if (_respawner is not { } respawner)
         {

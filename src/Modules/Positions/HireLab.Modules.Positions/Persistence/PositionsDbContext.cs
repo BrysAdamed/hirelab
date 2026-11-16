@@ -14,11 +14,14 @@ internal sealed class PositionsDbContext(DbContextOptions<PositionsDbContext> op
 
     public DbSet<Candidate> Candidates => Set<Candidate>();
 
+    public DbSet<Attachment> Attachments => Set<Attachment>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.AddSharedKernelIdConversions();
         configurationBuilder.Properties<JobPositionId>().HaveConversion<JobPositionIdConverter>();
         configurationBuilder.Properties<CandidateId>().HaveConversion<CandidateIdConverter>();
+        configurationBuilder.Properties<AttachmentId>().HaveConversion<AttachmentIdConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
@@ -27,4 +30,6 @@ internal sealed class PositionsDbContext(DbContextOptions<PositionsDbContext> op
     private sealed class JobPositionIdConverter() : ValueConverter<JobPositionId, Guid>(id => id.Value, value => new JobPositionId(value));
 
     private sealed class CandidateIdConverter() : ValueConverter<CandidateId, Guid>(id => id.Value, value => new CandidateId(value));
+
+    private sealed class AttachmentIdConverter() : ValueConverter<AttachmentId, Guid>(id => id.Value, value => new AttachmentId(value));
 }
