@@ -5,6 +5,8 @@ using HireLab.Modules.Identity.Domain;
 using HireLab.Modules.Positions;
 using HireLab.Testing.Staff;
 using HireLab.SharedKernel.Modules;
+using HireLab.TaskTypes.Abstractions;
+using HireLab.Testing.TaskTypes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -25,7 +27,8 @@ namespace HireLab.Testing;
 /// <summary>
 /// The shared integration host of a test assembly (ADR 0014): PostgreSQL and Azurite in Testcontainers, every
 /// module migrated through its <see cref="IModuleMigrator"/>, and the real API in a
-/// <see cref="WebApplicationFactory{TEntryPoint}"/> with a <see cref="FakeTimeProvider"/>. The orphan attachment sweep is
+/// <see cref="WebApplicationFactory{TEntryPoint}"/> with a <see cref="FakeTimeProvider"/> and the fake
+/// <see cref="TestEchoTaskType"/> registered. The orphan attachment sweep is
 /// switched off, so it never deletes blobs behind a test's back; its tests run the sweeper directly.
 /// Register it once per assembly with <c>[assembly: AssemblyFixture(typeof(HireLabTestHost))]</c>, disable test
 /// parallelisation, and derive test classes from <see cref="IntegrationTest"/>.
@@ -262,6 +265,7 @@ public partial class HireLabTestHost : IAsyncLifetime
                 services.Replace(ServiceDescriptor.Scoped<IPasswordHasher<User>, ProbingPasswordHasher>());
                 ConcurrentChange.AddToEveryDbContext(services, host.ConcurrentChange);
                 UnfinishedSessions.Decorate(services, host.UnfinishedSessions);
+                services.AddTaskType<TestEchoTaskType>();
             });
 
             host.ConfigureWebHost(builder);

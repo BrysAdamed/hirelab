@@ -7,7 +7,7 @@
     "start:candidate": "ng serve candidate",
     "build": "ng build staff && ng build candidate",
     "lint": "eslint .",
-    "test": "ng test ui --watch=false && ng test staff --watch=false && ng test candidate --watch=false",
+    "test": "ng test ui --watch=false && ng test tasks --watch=false && ng test staff --watch=false && ng test candidate --watch=false",
     "check:contrast": "node scripts/check-contrast.mjs",
     "api:generate": "node scripts/api-client.mjs generate",
     "api:update": "node scripts/api-client.mjs update",
