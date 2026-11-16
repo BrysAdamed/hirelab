@@ -151,7 +151,8 @@ export class InvitesSection implements OnInit {
     return null;
   }
 
-  private async refresh(): Promise<void> {
+  /** Reloads the invites and the teams without a manager, for example after a manager was deactivated. */
+  async refresh(): Promise<void> {
     const [invites, teams] = await Promise.all([
       this.invitesService.list(this.kind()),
       this.kind() === 'managers'

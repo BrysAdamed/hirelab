@@ -649,6 +649,338 @@
           }
         }
       }
+    },
+    "/api/staff/teams": {
+      "get": {
+        "tags": [
+          "Teams"
+        ],
+        "summary": "Lists every team with its active manager (or none) and its members.",
+        "operationId": "ListTeams",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/teams/{teamId}/rename": {
+      "post": {
+        "tags": [
+          "Teams"
+        ],
+        "summary": "Renames a team. Its id, members and data stay the same.",
+        "operationId": "RenameTeam",
+        "parameters": [
+          {
+            "name": "teamId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenameTeamRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/users": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Lists every user, active and deactivated, by display name.",
+        "operationId": "ListUsers",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/users/{userId}/deactivate": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Deactivates a user: they can't log in, their sessions end within 5 minutes and the pending invites they issued are revoked. Nobody can deactivate themselves.",
+        "operationId": "DeactivateUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/users/{userId}/reactivate": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Reactivates a deactivated user. A manager is refused while their team has another active manager.",
+        "operationId": "ReactivateUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/users/{userId}/reassign": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Moves an interviewer to another team. Their sessions end within 5 minutes, so they lose the old team's data. Invites are not affected.",
+        "operationId": "ReassignUser",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReassignUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/my-team/interviewers": {
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Lists the interviewers of the manager's team, active and deactivated, by display name.",
+        "operationId": "ListMyTeamInterviewers",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/my-team/interviewers/{userId}/deactivate": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Deactivates a user: they can't log in, their sessions end within 5 minutes and the pending invites they issued are revoked. Nobody can deactivate themselves.",
+        "operationId": "DeactivateMyTeamInterviewer",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/my-team/interviewers/{userId}/reactivate": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Reactivates a deactivated user. A manager is refused while their team has another active manager.",
+        "operationId": "ReactivateMyTeamInterviewer",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -983,6 +1315,18 @@
           }
         }
       },
+      "ReassignUserRequest": {
+        "required": [
+          "teamId"
+        ],
+        "type": "object",
+        "properties": {
+          "teamId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "RedeemInviteRequest": {
         "required": [
           "token",
@@ -994,6 +1338,17 @@
             "type": "string"
           },
           "password": {
+            "type": "string"
+          }
+        }
+      },
+      "RenameTeamRequest": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
             "type": "string"
           }
         }
@@ -1041,7 +1396,96 @@
         ],
         "description": "The fixed role of a staff user (ADR 0009, ADR 0020). Sent over the wire by name."
       },
+      "TeamResponse": {
+        "required": [
+          "id",
+          "name",
+          "manager",
+          "members"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "manager": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/UserResponse"
+              }
+            ]
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserResponse"
+            }
+          }
+        }
+      },
       "TeamWithoutManagerResponse": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "UserResponse": {
+        "required": [
+          "id",
+          "email",
+          "displayName",
+          "role",
+          "team",
+          "isActive"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/StaffRole"
+          },
+          "team": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/UserTeamResponse"
+              }
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UserTeamResponse": {
         "required": [
           "id",
           "name"
@@ -1068,6 +1512,12 @@
     },
     {
       "name": "ResetLinks"
+    },
+    {
+      "name": "Teams"
+    },
+    {
+      "name": "Users"
     }
   ]
 }

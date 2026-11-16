@@ -1,16 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import {
-  type IssuedResetLink,
-  problemMessage,
-  type ResetLinkPreview,
-  STAFF_API,
-} from '../api/staff-api';
-import type { ApiResult } from '../invites/invites.service';
+import { type ApiResult, apiFailure } from '../api/api-result';
+import { type IssuedResetLink, type ResetLinkPreview, STAFF_API } from '../api/staff-api';
 
 /** Whose reset links a staff user generates: the admin managers', a manager their interviewers'. */
 export type ResetLinkKind = 'managers' | 'interviewers';
-
-const genericFailure = 'Something went wrong. Try again in a moment.';
 
 /** The reset link endpoints: generating a link for a user, and redeeming a link. */
 @Injectable({ providedIn: 'root' })
@@ -23,7 +16,7 @@ export class ResetLinksService {
       kind === 'managers'
         ? await this.api.POST('/api/staff/reset-links/managers/{userId}', { params })
         : await this.api.POST('/api/staff/reset-links/interviewers/{userId}', { params });
-    return data ? { ok: true, value: data } : failure(error);
+    return data ? { ok: true, value: data } : apiFailure(error);
   }
 
   /** Gets an antiforgery token for the current (usually anonymous) user, which redemption needs. */
@@ -35,7 +28,7 @@ export class ResetLinksService {
     const { data, error } = await this.api.POST('/api/staff/reset-links/preview', {
       body: { token },
     });
-    return data ? { ok: true, value: data } : failure(error);
+    return data ? { ok: true, value: data } : apiFailure(error);
   }
 
   /** Sets the new password. The user is not signed in: they log in with the new password next. */
@@ -43,13 +36,6 @@ export class ResetLinksService {
     const { error, response } = await this.api.POST('/api/staff/reset-links/redeem', {
       body: { token, password },
     });
-    return response.ok ? { ok: true, value: undefined } : failure(error);
+    return response.ok ? { ok: true, value: undefined } : apiFailure(error);
   }
-}
-
-function failure(error: { detail?: string | null; title?: string | null } | undefined): {
-  ok: false;
-  message: string;
-} {
-  return { ok: false, message: problemMessage(error, genericFailure) };
 }

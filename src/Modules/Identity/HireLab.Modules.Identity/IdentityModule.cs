@@ -6,6 +6,8 @@ using HireLab.Modules.Identity.Invites;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.Modules.Identity.ResetLinks;
 using HireLab.Modules.Identity.Seed;
+using HireLab.Modules.Identity.Teams;
+using HireLab.Modules.Identity.Users;
 using HireLab.SharedKernel.Handlers;
 using HireLab.SharedKernel.Modules;
 using HireLab.SharedKernel.Persistence;
@@ -43,6 +45,8 @@ public sealed class IdentityModule : IModule, IModuleMigrator
         staff.MapAuthEndpoints();
         staff.MapInviteEndpoints();
         staff.MapResetLinkEndpoints();
+        staff.MapTeamEndpoints();
+        staff.MapUserEndpoints();
     }
 
     /// <inheritdoc />

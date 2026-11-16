@@ -22,4 +22,11 @@ internal sealed class Team
 
         return new Team { Id = TeamId.New(), Name = name.Trim() };
     }
+
+    public void Rename(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        Name = name.Trim();
+    }
 }

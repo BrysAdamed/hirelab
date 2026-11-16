@@ -55,7 +55,7 @@ export const shellRoutes: Routes = [
   {
     path: 'users',
     title: 'Users - HireLab',
-    loadComponent: placeholder,
+    loadComponent: () => import('../pages/users-page').then((m) => m.UsersPage),
     data: staffPage({ roles: ['Admin'], nav: { label: 'Users', icon: lucideUsers } }),
   },
   {

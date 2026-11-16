@@ -61,6 +61,31 @@ describe('LoginPage', () => {
     });
   });
 
+  it('waits for the antiforgery token before it sends the login', async () => {
+    // Arrange
+    let releaseToken!: () => void;
+    const tokenIssued = new Promise<void>((resolve) => (releaseToken = resolve));
+    fake
+      .on('GET', '/api/staff/auth/antiforgery', async () => {
+        await tokenIssued;
+        return noContent();
+      })
+      .on('POST', '/api/staff/auth/login', () => json(200, fakeUser('Manager')));
+    await openLogin();
+
+    // Act
+    logIn('manager@example.com', 'fake-password-not-a-secret');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const postedBeforeToken = fake.requests.some((request) => request.method === 'POST');
+    releaseToken();
+
+    // Assert
+    expect(postedBeforeToken).toBe(false);
+    await vi.waitFor(() =>
+      expect(fake.requests.some((request) => request.method === 'POST')).toBe(true),
+    );
+  });
+
   it('shows the API message when login fails', async () => {
     // Arrange
     fake.on('POST', '/api/staff/auth/login', () =>
