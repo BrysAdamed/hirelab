@@ -11,7 +11,8 @@ namespace HireLab.SharedKernel.Persistence;
 /// <summary>
 /// The conventions every module <c>DbContext</c> shares (ADR 0004): PostgreSQL through the host's
 /// <see cref="NpgsqlDataSource"/>, the module schema as the default schema, <c>__EFMigrationsHistory</c>
-/// in that schema, <c>snake_case</c> names and the <see cref="AuditTimestamps"/> columns.
+/// in that schema, <c>snake_case</c> names, the <see cref="AuditTimestamps"/> columns and the
+/// <see cref="TeamQueryFilter"/> on team-owned entities.
 /// </summary>
 public static class ModuleDbContextConventions
 {

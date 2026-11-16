@@ -36,6 +36,7 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **Admin / Manager / Interviewer** | User roles. See `docs/vision.md#roles`. There is exactly one admin, who has no team. |
 | **User** | A staff account: email (the login), display name, role, team and an active flag. Candidates are not users. |
 | **Team** | An entity with its own id and name that owns job positions, sessions and evaluations. It has at most one active manager and any number of interviewers, and keeps its data when its manager changes. |
+| **Team-owned** | Data that belongs to one team (job positions, sessions, evaluations …). Only that team's manager and interviewers see it; the admin sees none. In code: `ITeamOwned`. |
 | **Deactivation** | Switching a user off instead of deleting them: they can't log in and their sessions end within 5 minutes. The admin deactivates anyone but themselves; a manager deactivates their own interviewers. Reversible by reactivation. |
 | **Handover** | Giving a team a new manager: the admin deactivates the old manager, the team shows "No manager", and the admin invites a new manager into the same team. |
 | **Security stamp** | A random value on each user that changes on deactivation, role or team change and password reset. Sessions issued before the change end at the next check, at most 5 minutes later. |

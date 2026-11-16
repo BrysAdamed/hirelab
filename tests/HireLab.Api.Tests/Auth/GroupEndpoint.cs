@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Routing.Patterns;
@@ -5,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace HireLab.Api.Tests.Auth;
 
-internal sealed record GroupEndpoint(string Method, string Pattern, Uri Uri)
+internal sealed record GroupEndpoint(string Method, string Pattern, Uri Uri, IReadOnlyList<string> Policies)
 {
     public const string StaffGroup = "/api/staff";
     public const string CandidateGroup = "/api/candidate";
@@ -19,7 +20,8 @@ internal sealed record GroupEndpoint(string Method, string Pattern, Uri Uri)
             .SelectMany(endpoint => MethodsOf(endpoint).Select(method => new GroupEndpoint(
                 method,
                 endpoint.RoutePattern.RawText ?? string.Empty,
-                ToUri(endpoint.RoutePattern))))
+                ToUri(endpoint.RoutePattern),
+                PoliciesOf(endpoint))))
             .ToList();
 
     public HttpRequestMessage CreateRequest() => new(new HttpMethod(Method), Uri);
@@ -35,6 +37,9 @@ internal sealed record GroupEndpoint(string Method, string Pattern, Uri Uri)
         endpoint.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods is { Count: > 0 } methods
             ? methods
             : [HttpMethods.Get];
+
+    private static List<string> PoliciesOf(RouteEndpoint endpoint) =>
+        endpoint.Metadata.GetOrderedMetadata<IAuthorizeData>().Select(data => data.Policy).OfType<string>().ToList();
 
     private static Uri ToUri(RoutePattern pattern)
     {

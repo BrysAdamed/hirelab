@@ -60,6 +60,7 @@ public partial class HireLabTestHost : IAsyncLifetime
         await Task.WhenAll(_postgres.StartAsync(), _azurite.StartAsync());
 
         await MigrateAsync();
+        await CreateTestTablesAsync();
         _respawner = await CreateRespawnerAsync();
 
         _factory = new ApiFactory(this);
@@ -129,6 +130,12 @@ public partial class HireLabTestHost : IAsyncLifetime
     protected virtual void ConfigureWebHost(IWebHostBuilder builder)
     {
     }
+
+    /// <summary>
+    /// Lets a test assembly create the tables of its test-only DbContexts in <see cref="DatabaseConnectionString"/>.
+    /// Runs after the module migrations and before Respawn is set up, so those tables are reset between tests too.
+    /// </summary>
+    protected virtual Task CreateTestTablesAsync() => Task.CompletedTask;
 
     private async Task MigrateAsync()
     {
