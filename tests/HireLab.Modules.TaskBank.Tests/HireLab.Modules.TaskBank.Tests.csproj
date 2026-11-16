@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Modules\TaskBank\HireLab.Modules.TaskBank\HireLab.Modules.TaskBank.csproj" />
+    <ProjectReference Include="..\..\src\Tasks\HireLab.Tasks.csproj" />
     <ProjectReference Include="..\HireLab.Testing\HireLab.Testing.csproj" />
   </ItemGroup>
 

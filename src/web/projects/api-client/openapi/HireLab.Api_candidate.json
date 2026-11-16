@@ -4,9 +4,217 @@
     "title": "HireLab.Api | candidate",
     "version": "1.0.0"
   },
-  "paths": { },
+  "paths": {
+    "/api/candidate/access/antiforgery": {
+      "get": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Issues the XSRF-TOKEN-CANDIDATE cookie for the current candidate, signed in or not.",
+        "operationId": "GetCandidateAntiforgeryToken",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/candidate/access": {
+      "post": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Exchanges a candidate link's token for the candidate cookie of its session and a new XSRF-TOKEN-CANDIDATE. Refused for a link that doesn't work, for example because it was regenerated (404 CandidateLink.Invalid), and for a finished session (409 CandidateSession.Ended).",
+        "operationId": "ExchangeCandidateLink",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExchangeCandidateLinkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/candidate/session": {
+      "get": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Gets the candidate's interview from the candidate cookie: the waiting page while the session is planned, the current task with its candidate content while one is current, and the closing screen after the last task.",
+        "operationId": "GetInterview",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/candidate/session/response": {
+      "put": {
+        "tags": [
+          "Interview"
+        ],
+        "summary": "Saves the candidate's whole response to the current task, named in the body, based on the revision they last saw, and returns the new revision. Refused for an older revision (409 Response.StaleRevision), a task that isn't Current (409 InterviewSession.TaskNotCurrent), a session that isn't Live (409 InterviewSession.NotLive), and a response the task type rejects or that is larger than 1 MB (400).",
+        "operationId": "SaveResponse",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveResponseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
   "components": {
     "schemas": {
+      "CurrentTaskResponse": {
+        "required": [
+          "id",
+          "taskType",
+          "content",
+          "response",
+          "revision"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "taskType": {
+            "type": "string"
+          },
+          "content": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "response": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            ]
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ExchangeCandidateLinkRequest": {
+        "required": [
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        }
+      },
+      "InterviewResponse": {
+        "required": [
+          "stage",
+          "currentTask"
+        ],
+        "type": "object",
+        "properties": {
+          "stage": {
+            "$ref": "#/components/schemas/InterviewStage"
+          },
+          "currentTask": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CurrentTaskResponse"
+              }
+            ]
+          }
+        }
+      },
+      "InterviewStage": {
+        "enum": [
+          "Waiting",
+          "CurrentTask",
+          "Closing"
+        ]
+      },
+      "JsonElement": { },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -42,7 +250,45 @@
             ]
           }
         }
+      },
+      "SaveResponseRequest": {
+        "required": [
+          "sessionTaskId",
+          "response",
+          "revision"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionTaskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "response": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "revision": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "SavedResponse": {
+        "required": [
+          "revision"
+        ],
+        "type": "object",
+        "properties": {
+          "revision": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "Interview"
+    }
+  ]
 }

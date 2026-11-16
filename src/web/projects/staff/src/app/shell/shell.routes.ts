@@ -1,6 +1,7 @@
 import type { Routes } from '@angular/router';
 import {
   lucideBriefcase,
+  lucideCalendarClock,
   lucideHouse,
   lucideLibraryBig,
   lucideUsers,
@@ -67,6 +68,21 @@ export const shellRoutes: Routes = [
     title: 'Edit candidate - HireLab',
     loadComponent: () =>
       import('../candidates/candidate-form-page').then((m) => m.CandidateFormPage),
+    data: staffPage({ roles: ['Manager', 'Interviewer'] }),
+  },
+  {
+    path: 'sessions',
+    title: 'Sessions - HireLab',
+    loadComponent: () => import('../sessions/sessions-page').then((m) => m.SessionsPage),
+    data: staffPage({
+      roles: ['Manager', 'Interviewer'],
+      nav: { label: 'Sessions', icon: lucideCalendarClock },
+    }),
+  },
+  {
+    path: 'sessions/:sessionId',
+    title: 'Session - HireLab',
+    loadComponent: () => import('../sessions/session-page').then((m) => m.SessionPage),
     data: staffPage({ roles: ['Manager', 'Interviewer'] }),
   },
   {

@@ -1,0 +1,42 @@
+{
+  "path": "/hubs/staff",
+  "serverMethods": {
+    "SubscribeToSession": {
+      "parameters": {
+        "sessionId": "string"
+      },
+      "returns": "CandidatePresence"
+    },
+    "UnsubscribeFromSession": {
+      "parameters": {
+        "sessionId": "string"
+      },
+      "returns": "void"
+    }
+  },
+  "clientMethods": {
+    "TaskQueueChanged": {
+      "sessionId": "string",
+      "queueRevision": "number"
+    },
+    "SessionStateChanged": {
+      "sessionId": "string"
+    },
+    "ResponseUpdated": {
+      "sessionId": "string",
+      "sessionTaskId": "string",
+      "revision": "number"
+    },
+    "CandidatePresenceChanged": {
+      "sessionId": "string",
+      "presence": "CandidatePresence"
+    }
+  },
+  "types": {
+    "CandidatePresence": {
+      "connected": "boolean",
+      "connections": "number",
+      "lastSeenAt": "string | null"
+    }
+  }
+}

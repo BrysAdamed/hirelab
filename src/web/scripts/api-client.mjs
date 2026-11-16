@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import openapiTS, { astToString } from 'openapi-typescript';
@@ -24,6 +24,8 @@ const entryPoints = ['staff', 'candidate'];
 
 const documentPath = (entryPoint) => join(documentsDir, `HireLab.Api_${entryPoint}.json`);
 const schemaPath = (entryPoint) => join(clientRoot, 'src', entryPoint, 'schema.ts');
+const hubContractPath = (entryPoint) => join(clientRoot, 'hubs', `${entryPoint}.json`);
+const hubPath = (entryPoint) => join(clientRoot, 'src', entryPoint, 'hub.ts');
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, { cwd: webRoot, stdio: 'inherit', ...options });
@@ -60,7 +62,57 @@ async function generateClient() {
     });
     writeFileSync(schemaPath(entryPoint), generatedHeader + astToString(ast));
     console.log(`Generated ${schemaPath(entryPoint)}`);
+
+    const contract = JSON.parse(readFileSync(hubContractPath(entryPoint), 'utf8'));
+    writeFileSync(hubPath(entryPoint), hubTypeScript(entryPoint, contract));
+    console.log(`Generated ${hubPath(entryPoint)}`);
   }
+}
+
+/**
+ * The TypeScript of a hub's contract (ADR 0031). `HubContractTests` keeps `hubs/<entry point>.json` in step with
+ * the typed hub in the API, so these types follow it too.
+ */
+function hubTypeScript(entryPoint, contract) {
+  const prefix = `${entryPoint[0].toUpperCase()}${entryPoint.slice(1)}Hub`;
+  const parameters = (parameterTypes) =>
+    Object.entries(parameterTypes)
+      .map(([name, type]) => `${name}: ${type}`)
+      .join(', ');
+  const shape = (name, members) =>
+    members.length === 0
+      ? `export type ${name} = Record<never, never>;\n`
+      : `export interface ${name} {\n${members.map((member) => `  ${member};\n`).join('')}}\n`;
+
+  const types = Object.entries(contract.types).map(([name, properties]) =>
+    shape(
+      name,
+      Object.entries(properties).map(([property, type]) => `${property}: ${type}`),
+    ),
+  );
+  const methods = shape(
+    `${prefix}Methods`,
+    Object.entries(contract.serverMethods).map(
+      ([name, method]) =>
+        `${name}: { args: [${parameters(method.parameters)}]; returns: ${method.returns} }`,
+    ),
+  );
+  const events = shape(
+    `${prefix}Events`,
+    Object.entries(contract.clientMethods).map(([name, args]) => `${name}: [${parameters(args)}]`),
+  );
+  const eventNames = Object.keys(contract.clientMethods)
+    .map((name) => `'${name}'`)
+    .join(', ');
+
+  return [
+    `/**\n * This file was generated from hubs/${entryPoint}.json by scripts/api-client.mjs.\n * Do not make direct changes to the file.\n */\n`,
+    `/** Where the hub is mapped. */\nexport const ${entryPoint}HubPath = '${contract.path}';\n`,
+    ...types,
+    `/** The methods a client invokes on the hub: their arguments and what they return. */\n${methods}`,
+    `/** The messages the hub sends to a client, with their arguments. */\n${events}`,
+    `/** The names of the messages in {@link ${prefix}Events}. */\nexport const ${entryPoint}HubEvents = [${eventNames}] as const satisfies readonly (keyof ${prefix}Events)[];\n`,
+  ].join('\n');
 }
 
 function checkForDrift() {

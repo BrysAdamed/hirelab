@@ -6,7 +6,7 @@ namespace HireLab.Api.Tests.OpenApi;
 
 public sealed class CandidateOpenApiContractTests(ApiTestHost host) : IntegrationTest(host)
 {
-    private static readonly string[] _sharedSchemas = ["ProblemDetails", "HttpValidationProblemDetails"];
+    private static readonly string[] _sharedSchemas = ["ProblemDetails", "HttpValidationProblemDetails", "JsonElement"];
 
     private static readonly string[] _staffOnlyFieldNames =
     [
@@ -27,6 +27,18 @@ public sealed class CandidateOpenApiContractTests(ApiTestHost host) : Integratio
         paths.ShouldContain(AuthProbeModule.CandidatePath);
         paths.ShouldContain(TestEchoTaskType.EchoPath);
         paths.ShouldAllBe(path => path.StartsWith(GroupEndpoint.CandidateGroup + "/", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Candidate_paths_take_no_route_parameters()
+    {
+        // Act
+        var paths = PathsOf(await GetDocumentAsync("candidate"));
+
+        // Assert
+        paths.ShouldNotBeEmpty();
+        paths.Where(path => path.Contains('{', StringComparison.Ordinal))
+            .ShouldBeEmpty("Candidate endpoints take the session from the candidate cookie, never from the route (ADR 0008)");
     }
 
     [Fact]

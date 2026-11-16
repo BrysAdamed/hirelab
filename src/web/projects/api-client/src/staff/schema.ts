@@ -642,6 +642,196 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/candidates/{candidateId}/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists a candidate's interview sessions by number. */
+        get: operations["ListCandidateSessions"];
+        put?: never;
+        /** Plans an interview session for a candidate, optionally scheduled, shown as "Session N" for the candidate. Refused for an anonymised candidate (409 InterviewSession.CandidateAnonymised) or a closed position (409 InterviewSession.PositionClosed). */
+        post: operations["CreateSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists the team's Planned and Live sessions, soonest first: Live ones, then by schedule, unscheduled ones last. */
+        get: operations["ListTeamSessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/sessions/{sessionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets one of the team's sessions with its queue in order. Pending tasks whose task has another active version are re-pinned to it first. */
+        get: operations["GetSession"];
+        put?: never;
+        post?: never;
+        /** Deletes a planned session and its queue. A session that has started can't be deleted (409 InterviewSession.NotPlanned). */
+        delete: operations["DeleteSession"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/sessions/{sessionId}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Sets or clears when a planned session is scheduled. Refused once the session has started (409 InterviewSession.NotPlanned). */
+        put: operations["RescheduleSession"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/sessions/{sessionId}/go-live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Starts a planned session: its first task becomes Current, re-pinned to its task's active version. Refused for a session that has started (409 InterviewSession.NotPlanned), an empty queue (409 InterviewSession.EmptyQueue), a closed position (409 InterviewSession.PositionClosed) and an anonymised candidate (409 InterviewSession.CandidateAnonymised). */
+        post: operations["GoLive"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/sessions/{sessionId}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finishes a live session for good: the Current task becomes Done and Pending tasks stay Pending (not reached). Refused for a session that isn't Live (409 InterviewSession.NotLive). */
+        post: operations["FinishSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/sessions/{sessionId}/candidate-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creates the session's candidate link, or regenerates it, which revokes the old link and the candidate cookies issued from it. Returns the link's path once: it can't be shown again. Refused for a finished session (409 InterviewSession.Finished), a closed position (409 InterviewSession.PositionClosed) and an anonymised candidate (409 InterviewSession.CandidateAnonymised). */
+        post: operations["IssueCandidateLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/sessions/{sessionId}/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Adds a task from the task bank to the end of a session's queue, pinning its active version. A task is queued at most once (409 InterviewSession.TaskAlreadyQueued); a finished session's queue can't change (409 InterviewSession.Finished). */
+        post: operations["AddSessionTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/sessions/{sessionId}/tasks/{sessionTaskId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets a task of a session's queue with the content, reference answer and interviewer notes of the version it pins, and the candidate's response with its revision. */
+        get: operations["GetSessionTask"];
+        put?: never;
+        post?: never;
+        /** Removes a task that hasn't started from a session's queue (409 InterviewSession.TaskStarted for a Current or Done task, 409 InterviewSession.Finished once the session has finished). */
+        delete: operations["RemoveSessionTask"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/sessions/{sessionId}/tasks/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Puts a session's queue in the given order. It must list every task in the queue exactly once and keep the tasks that have started in their places (409 InterviewSession.TaskStarted); a stale list is refused with 409 InterviewSession.OrderMismatch. */
+        put: operations["ReorderSessionTasks"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/sessions/{sessionId}/tasks/{sessionTaskId}/done": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Marks a live session's Current task done; the next Pending task becomes Current, re-pinned to its task's active version. Refused for a session that isn't Live (409 InterviewSession.NotLive) and a task that isn't Current (409 InterviewSession.TaskNotCurrent). */
+        post: operations["MarkSessionTaskDone"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -652,11 +842,19 @@ export interface components {
             phone: null | string;
             links: null | string[];
         };
+        AddSessionTaskRequest: {
+            /** Format: uuid */
+            taskId: string;
+        };
         AddedCandidateResponse: {
             /** Format: uuid */
             id: string;
             /** Format: int32 */
             number: number;
+        };
+        AddedSessionTaskResponse: {
+            /** Format: uuid */
+            id: string;
         };
         AnonymiseCandidateRequest: {
             /** Format: uint32 */
@@ -702,6 +900,19 @@ export interface components {
             /** Format: uint32 */
             version: number;
         };
+        CandidateSessionResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            number: number;
+            state: components["schemas"]["InterviewSessionState"];
+            /** Format: date-time */
+            scheduledAt: null | string;
+            /** Format: int32 */
+            taskCount: number;
+            /** Format: date-time */
+            createdAt: string;
+        };
         ChangePasswordRequest: {
             currentPassword: string;
             newPassword: string;
@@ -733,9 +944,19 @@ export interface components {
             teamId: null | string;
             newTeamName: null | string;
         };
+        CreateSessionRequest: {
+            /** Format: date-time */
+            scheduledAt: null | string;
+        };
         CreatedJobPositionResponse: {
             /** Format: uuid */
             id: string;
+        };
+        CreatedSessionResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            number: number;
         };
         CurrentUserResponse: {
             /** Format: uuid */
@@ -769,6 +990,8 @@ export interface components {
         };
         /** Format: binary */
         IFormFile: Blob;
+        /** @enum {unknown} */
+        InterviewSessionState: "Planned" | "Live" | "Finished";
         InvitePreviewResponse: {
             email: string;
             displayName: string;
@@ -794,6 +1017,11 @@ export interface components {
             id: null | string;
             name: string;
             isNew: boolean;
+        };
+        IssuedCandidateLinkResponse: {
+            linkPath: string;
+            /** Format: date-time */
+            createdAt: string;
         };
         IssuedInviteResponse: {
             invite: components["schemas"]["InviteResponse"];
@@ -879,6 +1107,13 @@ export interface components {
         RenameTeamRequest: {
             name: string;
         };
+        ReorderSessionTasksRequest: {
+            sessionTaskIds: string[];
+        };
+        RescheduleSessionRequest: {
+            /** Format: date-time */
+            scheduledAt: null | string;
+        };
         ResetLinkPreviewResponse: {
             email: string;
             displayName: string;
@@ -923,6 +1158,61 @@ export interface components {
             score: number;
             description: string;
         };
+        SessionResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            number: number;
+            state: components["schemas"]["InterviewSessionState"];
+            /** Format: date-time */
+            scheduledAt: null | string;
+            /** Format: uuid */
+            candidateId: string;
+            candidateDisplayName: string;
+            /** Format: uuid */
+            createdById: string;
+            createdByName: null | string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: int32 */
+            queueRevision: number;
+            /** Format: date-time */
+            candidateLinkCreatedAt: null | string;
+            tasks: components["schemas"]["SessionTaskResponse"][];
+        };
+        SessionTaskDetailResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            taskId: string;
+            state: components["schemas"]["SessionTaskState"];
+            /** Format: int32 */
+            versionNumber: number;
+            taskType: string;
+            title: string;
+            summary: string;
+            referenceAnswer: string;
+            interviewerNotes: null | string;
+            candidateContent: components["schemas"]["JsonElement"];
+            staffContent: components["schemas"]["JsonElement"];
+            response: null | components["schemas"]["JsonElement"];
+            /** Format: int32 */
+            responseRevision: number;
+        };
+        SessionTaskResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            taskId: string;
+            state: components["schemas"]["SessionTaskState"];
+            /** Format: int32 */
+            versionNumber: number;
+            taskType: string;
+            title: string;
+            summary: string;
+        };
+        /** @enum {unknown} */
+        SessionTaskState: "Pending" | "Current" | "Done";
         /**
          * @description The fixed role of a staff user (ADR 0009, ADR 0020). Sent over the wire by name.
          * @enum {unknown}
@@ -971,6 +1261,20 @@ export interface components {
             name: string;
             manager: null | components["schemas"]["UserResponse"];
             members: components["schemas"]["UserResponse"][];
+        };
+        TeamSessionResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            number: number;
+            state: components["schemas"]["InterviewSessionState"];
+            /** Format: date-time */
+            scheduledAt: null | string;
+            /** Format: int32 */
+            taskCount: number;
+            /** Format: uuid */
+            candidateId: string;
+            candidateDisplayName: string;
         };
         TeamWithoutManagerResponse: {
             /** Format: uuid */
@@ -2421,6 +2725,443 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["TaskResponse"];
                 };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListCandidateSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateSessionResponse"][];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    CreateSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateSessionRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CreatedSessionResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListTeamSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamSessionResponse"][];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    DeleteSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RescheduleSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RescheduleSessionRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GoLive: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    FinishSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    IssueCandidateLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedCandidateLinkResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    AddSessionTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddSessionTaskRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddedSessionTaskResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetSessionTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+                sessionTaskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionTaskDetailResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RemoveSessionTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+                sessionTaskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ReorderSessionTasks: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReorderSessionTasksRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    MarkSessionTaskDone: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: string;
+                sessionTaskId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description The request failed. The body describes the problem. */
             default: {

@@ -26,6 +26,8 @@ internal static class AuthenticationSetup
                 options.CookieManager = new MultiPathCookieManager(AuthCookies.CandidatePaths);
                 options.ExpireTimeSpan = _candidateLifetime;
                 options.SlidingExpiration = false;
+                options.Events.OnValidatePrincipal = CandidateCookieValidation.OnValidatePrincipalAsync;
+                options.Events.OnRedirectToLogin = CandidateCookieValidation.OnRedirectToLoginAsync;
             });
 
         services.AddAuthorizationBuilder()

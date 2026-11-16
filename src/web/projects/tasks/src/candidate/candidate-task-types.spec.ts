@@ -20,9 +20,9 @@ class StubCandidateTask implements CandidateTaskComponent<StubContent, StubRespo
 }
 
 describe('candidate task types', () => {
-  it('ship empty until a task type is added', () => {
+  it('ship the open question type', () => {
     // Assert
-    expect(candidateTaskTypes.keys).toEqual([]);
+    expect(candidateTaskTypes.keys).toEqual(['open-question']);
   });
 
   it('are injected from the shipped registry', () => {

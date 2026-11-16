@@ -65,7 +65,7 @@ public sealed class AnonymiseCandidateTests(HireLabTestHost host) : IntegrationT
         var summary = await directory.FindAsync(candidateId, CancellationToken);
 
         // Assert
-        summary.ShouldBe(new CandidateSummary(candidateId, positionId, "Candidate #1", IsAnonymised: true));
+        summary.ShouldBe(new CandidateSummary(candidateId, positionId, "Candidate #1", IsAnonymised: true, IsJobPositionClosed: false));
     }
 
     [Theory]

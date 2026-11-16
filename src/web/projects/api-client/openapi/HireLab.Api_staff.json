@@ -1827,6 +1827,601 @@
           }
         }
       }
+    },
+    "/api/staff/candidates/{candidateId}/sessions": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Lists a candidate's interview sessions by number.",
+        "operationId": "ListCandidateSessions",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CandidateSessionResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Plans an interview session for a candidate, optionally scheduled, shown as \"Session N\" for the candidate. Refused for an anonymised candidate (409 InterviewSession.CandidateAnonymised) or a closed position (409 InterviewSession.PositionClosed).",
+        "operationId": "CreateSession",
+        "parameters": [
+          {
+            "name": "candidateId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedSessionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/sessions": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Lists the team's Planned and Live sessions, soonest first: Live ones, then by schedule, unscheduled ones last.",
+        "operationId": "ListTeamSessions",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamSessionResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/sessions/{sessionId}": {
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Gets one of the team's sessions with its queue in order. Pending tasks whose task has another active version are re-pinned to it first.",
+        "operationId": "GetSession",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Deletes a planned session and its queue. A session that has started can't be deleted (409 InterviewSession.NotPlanned).",
+        "operationId": "DeleteSession",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/sessions/{sessionId}/schedule": {
+      "put": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Sets or clears when a planned session is scheduled. Refused once the session has started (409 InterviewSession.NotPlanned).",
+        "operationId": "RescheduleSession",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RescheduleSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/sessions/{sessionId}/go-live": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Starts a planned session: its first task becomes Current, re-pinned to its task's active version. Refused for a session that has started (409 InterviewSession.NotPlanned), an empty queue (409 InterviewSession.EmptyQueue), a closed position (409 InterviewSession.PositionClosed) and an anonymised candidate (409 InterviewSession.CandidateAnonymised).",
+        "operationId": "GoLive",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/sessions/{sessionId}/finish": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Finishes a live session for good: the Current task becomes Done and Pending tasks stay Pending (not reached). Refused for a session that isn't Live (409 InterviewSession.NotLive).",
+        "operationId": "FinishSession",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/sessions/{sessionId}/candidate-link": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Creates the session's candidate link, or regenerates it, which revokes the old link and the candidate cookies issued from it. Returns the link's path once: it can't be shown again. Refused for a finished session (409 InterviewSession.Finished), a closed position (409 InterviewSession.PositionClosed) and an anonymised candidate (409 InterviewSession.CandidateAnonymised).",
+        "operationId": "IssueCandidateLink",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedCandidateLinkResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/sessions/{sessionId}/tasks": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Adds a task from the task bank to the end of a session's queue, pinning its active version. A task is queued at most once (409 InterviewSession.TaskAlreadyQueued); a finished session's queue can't change (409 InterviewSession.Finished).",
+        "operationId": "AddSessionTask",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSessionTaskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddedSessionTaskResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/sessions/{sessionId}/tasks/{sessionTaskId}": {
+      "delete": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Removes a task that hasn't started from a session's queue (409 InterviewSession.TaskStarted for a Current or Done task, 409 InterviewSession.Finished once the session has finished).",
+        "operationId": "RemoveSessionTask",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionTaskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Gets a task of a session's queue with the content, reference answer and interviewer notes of the version it pins, and the candidate's response with its revision.",
+        "operationId": "GetSessionTask",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionTaskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionTaskDetailResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/sessions/{sessionId}/tasks/order": {
+      "put": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Puts a session's queue in the given order. It must list every task in the queue exactly once and keep the tasks that have started in their places (409 InterviewSession.TaskStarted); a stale list is refused with 409 InterviewSession.OrderMismatch.",
+        "operationId": "ReorderSessionTasks",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderSessionTasksRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/sessions/{sessionId}/tasks/{sessionTaskId}/done": {
+      "post": {
+        "tags": [
+          "Sessions"
+        ],
+        "summary": "Marks a live session's Current task done; the next Pending task becomes Current, re-pinned to its task's active version. Refused for a session that isn't Live (409 InterviewSession.NotLive) and a task that isn't Current (409 InterviewSession.TaskNotCurrent).",
+        "operationId": "MarkSessionTaskDone",
+        "parameters": [
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sessionTaskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1866,6 +2461,18 @@
           }
         }
       },
+      "AddSessionTaskRequest": {
+        "required": [
+          "taskId"
+        ],
+        "type": "object",
+        "properties": {
+          "taskId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "AddedCandidateResponse": {
         "required": [
           "id",
@@ -1880,6 +2487,18 @@
           "number": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "AddedSessionTaskResponse": {
+        "required": [
+          "id"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
           }
         }
       },
@@ -2043,6 +2662,45 @@
           }
         }
       },
+      "CandidateSessionResponse": {
+        "required": [
+          "id",
+          "number",
+          "state",
+          "scheduledAt",
+          "taskCount",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "state": {
+            "$ref": "#/components/schemas/InterviewSessionState"
+          },
+          "scheduledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "taskCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "ChangePasswordRequest": {
         "required": [
           "currentPassword",
@@ -2158,6 +2816,21 @@
           }
         }
       },
+      "CreateSessionRequest": {
+        "required": [
+          "scheduledAt"
+        ],
+        "type": "object",
+        "properties": {
+          "scheduledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "CreatedJobPositionResponse": {
         "required": [
           "id"
@@ -2167,6 +2840,23 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          }
+        }
+      },
+      "CreatedSessionResponse": {
+        "required": [
+          "id",
+          "number"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -2306,6 +2996,13 @@
         "type": "string",
         "format": "binary"
       },
+      "InterviewSessionState": {
+        "enum": [
+          "Planned",
+          "Live",
+          "Finished"
+        ]
+      },
       "InvitePreviewResponse": {
         "required": [
           "email",
@@ -2405,6 +3102,22 @@
           },
           "isNew": {
             "type": "boolean"
+          }
+        }
+      },
+      "IssuedCandidateLinkResponse": {
+        "required": [
+          "linkPath",
+          "createdAt"
+        ],
+        "type": "object",
+        "properties": {
+          "linkPath": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -2717,6 +3430,36 @@
           }
         }
       },
+      "ReorderSessionTasksRequest": {
+        "required": [
+          "sessionTaskIds"
+        ],
+        "type": "object",
+        "properties": {
+          "sessionTaskIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "RescheduleSessionRequest": {
+        "required": [
+          "scheduledAt"
+        ],
+        "type": "object",
+        "properties": {
+          "scheduledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "ResetLinkPreviewResponse": {
         "required": [
           "email",
@@ -2877,6 +3620,199 @@
           }
         },
         "description": "What one score of a ScaleCriterion means."
+      },
+      "SessionResponse": {
+        "required": [
+          "id",
+          "number",
+          "state",
+          "scheduledAt",
+          "candidateId",
+          "candidateDisplayName",
+          "createdById",
+          "createdByName",
+          "createdAt",
+          "queueRevision",
+          "candidateLinkCreatedAt",
+          "tasks"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "state": {
+            "$ref": "#/components/schemas/InterviewSessionState"
+          },
+          "scheduledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "candidateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "candidateDisplayName": {
+            "type": "string"
+          },
+          "createdById": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdByName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "queueRevision": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "candidateLinkCreatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SessionTaskResponse"
+            }
+          }
+        }
+      },
+      "SessionTaskDetailResponse": {
+        "required": [
+          "id",
+          "taskId",
+          "state",
+          "versionNumber",
+          "taskType",
+          "title",
+          "summary",
+          "referenceAnswer",
+          "interviewerNotes",
+          "candidateContent",
+          "staffContent",
+          "response",
+          "responseRevision"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "$ref": "#/components/schemas/SessionTaskState"
+          },
+          "versionNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "taskType": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "referenceAnswer": {
+            "type": "string"
+          },
+          "interviewerNotes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "candidateContent": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "staffContent": {
+            "$ref": "#/components/schemas/JsonElement"
+          },
+          "response": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/JsonElement"
+              }
+            ]
+          },
+          "responseRevision": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "SessionTaskResponse": {
+        "required": [
+          "id",
+          "taskId",
+          "state",
+          "versionNumber",
+          "taskType",
+          "title",
+          "summary"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "taskId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "$ref": "#/components/schemas/SessionTaskState"
+          },
+          "versionNumber": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "taskType": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      },
+      "SessionTaskState": {
+        "enum": [
+          "Pending",
+          "Current",
+          "Done"
+        ]
       },
       "StaffRole": {
         "enum": [
@@ -3052,6 +3988,49 @@
           }
         }
       },
+      "TeamSessionResponse": {
+        "required": [
+          "id",
+          "number",
+          "state",
+          "scheduledAt",
+          "taskCount",
+          "candidateId",
+          "candidateDisplayName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "state": {
+            "$ref": "#/components/schemas/InterviewSessionState"
+          },
+          "scheduledAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "taskCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "candidateId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "candidateDisplayName": {
+            "type": "string"
+          }
+        }
+      },
       "TeamWithoutManagerResponse": {
         "required": [
           "id",
@@ -3177,6 +4156,9 @@
     },
     {
       "name": "Tasks"
+    },
+    {
+      "name": "Sessions"
     }
   ]
 }

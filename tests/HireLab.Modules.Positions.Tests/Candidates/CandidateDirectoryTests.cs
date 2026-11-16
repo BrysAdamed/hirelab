@@ -21,7 +21,7 @@ public sealed class CandidateDirectoryTests(HireLabTestHost host) : IntegrationT
         var summary = await directory.FindAsync(candidateId, CancellationToken);
 
         // Assert
-        summary.ShouldBe(new CandidateSummary(candidateId, positionId, "Jane Fakeperson", IsAnonymised: false));
+        summary.ShouldBe(new CandidateSummary(candidateId, positionId, "Jane Fakeperson", IsAnonymised: false, IsJobPositionClosed: false));
     }
 
     [Fact]
@@ -40,7 +40,25 @@ public sealed class CandidateDirectoryTests(HireLabTestHost host) : IntegrationT
         var summary = await directory.FindAsync(candidateId, CancellationToken);
 
         // Assert
-        summary.ShouldBe(new CandidateSummary(candidateId, positionId, "Candidate #3", IsAnonymised: true));
+        summary.ShouldBe(new CandidateSummary(candidateId, positionId, "Candidate #3", IsAnonymised: true, IsJobPositionClosed: false));
+    }
+
+    [Fact]
+    public async Task A_candidate_of_a_closed_position_says_so()
+    {
+        // Arrange
+        var manager = await SignInAsAsync(StaffRole.Manager);
+        var positionId = await Host.CreateJobPositionAsync(manager.User.TeamId!.Value);
+        var candidateId = await Host.AddCandidateAsync(positionId);
+        await Host.ClosePositionAsync(positionId);
+        await using var scope = Host.CreateScopeAs(manager.User);
+        var directory = scope.Services.GetRequiredService<ICandidateDirectory>();
+
+        // Act
+        var summaries = await directory.FindManyAsync([candidateId], CancellationToken);
+
+        // Assert
+        summaries[candidateId].IsJobPositionClosed.ShouldBeTrue();
     }
 
     [Fact]
@@ -63,8 +81,8 @@ public sealed class CandidateDirectoryTests(HireLabTestHost host) : IntegrationT
 
         // Assert
         summaries.Count.ShouldBe(2);
-        summaries[first].ShouldBe(new CandidateSummary(first, firstPosition, "Fake First", IsAnonymised: false));
-        summaries[second].ShouldBe(new CandidateSummary(second, secondPosition, "Fake Second", IsAnonymised: false));
+        summaries[first].ShouldBe(new CandidateSummary(first, firstPosition, "Fake First", IsAnonymised: false, IsJobPositionClosed: false));
+        summaries[second].ShouldBe(new CandidateSummary(second, secondPosition, "Fake Second", IsAnonymised: false, IsJobPositionClosed: false));
         (await directory.FindManyAsync([], CancellationToken)).ShouldBeEmpty();
     }
 

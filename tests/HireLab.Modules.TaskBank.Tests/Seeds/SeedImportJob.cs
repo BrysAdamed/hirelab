@@ -1,5 +1,6 @@
 using HireLab.Modules.TaskBank.Seeds;
 using HireLab.TaskTypes.Abstractions;
+using HireLab.TaskTypes.Catalog;
 using HireLab.Testing.TaskTypes;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,7 +11,8 @@ namespace HireLab.Modules.TaskBank.Tests.Seeds;
 
 /// <summary>
 /// The TaskBank's bootstrap step as the migration worker runs it: <see cref="TaskBankModule.AddMigrationServices"/> on the
-/// test database and the test host's clock, with <see cref="TestEchoTaskType"/> registered and the given packages.
+/// test database and the test host's clock, with the shipped task types and <see cref="TestEchoTaskType"/> registered and
+/// the given packages.
 /// </summary>
 internal static class SeedImportJob
 {
@@ -30,6 +32,7 @@ internal static class SeedImportJob
         var module = new TaskBankModule();
         module.AddMigrationServices(services);
         services.Replace(ServiceDescriptor.Singleton(packages));
+        services.AddTaskTypes();
         services.AddTaskType<TestEchoTaskType>();
 
         await using var provider = services.BuildServiceProvider();

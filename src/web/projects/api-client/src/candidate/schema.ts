@@ -3,10 +3,98 @@
  * Do not make direct changes to the file.
  */
 
-export type paths = Record<string, never>;
+export interface paths {
+    "/api/candidate/access/antiforgery": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Issues the XSRF-TOKEN-CANDIDATE cookie for the current candidate, signed in or not. */
+        get: operations["GetCandidateAntiforgeryToken"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/candidate/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Exchanges a candidate link's token for the candidate cookie of its session and a new XSRF-TOKEN-CANDIDATE. Refused for a link that doesn't work, for example because it was regenerated (404 CandidateLink.Invalid), and for a finished session (409 CandidateSession.Ended). */
+        post: operations["ExchangeCandidateLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/candidate/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets the candidate's interview from the candidate cookie: the waiting page while the session is planned, the current task with its candidate content while one is current, and the closing screen after the last task. */
+        get: operations["GetInterview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/candidate/session/response": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Saves the candidate's whole response to the current task, named in the body, based on the revision they last saw, and returns the new revision. Refused for an older revision (409 Response.StaleRevision), a task that isn't Current (409 InterviewSession.TaskNotCurrent), a session that isn't Live (409 InterviewSession.NotLive), and a response the task type rejects or that is larger than 1 MB (400). */
+        put: operations["SaveResponse"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+}
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CurrentTaskResponse: {
+            /** Format: uuid */
+            id: string;
+            taskType: string;
+            content: components["schemas"]["JsonElement"];
+            response: null | components["schemas"]["JsonElement"];
+            /** Format: int32 */
+            revision: number;
+        };
+        ExchangeCandidateLinkRequest: {
+            token: string;
+        };
+        InterviewResponse: {
+            stage: components["schemas"]["InterviewStage"];
+            currentTask: null | components["schemas"]["CurrentTaskResponse"];
+        };
+        /** @enum {unknown} */
+        InterviewStage: "Waiting" | "CurrentTask" | "Closing";
+        JsonElement: unknown;
         ProblemDetails: {
             type?: null | string;
             title?: null | string;
@@ -14,6 +102,17 @@ export interface components {
             status?: null | number;
             detail?: null | string;
             instance?: null | string;
+        };
+        SaveResponseRequest: {
+            /** Format: uuid */
+            sessionTaskId: string;
+            response: components["schemas"]["JsonElement"];
+            /** Format: int32 */
+            revision: number;
+        };
+        SavedResponse: {
+            /** Format: int32 */
+            revision: number;
         };
     };
     responses: never;
@@ -23,4 +122,125 @@ export interface components {
     pathItems: never;
 }
 export type $defs = Record<string, never>;
-export type operations = Record<string, never>;
+export interface operations {
+    GetCandidateAntiforgeryToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ExchangeCandidateLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExchangeCandidateLinkRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetInterview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    SaveResponse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveResponseRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+}

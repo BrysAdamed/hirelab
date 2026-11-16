@@ -36,6 +36,15 @@ export type Rubric = components['schemas']['Rubric'];
 export type RubricCriterion = components['schemas']['RubricCriterion'];
 export type CheckCriterion = components['schemas']['RubricCriterionCheckCriterion'];
 export type ScaleCriterion = components['schemas']['RubricCriterionScaleCriterion'];
+export type InterviewSession = components['schemas']['SessionResponse'];
+export type SessionTask = components['schemas']['SessionTaskResponse'];
+export type SessionTaskDetail = components['schemas']['SessionTaskDetailResponse'];
+export type CandidateSession = components['schemas']['CandidateSessionResponse'];
+export type TeamSession = components['schemas']['TeamSessionResponse'];
+export type CreatedSession = components['schemas']['CreatedSessionResponse'];
+export type IssuedCandidateLink = components['schemas']['IssuedCandidateLinkResponse'];
+export type InterviewSessionState = components['schemas']['InterviewSessionState'];
+export type SessionTaskState = components['schemas']['SessionTaskState'];
 
 /** The message of a failed API call: the ProblemDetails detail, or a generic fallback. */
 export function problemMessage(

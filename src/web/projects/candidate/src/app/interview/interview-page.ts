@@ -1,0 +1,338 @@
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  DOCUMENT,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { NgIcon, provideIcons } from '@ng-icons/core';
+import {
+  lucideCircleAlert,
+  lucideCircleCheck,
+  lucideClock,
+  lucideCloudAlert,
+  lucideCloudCheck,
+  lucideLink2Off,
+  lucideLoaderCircle,
+  lucideRotateCw,
+} from '@ng-icons/lucide';
+import { HlmButton } from '@hirelab/ui/helm/button';
+import { CandidateTaskOutlet, type CandidateTaskOutletState } from '@hirelab/tasks/candidate';
+import { ReconnectingBanner } from '@hirelab/ui/live';
+import type { CurrentTask } from '../api/candidate-api';
+import { InterviewService, type InterviewResult } from './interview.service';
+import { InterviewUpdates, type InterviewWatch } from './interview-updates';
+import { ResponseAutosave } from './response-autosave';
+
+/**
+ * The candidate's interview (ADR 0008): a waiting page until the session goes Live, then only the current task,
+ * rendered by its task type's `candidate` component, and a closing screen after the last one. When the session has
+ * finished, or the link no longer works, it says so. It follows the session through {@link InterviewUpdates} and
+ * autosaves the response through {@link ResponseAutosave} (ADR 0031).
+ */
+@Component({
+  selector: 'hl-interview-page',
+  imports: [NgIcon, HlmButton, CandidateTaskOutlet, ReconnectingBanner],
+  providers: [
+    ResponseAutosave,
+    provideIcons({
+      lucideCircleAlert,
+      lucideCircleCheck,
+      lucideClock,
+      lucideCloudAlert,
+      lucideCloudCheck,
+      lucideLink2Off,
+      lucideLoaderCircle,
+      lucideRotateCw,
+    }),
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'mx-auto flex w-full max-w-4xl flex-col gap-4 p-6' },
+  template: `
+    <hl-reconnecting-banner
+      [reconnecting]="reconnecting()"
+      detail="Your answers are still saved while this page reconnects."
+    />
+    @let current = result();
+    @if (!current) {
+      <p role="status" class="flex items-center gap-2 text-muted-foreground">
+        <ng-icon
+          name="lucideLoaderCircle"
+          size="20"
+          class="motion-safe:animate-spin"
+          aria-hidden="true"
+        />
+        Opening your interview…
+      </p>
+    } @else if (current.ok) {
+      @switch (current.interview.stage) {
+        @case ('Waiting') {
+          <section class="flex flex-col gap-2" aria-labelledby="interview-title">
+            <h1 id="interview-title" class="flex items-center gap-2 text-2xl font-semibold">
+              <ng-icon name="lucideClock" size="20" aria-hidden="true" />
+              Your interview hasn’t started yet
+            </h1>
+            <p>
+              Keep this page open. The first task appears here when your interviewer starts the
+              interview.
+            </p>
+          </section>
+        }
+        @case ('CurrentTask') {
+          @if (task(); as task) {
+            <section class="flex flex-col gap-4" aria-labelledby="interview-title">
+              <h1 id="interview-title" class="sr-only">Current task</h1>
+              @switch (taskState()) {
+                @case ('loading') {
+                  <p role="status" class="text-muted-foreground">Loading the task…</p>
+                }
+                @case ('unavailable') {
+                  <p role="alert" class="flex items-center gap-2 rounded-md border p-4">
+                    <ng-icon name="lucideCircleAlert" size="20" aria-hidden="true" />
+                    This task can’t be shown here. Please tell your interviewer.
+                  </p>
+                }
+                @case ('failed') {
+                  <p
+                    role="alert"
+                    class="flex items-center gap-2 rounded-md border border-destructive p-4"
+                  >
+                    <ng-icon
+                      name="lucideCircleAlert"
+                      size="20"
+                      class="text-destructive"
+                      aria-hidden="true"
+                    />
+                    The task could not be loaded. Reload the page to try again.
+                  </p>
+                }
+              }
+              <div class="flex flex-col gap-2" [class.hidden]="taskState() !== 'ready'">
+                <p
+                  role="status"
+                  class="flex min-h-5 items-center justify-end gap-1.5 text-sm text-muted-foreground"
+                >
+                  @switch (saveStatus()) {
+                    @case ('saving') {
+                      <ng-icon
+                        name="lucideLoaderCircle"
+                        size="16"
+                        class="motion-safe:animate-spin"
+                        aria-hidden="true"
+                      />
+                      Saving…
+                    }
+                    @case ('saved') {
+                      <ng-icon name="lucideCloudCheck" size="16" aria-hidden="true" />
+                      Saved
+                    }
+                    @case ('stale') {
+                      <ng-icon name="lucideCloudCheck" size="16" aria-hidden="true" />
+                      Updated in another tab
+                    }
+                    @case ('failed') {
+                      <ng-icon
+                        name="lucideCloudAlert"
+                        size="16"
+                        class="text-destructive"
+                        aria-hidden="true"
+                      />
+                      Not saved yet. Trying again…
+                    }
+                    @case ('rejected') {
+                      <ng-icon
+                        name="lucideCloudAlert"
+                        size="16"
+                        class="text-destructive"
+                        aria-hidden="true"
+                      />
+                      Your answer can’t be saved. It may be too long.
+                    }
+                  }
+                </p>
+                <hl-candidate-task-outlet
+                  [taskType]="task.taskType"
+                  [content]="task.content"
+                  [response]="response()"
+                  (responseChange)="edit($event)"
+                  (stateChange)="taskState.set($event)"
+                />
+              </div>
+            </section>
+          }
+        }
+        @case ('Closing') {
+          <section class="flex flex-col gap-2" aria-labelledby="interview-title">
+            <h1 id="interview-title" class="flex items-center gap-2 text-2xl font-semibold">
+              <ng-icon name="lucideCircleCheck" size="20" aria-hidden="true" />
+              That was the last task
+            </h1>
+            <p>Thank you. Your interviewer will wrap up the interview with you.</p>
+          </section>
+        }
+      }
+    } @else {
+      <section class="flex flex-col gap-2" aria-labelledby="interview-title" role="alert">
+        @switch (current.reason) {
+          @case ('ended') {
+            <h1 id="interview-title" class="flex items-center gap-2 text-2xl font-semibold">
+              <ng-icon name="lucideCircleCheck" size="20" aria-hidden="true" />
+              This interview has ended
+            </h1>
+            <p>Thank you for taking part. You can close this page.</p>
+          }
+          @case ('invalid-link') {
+            <h1 id="interview-title" class="flex items-center gap-2 text-2xl font-semibold">
+              <ng-icon name="lucideLink2Off" size="20" aria-hidden="true" />
+              This link doesn’t work
+            </h1>
+            <p>
+              It may have been replaced by a new one. Ask your interviewer for the current link.
+            </p>
+          }
+          @case ('no-access') {
+            <h1 id="interview-title" class="flex items-center gap-2 text-2xl font-semibold">
+              <ng-icon name="lucideLink2Off" size="20" aria-hidden="true" />
+              Open the link from your interviewer
+            </h1>
+            <p>This page works only through the interview link your interviewer sent you.</p>
+          }
+          @case ('rate-limited') {
+            <h1 id="interview-title" class="flex items-center gap-2 text-2xl font-semibold">
+              <ng-icon name="lucideCircleAlert" size="20" aria-hidden="true" />
+              Too many attempts
+            </h1>
+            <p>Wait a minute, then open the link from your interviewer again.</p>
+          }
+          @case ('failed') {
+            <h1 id="interview-title" class="flex items-center gap-2 text-2xl font-semibold">
+              <ng-icon
+                name="lucideCircleAlert"
+                size="20"
+                class="text-destructive"
+                aria-hidden="true"
+              />
+              Something went wrong
+            </h1>
+            <p>Your interview could not be loaded. Check your connection and try again.</p>
+            <div>
+              <button hlmBtn type="button" variant="outline" (click)="retry()">
+                <ng-icon name="lucideRotateCw" size="20" aria-hidden="true" />
+                Try again
+              </button>
+            </div>
+          }
+        }
+      </section>
+    }
+  `,
+})
+export class InterviewPage {
+  private readonly interviews = inject(InterviewService);
+  private readonly updates = inject(InterviewUpdates);
+  private readonly autosave = inject(ResponseAutosave);
+  private trackedTaskId: string | null = null;
+
+  protected readonly result = signal<InterviewResult | null>(null);
+  protected readonly task = computed<CurrentTask | null>(
+    () => {
+      const result = this.result();
+      return result?.ok ? (result.interview.currentTask ?? null) : null;
+    },
+    { equal: (previous, next) => previous?.id === next?.id },
+  );
+  protected readonly taskState = signal<CandidateTaskOutletState>('loading');
+  /** The response the candidate is editing: the saved one when the task opens, then their changes. */
+  protected readonly response = signal<unknown>(null);
+  protected readonly saveStatus = this.autosave.status;
+  private readonly watch = signal<InterviewWatch | null>(null);
+  protected readonly reconnecting = computed(() => this.watch()?.status() === 'reconnecting');
+
+  constructor() {
+    const document = inject(DOCUMENT);
+    const flushWhenHidden = () => {
+      if (document.visibilityState === 'hidden') {
+        void this.autosave.flush();
+      }
+    };
+    document.addEventListener('visibilitychange', flushWhenHidden);
+    inject(DestroyRef).onDestroy(() => {
+      document.removeEventListener('visibilitychange', flushWhenHidden);
+      this.watch()?.stop();
+      void this.autosave.flush();
+    });
+    this.autosave.onRefused((refusal) => void this.refresh(refusal === 'stale'));
+    void this.open();
+  }
+
+  protected retry(): void {
+    this.result.set(null);
+    void this.refresh();
+  }
+
+  protected edit(response: unknown): void {
+    this.response.set(response);
+    this.autosave.change(response);
+  }
+
+  private async open(): Promise<void> {
+    this.show(await this.interviews.open());
+  }
+
+  private async refresh(takeSavedResponse = false): Promise<void> {
+    this.show(await this.interviews.refresh(), takeSavedResponse);
+  }
+
+  /**
+   * Shows the interview. A new current task starts from its saved response. The same task takes the saved response
+   * only after a save was refused as stale, or when another tab saved a newer one and nothing here is unsaved.
+   */
+  private show(result: InterviewResult, takeSavedResponse = false): void {
+    this.result.set(result);
+    if (result.ok) {
+      this.follow(result.interview.currentTask ?? null, takeSavedResponse);
+    }
+    const following = result.ok || result.reason === 'failed';
+    if (following && !this.watch()) {
+      this.watch.set(
+        this.updates.watch({
+          changed: () => void this.refresh(),
+          responseSaved: (sessionTaskId, revision) => this.responseSaved(sessionTaskId, revision),
+        }),
+      );
+    } else if (!following) {
+      this.watch()?.stop();
+      this.watch.set(null);
+      this.autosave.stop();
+    }
+  }
+
+  /** Another tab saved a newer response to the task shown here: take it, unless something here isn't saved yet. */
+  private responseSaved(sessionTaskId: string, revision: number): void {
+    if (
+      sessionTaskId === this.trackedTaskId &&
+      revision > this.autosave.revision &&
+      !this.autosave.dirty
+    ) {
+      void this.refresh();
+    }
+  }
+
+  private follow(task: CurrentTask | null, takeSavedResponse: boolean): void {
+    if (!task) {
+      this.trackedTaskId = null;
+      this.autosave.track(null, 0);
+      return;
+    }
+
+    const newTask = task.id !== this.trackedTaskId;
+    const newerElsewhere = !this.autosave.dirty && task.revision > this.autosave.revision;
+    if (newTask || takeSavedResponse || newerElsewhere) {
+      this.trackedTaskId = task.id;
+      this.response.set(task.response ?? null);
+      this.autosave.track(task.id, task.revision, newTask ? 'idle' : this.autosave.status());
+    }
+  }
+}

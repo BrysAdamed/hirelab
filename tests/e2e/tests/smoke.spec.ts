@@ -1,7 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { candidateApp, staffApp, type App } from '../apps.ts';
 
-// The staff app asks the API who is signed in; for an anonymous visitor the browser logs that 401.
+// Both apps ask the API who is signed in (the candidate app reads its interview); for an anonymous visitor the browser
+// logs that 401.
 function isAnonymousSessionCheck(text: string): boolean {
   return text.includes('status of 401');
 }

@@ -21,6 +21,7 @@ import { HlmDropdownMenuImports } from '@hirelab/ui/helm/dropdown-menu';
 import { HlmInput } from '@hirelab/ui/helm/input';
 import { HlmLabel } from '@hirelab/ui/helm/label';
 import { HlmTextarea } from '@hirelab/ui/helm/textarea';
+import { PresenceIndicator, ReconnectingBanner, type Presence } from '@hirelab/ui/live';
 import { MarkdownViewer } from '@hirelab/ui/markdown';
 
 @Component({
@@ -37,6 +38,8 @@ import { MarkdownViewer } from '@hirelab/ui/markdown';
     HlmLabel,
     HlmTextarea,
     MarkdownViewer,
+    PresenceIndicator,
+    ReconnectingBanner,
   ],
   providers: [
     provideIcons({
@@ -65,6 +68,13 @@ export class DesignPage {
     '',
     '> Interviewer notes stay with the team.',
   ].join('\n');
+
+  protected readonly presences: readonly Presence[] = [
+    { connected: true, connections: 1, lastSeenAt: '2026-01-05T09:00:00Z' },
+    { connected: true, connections: 2, lastSeenAt: '2026-01-05T09:02:00Z' },
+    { connected: false, connections: 0, lastSeenAt: '2026-01-05T09:40:00Z' },
+    { connected: false, connections: 0, lastSeenAt: null },
+  ];
 
   protected readonly buttonVariants = [
     'default',

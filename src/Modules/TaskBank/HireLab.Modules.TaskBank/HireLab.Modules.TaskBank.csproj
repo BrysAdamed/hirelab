@@ -12,6 +12,8 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="HireLab.Tasks.Tests" />
+    <!-- The shared integration host adds tasks for the test assemblies of other modules. -->
+    <InternalsVisibleTo Include="HireLab.Testing" />
   </ItemGroup>
 
 </Project>

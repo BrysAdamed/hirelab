@@ -23,6 +23,7 @@ module.exports = defineConfig([
       '.angular/**',
       'coverage/**',
       'projects/api-client/src/*/schema.ts',
+      'projects/api-client/src/*/hub.ts',
     ],
   },
   {
