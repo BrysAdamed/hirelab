@@ -40,6 +40,7 @@
     <ProjectReference Include="..\Modules\Sessions\HireLab.Modules.Sessions\HireLab.Modules.Sessions.csproj" />
     <ProjectReference Include="..\Modules\Evaluation\HireLab.Modules.Evaluation\HireLab.Modules.Evaluation.csproj" />
     <ProjectReference Include="..\TaskTypes\HireLab.TaskTypes.Abstractions\HireLab.TaskTypes.Abstractions.csproj" />
+    <ProjectReference Include="..\TaskTypes\HireLab.TaskTypes.Catalog\HireLab.TaskTypes.Catalog.csproj" />
   </ItemGroup>
 
   <ItemGroup>

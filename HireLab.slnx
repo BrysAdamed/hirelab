@@ -37,6 +37,7 @@
   </Folder>
   <Folder Name="/src/TaskTypes/">
     <Project Path="src/TaskTypes/HireLab.TaskTypes.Abstractions/HireLab.TaskTypes.Abstractions.csproj" />
+    <Project Path="src/TaskTypes/HireLab.TaskTypes.Catalog/HireLab.TaskTypes.Catalog.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/HireLab.Api.Tests/HireLab.Api.Tests.csproj" />
