@@ -20,7 +20,7 @@ public static class TeamQueryFilter
     public const string Name = "Team";
 
     private static readonly MethodInfo _currentTeamOf =
-        typeof(TeamQueryFilter).GetMethod(nameof(CurrentTeamOf), BindingFlags.NonPublic | BindingFlags.Static)!;
+        typeof(TeamQueryFilter).GetMethod(nameof(CurrentTeamOf), BindingFlags.Public | BindingFlags.Static)!;
 
     internal static void AddTo(ModelBuilder modelBuilder, DbContext context)
     {
@@ -53,10 +53,19 @@ public static class TeamQueryFilter
         return Expression.Lambda(Expression.Equal(entityTeam, currentTeam), entity);
     }
 
-    private static TeamId? CurrentTeamOf(DbContext context) =>
-        context.GetService<IDbContextOptions>()
+    /// <summary>
+    /// The <see cref="ICurrentUser.TeamId"/> of <paramref name="context"/>'s scope: <c>null</c> for the admin, candidates,
+    /// anonymous requests and code outside a request. A module that needs its own team-based filter, such as the task
+    /// visibility filter (ADR 0015), builds it on this.
+    /// </summary>
+    public static TeamId? CurrentTeamOf(DbContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return context.GetService<IDbContextOptions>()
             .FindExtension<CoreOptionsExtension>()?
             .ApplicationServiceProvider?
             .GetService<ICurrentUser>()?
             .TeamId;
+    }
 }
