@@ -26,21 +26,21 @@ internal static class ExchangeCandidateLinkEndpoints
         candidate.MapGet("/access/antiforgery", IssueAntiforgeryToken)
             .AllowAnonymous()
             .WithName("GetCandidateAntiforgeryToken")
-            .WithSummary("Issues the XSRF-TOKEN cookie for the current candidate, signed in or not.");
+            .WithSummary("Issues the XSRF-TOKEN-CANDIDATE cookie for the current candidate, signed in or not.");
 
         candidate.MapPost("/access", ExchangeAsync)
             .AllowAnonymous()
             .RequireRateLimiting(RateLimitPolicies.Authentication)
             .WithName("ExchangeCandidateLink")
             .WithSummary(
-                "Exchanges a candidate link's token for the candidate cookie of its session and a new XSRF-TOKEN. Refused for "
+                "Exchanges a candidate link's token for the candidate cookie of its session and a new XSRF-TOKEN-CANDIDATE. Refused for "
                 + "a link that doesn't work, for example because it was regenerated (404 CandidateLink.Invalid), and for a "
                 + "finished session (409 CandidateSession.Ended).");
     }
 
     private static NoContent IssueAntiforgeryToken(HttpContext httpContext)
     {
-        AntiforgeryTokens.Issue(httpContext);
+        AntiforgeryTokens.IssueForCandidate(httpContext);
         return TypedResults.NoContent();
     }
 
@@ -59,7 +59,7 @@ internal static class ExchangeCandidateLinkEndpoints
         var candidate = exchanged.Value.ToPrincipal();
         await httpContext.SignInAsync(CandidateAuthentication.Scheme, candidate);
         httpContext.User = candidate;
-        AntiforgeryTokens.Issue(httpContext);
+        AntiforgeryTokens.IssueForCandidate(httpContext);
         return TypedResults.NoContent();
     }
 }

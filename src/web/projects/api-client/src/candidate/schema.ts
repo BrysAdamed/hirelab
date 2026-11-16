@@ -11,7 +11,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Issues the XSRF-TOKEN cookie for the current candidate, signed in or not. */
+        /** Issues the XSRF-TOKEN-CANDIDATE cookie for the current candidate, signed in or not. */
         get: operations["GetCandidateAntiforgeryToken"];
         put?: never;
         post?: never;
@@ -30,7 +30,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Exchanges a candidate link's token for the candidate cookie of its session and a new XSRF-TOKEN. Refused for a link that doesn't work, for example because it was regenerated (404 CandidateLink.Invalid), and for a finished session (409 CandidateSession.Ended). */
+        /** Exchanges a candidate link's token for the candidate cookie of its session and a new XSRF-TOKEN-CANDIDATE. Refused for a link that doesn't work, for example because it was regenerated (404 CandidateLink.Invalid), and for a finished session (409 CandidateSession.Ended). */
         post: operations["ExchangeCandidateLink"];
         delete?: never;
         options?: never;

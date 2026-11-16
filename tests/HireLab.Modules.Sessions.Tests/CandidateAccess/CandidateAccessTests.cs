@@ -26,7 +26,7 @@ public sealed class CandidateAccessTests(HireLabTestHost host) : IntegrationTest
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
         candidate.Cookie(TestCandidateAccess.CookieName).ShouldNotBeNull();
-        candidate.Cookie(AntiforgeryTokens.CookieName).ShouldNotBeNull();
+        candidate.Cookie(AntiforgeryTokens.CandidateCookieName).ShouldNotBeNull();
         (await candidate.InterviewAsync()).ShouldBe(new InterviewView("Waiting", null));
     }
 
@@ -232,15 +232,59 @@ public sealed class CandidateAccessTests(HireLabTestHost host) : IntegrationTest
         // Arrange
         var session = await PlanSessionAsync();
         using var candidate = await Host.CreateCandidateBrowserAsync();
-        var anonymousToken = candidate.Cookie(AntiforgeryTokens.CookieName);
+        var anonymousToken = candidate.Cookie(AntiforgeryTokens.CandidateCookieName);
         await candidate.ExchangedAsync(session.Token);
 
         // Act
         using var response = await candidate.ExchangeAsync(session.Token);
 
         // Assert
-        candidate.Cookie(AntiforgeryTokens.CookieName).ShouldNotBe(anonymousToken);
+        candidate.Cookie(AntiforgeryTokens.CandidateCookieName).ShouldNotBe(anonymousToken);
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task Opening_the_link_in_the_staff_browser_keeps_the_staff_antiforgery_token_working()
+    {
+        // Arrange
+        var session = await PlanSessionAsync();
+        await session.Staff.AddedTaskAsync(session.Id, await Host.AddBankTaskAsync(session.TeamId));
+        var staffToken = session.Staff.Cookie(AntiforgeryTokens.CookieName);
+        using (var antiforgery = await session.Staff.GetAsync(TestCandidateAccess.AntiforgeryUri))
+        {
+            antiforgery.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        }
+
+        await session.Staff.ExchangedAsync(session.Token);
+
+        // Act
+        await session.Staff.WentLiveAsync(session.Id);
+
+        // Assert
+        session.Staff.Cookie(AntiforgeryTokens.CookieName).ShouldBe(staffToken);
+        session.Staff.Cookie(AntiforgeryTokens.CandidateCookieName).ShouldNotBeNull();
+    }
+
+    [Fact]
+    public async Task The_candidate_keeps_saving_after_staff_get_a_new_antiforgery_token_in_the_same_browser()
+    {
+        // Arrange
+        var session = await PlanSessionAsync();
+        var first = await session.Staff.AddedTaskAsync(session.Id, await Host.AddBankTaskAsync(session.TeamId));
+        await session.Staff.WentLiveAsync(session.Id);
+        using (var antiforgery = await session.Staff.GetAsync(TestCandidateAccess.AntiforgeryUri))
+        {
+            antiforgery.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+        }
+
+        await session.Staff.ExchangedAsync(session.Token);
+        await session.Staff.RefreshAntiforgeryTokenAsync();
+
+        // Act
+        var revision = await session.Staff.SavedResponseAsync(first, new { echo = "fake answer from a shared browser" }, 0);
+
+        // Assert
+        revision.ShouldBe(1);
     }
 
     [Fact]

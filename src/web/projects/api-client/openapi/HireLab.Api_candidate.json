@@ -10,7 +10,7 @@
         "tags": [
           "Interview"
         ],
-        "summary": "Issues the XSRF-TOKEN cookie for the current candidate, signed in or not.",
+        "summary": "Issues the XSRF-TOKEN-CANDIDATE cookie for the current candidate, signed in or not.",
         "operationId": "GetCandidateAntiforgeryToken",
         "responses": {
           "204": {
@@ -34,7 +34,7 @@
         "tags": [
           "Interview"
         ],
-        "summary": "Exchanges a candidate link's token for the candidate cookie of its session and a new XSRF-TOKEN. Refused for a link that doesn't work, for example because it was regenerated (404 CandidateLink.Invalid), and for a finished session (409 CandidateSession.Ended).",
+        "summary": "Exchanges a candidate link's token for the candidate cookie of its session and a new XSRF-TOKEN-CANDIDATE. Refused for a link that doesn't work, for example because it was regenerated (404 CandidateLink.Invalid), and for a finished session (409 CandidateSession.Ended).",
         "operationId": "ExchangeCandidateLink",
         "requestBody": {
           "content": {

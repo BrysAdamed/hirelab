@@ -6,8 +6,9 @@ using Xunit;
 namespace HireLab.Testing;
 
 /// <summary>
-/// An API client that behaves like an SPA in a browser: it keeps the cookies the API sets and copies the
-/// <c>XSRF-TOKEN</c> cookie into the <c>X-XSRF-TOKEN</c> header on unsafe methods. Create it with
+/// An API client that behaves like the SPAs in one browser: it keeps the cookies the API sets and copies the
+/// antiforgery cookie of the app that calls (<c>XSRF-TOKEN</c> for staff, <c>XSRF-TOKEN-CANDIDATE</c> for
+/// <c>/api/candidate</c>) into the <c>X-XSRF-TOKEN</c> header on unsafe methods. Create it with
 /// <see cref="HireLabTestHost.CreateBrowserAsync"/>. Each session has its own client IP address.
 /// </summary>
 public sealed class BrowserSession : IDisposable
@@ -60,7 +61,7 @@ public sealed class BrowserSession : IDisposable
                 request.Headers.Add(HeaderNames.Cookie, string.Join("; ", _cookies.Select(cookie => $"{cookie.Key}={cookie.Value}")));
             }
 
-            if (SendsAntiforgeryHeader && !IsSafe(request.Method) && Cookie(AntiforgeryTokens.CookieName) is { } token)
+            if (SendsAntiforgeryHeader && !IsSafe(request.Method) && Cookie(AntiforgeryCookieFor(request)) is { } token)
             {
                 request.Headers.Add(AntiforgeryTokens.HeaderName, token);
             }
@@ -92,6 +93,11 @@ public sealed class BrowserSession : IDisposable
             }
         }
     }
+
+    private static string AntiforgeryCookieFor(HttpRequestMessage request) =>
+        request.RequestUri?.OriginalString.StartsWith("/api/candidate", StringComparison.Ordinal) == true
+            ? AntiforgeryTokens.CandidateCookieName
+            : AntiforgeryTokens.CookieName;
 
     private static bool IsSafe(HttpMethod method) =>
         method == HttpMethod.Get || method == HttpMethod.Head || method == HttpMethod.Options || method == HttpMethod.Trace;
