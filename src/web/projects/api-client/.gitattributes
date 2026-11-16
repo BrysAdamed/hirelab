@@ -1,2 +1,4 @@
 openapi/*.json text eol=lf
 src/*/schema.ts text eol=lf
+hubs/*.json text eol=lf
+src/*/hub.ts text eol=lf

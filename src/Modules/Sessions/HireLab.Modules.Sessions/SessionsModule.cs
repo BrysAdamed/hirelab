@@ -30,6 +30,7 @@ public sealed class SessionsModule : IModule, IModuleMigrator
         builder.Services.AddScoped<LazyRepinning>();
         builder.Services.AddScoped<CandidateSessions>();
         builder.Services.AddScoped<ICandidateAccessValidator, CandidateAccessValidator>();
+        builder.Services.AddScoped<IStaffSessionAccess, StaffSessionAccess>();
     }
 
     /// <inheritdoc />

@@ -12,7 +12,7 @@ namespace HireLab.Modules.Sessions.CandidateAccess;
 /// </summary>
 internal sealed class CandidateAccessValidator(CandidateSessions sessions) : ICandidateAccessValidator
 {
-    public async Task<Result> ValidateAsync(ClaimsPrincipal candidate, CancellationToken cancellationToken = default)
+    public async Task<Result<CandidateSessionAccess>> ValidateAsync(ClaimsPrincipal candidate, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(candidate);
 
@@ -21,6 +21,7 @@ internal sealed class CandidateAccessValidator(CandidateSessions sessions) : ICa
             return CandidateAccessErrors.InvalidLink;
         }
 
-        return CandidateSessions.CheckAccess(await sessions.FindStateAsync(cookie, cancellationToken));
+        var access = CandidateSessions.CheckAccess(await sessions.FindStateAsync(cookie, cancellationToken));
+        return access.IsSuccess ? new CandidateSessionAccess(cookie.SessionId, cookie.CandidateLinkId) : access.Error;
     }
 }

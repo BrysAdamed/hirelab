@@ -1,2 +1,4 @@
 projects/api-client/openapi/
 projects/api-client/src/*/schema.ts
+projects/api-client/hubs/
+projects/api-client/src/*/hub.ts

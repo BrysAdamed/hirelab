@@ -3,6 +3,7 @@ using HireLab.Api;
 using HireLab.Api.Auth;
 using HireLab.Api.Infrastructure;
 using HireLab.Api.Modules;
+using HireLab.Api.Realtime;
 using HireLab.ServiceDefaults;
 using HireLab.SharedKernel.Users;
 
@@ -23,6 +24,7 @@ builder.Services.AddStaffAndCandidateAuth();
 builder.Services.AddApiAntiforgery();
 builder.Services.AddApiRateLimiting(builder.Configuration);
 builder.Services.AddCurrentUser();
+builder.Services.AddRealtime();
 
 builder.AddModules(ModuleCatalog.All);
 
@@ -35,6 +37,7 @@ app.UseRateLimiter();
 
 app.MapDefaultEndpoints();
 app.MapModules();
+app.MapRealtime();
 app.MapSpaHosting();
 
 await app.RunAsync();
