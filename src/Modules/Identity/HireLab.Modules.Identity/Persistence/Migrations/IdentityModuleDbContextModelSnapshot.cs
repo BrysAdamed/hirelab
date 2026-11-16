@@ -122,6 +122,70 @@ namespace HireLab.Modules.Identity.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("HireLab.Modules.Identity.Domain.ResetLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<Guid?>("IssuedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("issued_by");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<DateTimeOffset?>("UsedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("used_at");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_reset_links");
+
+                    b.HasIndex("IssuedBy")
+                        .HasDatabaseName("ix_reset_links_issued_by");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_reset_links_token_hash");
+
+                    b.HasIndex(new[] { "UserId" }, "ix_reset_links_one_open_per_user")
+                        .IsUnique()
+                        .HasDatabaseName("ix_reset_links_one_open_per_user")
+                        .HasFilter("used_at IS NULL AND revoked_at IS NULL");
+
+                    b.ToTable("reset_links", "identity");
+                });
+
             modelBuilder.Entity("HireLab.Modules.Identity.Domain.Team", b =>
                 {
                     b.Property<Guid>("Id")
@@ -396,6 +460,22 @@ namespace HireLab.Modules.Identity.Persistence.Migrations
                         .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_invites_teams_team_id");
+                });
+
+            modelBuilder.Entity("HireLab.Modules.Identity.Domain.ResetLink", b =>
+                {
+                    b.HasOne("HireLab.Modules.Identity.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("IssuedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_reset_links_users_issued_by");
+
+                    b.HasOne("HireLab.Modules.Identity.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_reset_links_users_user_id");
                 });
 
             modelBuilder.Entity("HireLab.Modules.Identity.Domain.User", b =>

@@ -1,4 +1,5 @@
 using HireLab.Modules.Identity.Auth.Antiforgery;
+using HireLab.Modules.Identity.Auth.ChangePassword;
 using HireLab.Modules.Identity.Auth.CurrentUser;
 using HireLab.Modules.Identity.Auth.Login;
 using HireLab.Modules.Identity.Auth.Logout;
@@ -20,5 +21,6 @@ internal static class AuthEndpoints
         auth.MapLogin();
         auth.MapLogout();
         auth.MapCurrentUser();
+        auth.MapChangePassword();
     }
 }

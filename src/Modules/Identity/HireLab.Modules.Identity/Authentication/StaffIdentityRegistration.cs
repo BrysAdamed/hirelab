@@ -16,6 +16,7 @@ internal static class StaffIdentityRegistration
     public static IdentityBuilder AddStaffIdentityCore(this IServiceCollection services) =>
         services.AddIdentityCore<User>(ConfigureIdentity)
             .AddUserStore<StaffUserStore>()
+            .AddUserManager<StaffUserManager>()
             .AddClaimsPrincipalFactory<StaffClaimsPrincipalFactory>();
 
     public static IdentityBuilder AddStaffSignIn(this IdentityBuilder identity)

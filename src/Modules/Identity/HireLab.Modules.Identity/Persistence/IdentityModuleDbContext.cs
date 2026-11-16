@@ -17,10 +17,13 @@ internal sealed class IdentityModuleDbContext(DbContextOptions<IdentityModuleDbC
 
     public DbSet<Invite> Invites => Set<Invite>();
 
+    public DbSet<ResetLink> ResetLinks => Set<ResetLink>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.AddSharedKernelIdConversions();
         configurationBuilder.Properties<InviteId>().HaveConversion<InviteIdConverter>();
+        configurationBuilder.Properties<ResetLinkId>().HaveConversion<ResetLinkIdConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -47,4 +50,6 @@ internal sealed class IdentityModuleDbContext(DbContextOptions<IdentityModuleDbC
     }
 
     private sealed class InviteIdConverter() : ValueConverter<InviteId, Guid>(id => id.Value, value => new InviteId(value));
+
+    private sealed class ResetLinkIdConverter() : ValueConverter<ResetLinkId, Guid>(id => id.Value, value => new ResetLinkId(value));
 }

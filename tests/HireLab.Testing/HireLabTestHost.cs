@@ -1,7 +1,10 @@
 using HireLab.Api;
 using HireLab.Api.Modules;
+using HireLab.Modules.Identity.Domain;
+using HireLab.Testing.Staff;
 using HireLab.SharedKernel.Modules;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -46,6 +49,9 @@ public partial class HireLabTestHost : IAsyncLifetime
     /// <summary>The clock the API uses. It doesn't move unless a test advances it.</summary>
     public FakeTimeProvider Time { get; } = new(StartTime);
 
+    /// <summary>Counts the password hash verifications the API performs.</summary>
+    public PasswordHashProbe PasswordHashes { get; } = new();
+
     /// <summary>The running API's root service provider.</summary>
     public IServiceProvider Services => Factory.Services;
 
@@ -68,7 +74,7 @@ public partial class HireLabTestHost : IAsyncLifetime
     }
 
     /// <summary>
-    /// Deletes all data except the migrations history; does nothing while no module has tables.
+    /// Deletes all data except the migrations history (nothing while no module has tables) and resets <see cref="PasswordHashes"/>.
     /// <see cref="IntegrationTest"/> calls it before every test.
     /// </summary>
     public async ValueTask ResetAsync()
@@ -77,6 +83,8 @@ public partial class HireLabTestHost : IAsyncLifetime
         {
             throw new InvalidOperationException("The test host has not been initialised.");
         }
+
+        PasswordHashes.Reset();
 
         if (_respawner is not { } respawner)
         {
@@ -225,6 +233,8 @@ public partial class HireLabTestHost : IAsyncLifetime
                 services.Replace(ServiceDescriptor.Singleton<TimeProvider>(host.Time));
                 services.AddSingleton<IStartupFilter, TestClientAddress>();
                 services.AddSingleton<IStartupFilter, TestSignIn>();
+                services.AddSingleton(host.PasswordHashes);
+                services.Replace(ServiceDescriptor.Scoped<IPasswordHasher<User>, ProbingPasswordHasher>());
             });
 
             host.ConfigureWebHost(builder);

@@ -6,7 +6,10 @@ using Microsoft.AspNetCore.Identity;
 
 namespace HireLab.Modules.Identity.Auth.Login;
 
-internal sealed class LoginHandler(UserManager<User> userManager, SignInManager<User> signInManager)
+internal sealed class LoginHandler(
+    UserManager<User> userManager,
+    SignInManager<User> signInManager,
+    UnknownUserPasswordCheck unknownUserPasswordCheck)
     : ICommandHandler<LoginCommand, Result<UserId>>
 {
     public static readonly Error InvalidCredentials = Error.Validation(
@@ -17,6 +20,7 @@ internal sealed class LoginHandler(UserManager<User> userManager, SignInManager<
     {
         if (await userManager.FindByEmailAsync(command.Email.Trim()) is not { } user)
         {
+            unknownUserPasswordCheck.Verify(userManager.PasswordHasher, command.Password);
             return InvalidCredentials;
         }
 

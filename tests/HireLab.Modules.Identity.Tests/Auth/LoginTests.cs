@@ -82,6 +82,25 @@ public sealed class LoginTests(HireLabTestHost host) : IntegrationTest(host)
     }
 
     [Fact]
+    public async Task Unknown_email_costs_a_password_hash_verification_like_a_wrong_password()
+    {
+        // Arrange
+        var user = await Host.CreateUserAsync(UserBuilder.Admin());
+        using var browser = await CreateBrowserAsync();
+        using var wrongPassword = await browser.LoginAsync(user.Email, "wrong-password-not-a-secret");
+        var forWrongPassword = Host.PasswordHashes.Verifications;
+        Host.PasswordHashes.Reset();
+
+        // Act
+        using var unknownEmail = await browser.LoginAsync("nobody@example.com", "wrong-password-not-a-secret");
+
+        // Assert
+        await ShouldBeInvalidCredentialsAsync(unknownEmail);
+        forWrongPassword.ShouldBe(1);
+        Host.PasswordHashes.Verifications.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Five_wrong_passwords_lock_the_account_so_even_the_right_one_is_refused()
     {
         // Arrange
