@@ -12,6 +12,7 @@ import {
   lucideTriangleAlert,
 } from '@ng-icons/lucide';
 import { THEMES, type Theme } from '@hirelab/ui';
+import { CopyButton } from '@hirelab/ui/copy';
 import { HlmBadge } from '@hirelab/ui/helm/badge';
 import { HlmButton } from '@hirelab/ui/helm/button';
 import { HlmCardImports } from '@hirelab/ui/helm/card';
@@ -24,6 +25,7 @@ import { HlmLabel } from '@hirelab/ui/helm/label';
   selector: 'hl-design-page',
   imports: [
     NgIcon,
+    CopyButton,
     HlmBadge,
     HlmButton,
     HlmCardImports,

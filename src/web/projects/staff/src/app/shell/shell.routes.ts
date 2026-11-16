@@ -43,13 +43,13 @@ export const shellRoutes: Routes = [
   {
     path: 'team',
     title: 'My team - HireLab',
-    loadComponent: placeholder,
+    loadComponent: () => import('../pages/my-team-page').then((m) => m.MyTeamPage),
     data: staffPage({ roles: ['Manager'], nav: { label: 'My team', icon: lucideUsersRound } }),
   },
   {
     path: 'teams',
     title: 'Teams - HireLab',
-    loadComponent: placeholder,
+    loadComponent: () => import('../pages/teams-page').then((m) => m.TeamsPage),
     data: staffPage({ roles: ['Admin'], nav: { label: 'Teams', icon: lucideUsersRound } }),
   },
   {

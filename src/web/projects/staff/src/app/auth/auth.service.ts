@@ -1,6 +1,6 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { type CurrentUser, STAFF_API } from '../api/staff-api';
+import { type CurrentUser, problemMessage, STAFF_API } from '../api/staff-api';
 
 export type LoginResult = { ok: true; user: CurrentUser } | { ok: false; message: string };
 
@@ -38,7 +38,12 @@ export class AuthService {
       this.setUser(data);
       return { ok: true, user: data };
     }
-    return { ok: false, message: error?.detail ?? error?.title ?? genericFailure };
+    return { ok: false, message: problemMessage(error, genericFailure) };
+  }
+
+  /** Records a user the API has just signed in another way, for example by redeeming an invite. */
+  signedIn(user: CurrentUser): void {
+    this.setUser(user);
   }
 
   async logout(): Promise<void> {

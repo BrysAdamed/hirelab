@@ -11,6 +11,11 @@ export const routes: Routes = [
     canActivate: [guestGuard],
     loadComponent: () => import('./auth/login-page').then((m) => m.LoginPage),
   },
+  {
+    path: 'invite',
+    title: 'Accept your invite - HireLab',
+    loadComponent: () => import('./invites/invite-page').then((m) => m.InvitePage),
+  },
   ...designRoutes,
   {
     path: '',

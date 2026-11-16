@@ -40,5 +40,7 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **Deactivation** | Switching a user off instead of deleting them: they can't log in and their sessions end within 5 minutes. The admin deactivates anyone but themselves; a manager deactivates their own interviewers. Reversible by reactivation. |
 | **Handover** | Giving a team a new manager: the admin deactivates the old manager, the team shows "No manager", and the admin invites a new manager into the same team. |
 | **Security stamp** | A random value on each user that changes on deactivation, role or team change and password reset. Sessions issued before the change end at the next check, at most 5 minutes later. |
-| **Invite link** | A one-time link with an expiry that creates a user account in a given role and team. |
+| **Invite link** | A one-time link, valid for 72 hours, that creates a user account in a given role and team. The admin invites a manager into a new team (created only when the link is redeemed) or into an existing team without an active manager; a manager invites interviewers into their own team. Issuing a new invite for the same email revokes the old one. In code: `Invite`. |
+| **Invite state** | The state of an invite or reset link: `Pending` (can be redeemed), `Used`, `Revoked` or `Expired`. Only a pending link works. In code: `OneTimeLinkState`. |
+| **Redemption** | Opening an invite link and setting a password: the account is created and the invitee is logged in. |
 | **Reset link** | A one-time link with an expiry that lets a user set a new password. A manager or admin generates it and sends it by hand. |

@@ -107,7 +107,7 @@ Spartan helm components are generated with `npx ng g @spartan-ng/cli:ui <name>` 
 | Rubric scorer | `scale` criteria as 0–4 segmented controls, `check` criteria as Yes / No, "not assessed", suggested values marked as such |
 | Presence indicator | Candidate online or offline and last seen, plus the number of open connections |
 | Reconnecting banner | Shown while SignalR reconnects |
-| Copy-link button | Copies the candidate or invite link and confirms with a toast |
+| Copy-link button | `hl-copy-button` from `@hirelab/ui/copy` (its own entry point, so it stays out of the initial bundle). Copies the candidate or invite link and confirms inline in a polite live region ("Copied"), or asks the user to copy by hand if the clipboard refuses. Switch the confirmation to a toast once toasts exist. |
 
 New components are added here and to `/design` when a feature needs them.
 

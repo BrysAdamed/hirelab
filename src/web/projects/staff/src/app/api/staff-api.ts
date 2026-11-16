@@ -9,6 +9,19 @@ import type { Middleware } from 'openapi-fetch';
 
 export type CurrentUser = components['schemas']['CurrentUserResponse'];
 export type StaffRole = components['schemas']['StaffRole'];
+export type Invite = components['schemas']['InviteResponse'];
+export type InviteState = components['schemas']['OneTimeLinkState'];
+export type IssuedInvite = components['schemas']['IssuedInviteResponse'];
+export type InvitePreview = components['schemas']['InvitePreviewResponse'];
+export type TeamWithoutManager = components['schemas']['TeamWithoutManagerResponse'];
+
+/** The message of a failed API call: the ProblemDetails detail, or a generic fallback. */
+export function problemMessage(
+  error: { detail?: string | null; title?: string | null } | undefined,
+  fallback: string,
+): string {
+  return error?.detail ?? error?.title ?? fallback;
+}
 
 const authPathPrefix = '/api/staff/auth/';
 
