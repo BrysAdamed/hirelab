@@ -51,6 +51,27 @@ export const shellRoutes: Routes = [
     data: staffPage({ roles: ['Manager'] }),
   },
   {
+    path: 'positions/:positionId/candidates/new',
+    title: 'Add candidate - HireLab',
+    loadComponent: () =>
+      import('../candidates/candidate-form-page').then((m) => m.CandidateFormPage),
+    data: staffPage({ roles: ['Manager', 'Interviewer'] }),
+  },
+  {
+    path: 'candidates/:candidateId',
+    title: 'Candidate - HireLab',
+    loadComponent: () =>
+      import('../candidates/candidate-profile-page').then((m) => m.CandidateProfilePage),
+    data: staffPage({ roles: ['Manager', 'Interviewer'] }),
+  },
+  {
+    path: 'candidates/:candidateId/edit',
+    title: 'Edit candidate - HireLab',
+    loadComponent: () =>
+      import('../candidates/candidate-form-page').then((m) => m.CandidateFormPage),
+    data: staffPage({ roles: ['Manager', 'Interviewer'] }),
+  },
+  {
     path: 'tasks',
     title: 'Task bank - HireLab',
     loadComponent: placeholder,

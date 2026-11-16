@@ -22,6 +22,10 @@ export type JobPosition = components['schemas']['JobPositionResponse'];
 export type JobPositionSummary = components['schemas']['JobPositionSummaryResponse'];
 export type JobPositionState = components['schemas']['JobPositionState'];
 export type JobPositionDetails = components['schemas']['CreateJobPositionRequest'];
+export type Candidate = components['schemas']['CandidateResponse'];
+export type PositionCandidate = components['schemas']['PositionCandidateResponse'];
+export type AddedCandidate = components['schemas']['AddedCandidateResponse'];
+export type CandidateDetails = components['schemas']['AddCandidateRequest'];
 
 /** The message of a failed API call: the ProblemDetails detail, or a generic fallback. */
 export function problemMessage(

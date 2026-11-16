@@ -16,6 +16,7 @@ import { HlmCardImports } from '@hirelab/ui/helm/card';
 import { MarkdownViewer } from '@hirelab/ui/markdown';
 import type { JobPosition } from '../api/staff-api';
 import { AuthService } from '../auth/auth.service';
+import { PositionCandidates } from '../candidates/position-candidates';
 import { DeletePositionAction } from './delete-position-action';
 import { PositionStateBadge } from './position-state-badge';
 import { PositionsService } from './positions.service';
@@ -36,6 +37,7 @@ interface Section {
     HlmCardImports,
     MarkdownViewer,
     DeletePositionAction,
+    PositionCandidates,
     PositionStateBadge,
   ],
   providers: [provideIcons({ lucideArrowLeft, lucideCircleAlert, lucideLock, lucidePencil })],
@@ -100,17 +102,7 @@ interface Section {
         </div>
       </section>
 
-      <section hlmCard class="mt-3" aria-labelledby="candidates-title">
-        <div hlmCardHeader>
-          <h2 hlmCardTitle id="candidates-title">Candidates</h2>
-        </div>
-        <div hlmCardContent>
-          <!-- TODO HLB-41: the position's candidates table goes here. -->
-          <p class="rounded-md border border-dashed p-3 text-center text-muted-foreground">
-            No candidates yet.
-          </p>
-        </div>
-      </section>
+      <hl-position-candidates class="mt-3 block" [position]="position" />
     }
   `,
 })
