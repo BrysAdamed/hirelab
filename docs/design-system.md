@@ -105,8 +105,8 @@ Spartan helm components are generated with `npx ng g @spartan-ng/cli:ui <name>` 
 | Markdown editor | Monaco in markdown mode with live preview |
 | Code editor / diff editor | Monaco behind our wrapper, lazy-loaded, theme-synced |
 | Rubric scorer | `scale` criteria as 0–4 segmented controls, `check` criteria as Yes / No, "not assessed", suggested values marked as such |
-| Presence indicator | Candidate online or offline and last seen, plus the number of open connections |
-| Reconnecting banner | Shown while SignalR reconnects |
+| Presence indicator | `hl-presence-indicator` from `@hirelab/ui/live`: candidate online (with the number of open connections when there is more than one), offline with when they were last seen, or not connected yet. Icon + label. |
+| Reconnecting banner | `hl-reconnecting-banner` from `@hirelab/ui/live`: a warning strip, "Reconnecting…" plus what the user should know, in a polite live region that is always present. Shown while SignalR reconnects. |
 | Copy-link button | `hl-copy-button` from `@hirelab/ui/copy` (its own entry point, so it stays out of the initial bundle). Copies the candidate, invite or reset link and confirms inline in a polite live region ("Copied"), or asks the user to copy by hand if the clipboard refuses. Switch the confirmation to a toast once toasts exist. |
 
 New components are added here and to `/design` when a feature needs them.

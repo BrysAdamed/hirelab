@@ -20,9 +20,10 @@ import {
 } from '@ng-icons/lucide';
 import { HlmButton } from '@hirelab/ui/helm/button';
 import { CandidateTaskOutlet, type CandidateTaskOutletState } from '@hirelab/tasks/candidate';
+import { ReconnectingBanner } from '@hirelab/ui/live';
 import type { CurrentTask } from '../api/candidate-api';
 import { InterviewService, type InterviewResult } from './interview.service';
-import { InterviewUpdates } from './interview-updates';
+import { InterviewUpdates, type InterviewWatch } from './interview-updates';
 import { ResponseAutosave } from './response-autosave';
 
 /**
@@ -33,7 +34,7 @@ import { ResponseAutosave } from './response-autosave';
  */
 @Component({
   selector: 'hl-interview-page',
-  imports: [NgIcon, HlmButton, CandidateTaskOutlet],
+  imports: [NgIcon, HlmButton, CandidateTaskOutlet, ReconnectingBanner],
   providers: [
     ResponseAutosave,
     provideIcons({
@@ -50,6 +51,10 @@ import { ResponseAutosave } from './response-autosave';
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: { class: 'mx-auto flex w-full max-w-4xl flex-col gap-4 p-6' },
   template: `
+    <hl-reconnecting-banner
+      [reconnecting]="reconnecting()"
+      detail="Your answers are still saved while this page reconnects."
+    />
     @let current = result();
     @if (!current) {
       <p role="status" class="flex items-center gap-2 text-muted-foreground">
@@ -228,7 +233,6 @@ export class InterviewPage {
   private readonly interviews = inject(InterviewService);
   private readonly updates = inject(InterviewUpdates);
   private readonly autosave = inject(ResponseAutosave);
-  private stopWatching: (() => void) | null = null;
   private trackedTaskId: string | null = null;
 
   protected readonly result = signal<InterviewResult | null>(null);
@@ -243,6 +247,8 @@ export class InterviewPage {
   /** The response the candidate is editing: the saved one when the task opens, then their changes. */
   protected readonly response = signal<unknown>(null);
   protected readonly saveStatus = this.autosave.status;
+  private readonly watch = signal<InterviewWatch | null>(null);
+  protected readonly reconnecting = computed(() => this.watch()?.status() === 'reconnecting');
 
   constructor() {
     const document = inject(DOCUMENT);
@@ -254,7 +260,7 @@ export class InterviewPage {
     document.addEventListener('visibilitychange', flushWhenHidden);
     inject(DestroyRef).onDestroy(() => {
       document.removeEventListener('visibilitychange', flushWhenHidden);
-      this.stopWatching?.();
+      this.watch()?.stop();
       void this.autosave.flush();
     });
     this.autosave.onRefused((refusal) => void this.refresh(refusal === 'stale'));
@@ -289,12 +295,28 @@ export class InterviewPage {
       this.follow(result.interview.currentTask ?? null, takeSavedResponse);
     }
     const following = result.ok || result.reason === 'failed';
-    if (following && !this.stopWatching) {
-      this.stopWatching = this.updates.watch(() => void this.refresh());
+    if (following && !this.watch()) {
+      this.watch.set(
+        this.updates.watch({
+          changed: () => void this.refresh(),
+          responseSaved: (sessionTaskId, revision) => this.responseSaved(sessionTaskId, revision),
+        }),
+      );
     } else if (!following) {
-      this.stopWatching?.();
-      this.stopWatching = null;
+      this.watch()?.stop();
+      this.watch.set(null);
       this.autosave.stop();
+    }
+  }
+
+  /** Another tab saved a newer response to the task shown here: take it, unless something here isn't saved yet. */
+  private responseSaved(sessionTaskId: string, revision: number): void {
+    if (
+      sessionTaskId === this.trackedTaskId &&
+      revision > this.autosave.revision &&
+      !this.autosave.dirty
+    ) {
+      void this.refresh();
     }
   }
 

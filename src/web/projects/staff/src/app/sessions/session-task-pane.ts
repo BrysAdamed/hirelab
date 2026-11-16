@@ -10,13 +10,14 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
-import { lucideCircleAlert, lucideExternalLink, lucideRotateCw } from '@ng-icons/lucide';
+import { lucideCircleAlert, lucideExternalLink } from '@ng-icons/lucide';
 import type { TaskContent } from '@hirelab/tasks/framework';
 import { ReviewTaskOutlet, type ReviewTaskOutletState } from '@hirelab/tasks/review';
 import { HlmButton } from '@hirelab/ui/helm/button';
 import { HlmCardImports } from '@hirelab/ui/helm/card';
 import { MarkdownViewer } from '@hirelab/ui/markdown';
 import type { SessionTaskDetail } from '../api/staff-api';
+import type { ResponseUpdate } from './session-live-updates';
 import { SessionTaskStateBadge } from './session-task-state-badge';
 import { SessionsService } from './sessions.service';
 
@@ -36,7 +37,7 @@ import { SessionsService } from './sessions.service';
     ReviewTaskOutlet,
     SessionTaskStateBadge,
   ],
-  providers: [provideIcons({ lucideCircleAlert, lucideExternalLink, lucideRotateCw })],
+  providers: [provideIcons({ lucideCircleAlert, lucideExternalLink })],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section hlmCard aria-labelledby="session-task-title">
@@ -45,15 +46,12 @@ import { SessionsService } from './sessions.service';
           <div class="flex min-w-0 flex-wrap items-center gap-2">
             <h2 hlmCardTitle id="session-task-title">{{ task.title }}</h2>
             <span class="font-mono text-muted-foreground">v{{ task.versionNumber }}</span>
-            <hl-session-task-state-badge [state]="task.state" [sessionFinished]="sessionFinished()" />
+            <hl-session-task-state-badge
+              [state]="task.state"
+              [sessionFinished]="sessionFinished()"
+            />
           </div>
           <div class="flex items-center gap-2">
-            @if (live()) {
-              <button hlmBtn type="button" variant="outline" size="sm" (click)="reload()">
-                <ng-icon name="lucideRotateCw" aria-hidden="true" />
-                Refresh response
-              </button>
-            }
             <a hlmBtn variant="link" size="sm" class="px-0" [routerLink]="['/tasks', task.taskId]">
               <ng-icon name="lucideExternalLink" aria-hidden="true" />
               Task bank
@@ -67,7 +65,10 @@ import { SessionsService } from './sessions.service';
               <p role="status" class="text-muted-foreground">Loading the response…</p>
             }
             @case ('failed') {
-              <p role="alert" class="flex items-center gap-2 rounded-md border border-destructive p-2">
+              <p
+                role="alert"
+                class="flex items-center gap-2 rounded-md border border-destructive p-2"
+              >
                 <ng-icon
                   name="lucideCircleAlert"
                   size="16"
@@ -133,6 +134,10 @@ export class SessionTaskPane {
   readonly queueRevision = input.required<number>();
   readonly sessionLive = input(false);
   readonly sessionFinished = input(false);
+  /** The latest response revision the staff hub announced: a newer one for this task refetches it. */
+  readonly responseUpdate = input<ResponseUpdate | null>(null);
+  /** Raised after the live connection resubscribed, when anything may have changed unseen: refetches the task. */
+  readonly resync = input(0);
 
   protected readonly task = signal<SessionTaskDetail | null>(null);
   protected readonly error = signal<string | null>(null);
@@ -142,21 +147,30 @@ export class SessionTaskPane {
     return task ? { candidate: task.candidateContent, staff: task.staffContent } : null;
   });
   /** Whether the candidate may still be changing the response. */
-  protected readonly live = computed(
-    () => this.sessionLive() && this.task()?.state === 'Current',
-  );
+  protected readonly live = computed(() => this.sessionLive() && this.task()?.state === 'Current');
 
   constructor() {
     effect(() => {
       const sessionId = this.sessionId();
       const sessionTaskId = this.sessionTaskId();
       this.queueRevision();
+      this.resync();
       untracked(() => void this.load(sessionId, sessionTaskId));
     });
-  }
-
-  protected reload(): void {
-    void this.load(this.sessionId(), this.sessionTaskId());
+    effect(() => {
+      const update = this.responseUpdate();
+      untracked(() => {
+        const task = this.task();
+        if (
+          update &&
+          task &&
+          update.sessionTaskId === task.id &&
+          update.revision > task.responseRevision
+        ) {
+          void this.load(this.sessionId(), task.id);
+        }
+      });
+    });
   }
 
   private async load(sessionId: string, sessionTaskId: string): Promise<void> {

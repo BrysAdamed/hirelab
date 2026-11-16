@@ -1,0 +1,13 @@
+{
+  "path": "/hubs/candidate",
+  "serverMethods": {},
+  "clientMethods": {
+    "TaskQueueChanged": {},
+    "SessionStateChanged": {},
+    "ResponseUpdated": {
+      "sessionTaskId": "string",
+      "revision": "number"
+    }
+  },
+  "types": {}
+}

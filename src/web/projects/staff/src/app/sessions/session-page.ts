@@ -8,6 +8,7 @@ import {
   input,
   linkedSignal,
   signal,
+  untracked,
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { NgIcon, provideIcons } from '@ng-icons/core';
@@ -28,12 +29,14 @@ import { HlmCardImports } from '@hirelab/ui/helm/card';
 import { HlmDialogImports } from '@hirelab/ui/helm/dialog';
 import { HlmInput } from '@hirelab/ui/helm/input';
 import { HlmLabel } from '@hirelab/ui/helm/label';
+import { PresenceIndicator, ReconnectingBanner } from '@hirelab/ui/live';
 import type { ApiResult } from '../api/api-result';
 import type { InterviewSession } from '../api/staff-api';
 import { CandidateLinkAction } from './candidate-link-action';
 import { fromLocalInput, toLocalInput } from './schedule';
 import { SessionStateBadge } from './session-state-badge';
 import { SessionTaskPane } from './session-task-pane';
+import { SessionLiveUpdates } from './session-live-updates';
 import { SessionTaskStateBadge } from './session-task-state-badge';
 import { SessionsService } from './sessions.service';
 import { TaskPicker } from './task-picker';
@@ -55,12 +58,15 @@ import { TaskPicker } from './task-picker';
     HlmDialogImports,
     HlmInput,
     HlmLabel,
+    PresenceIndicator,
+    ReconnectingBanner,
     SessionStateBadge,
     SessionTaskPane,
     SessionTaskStateBadge,
     TaskPicker,
   ],
   providers: [
+    SessionLiveUpdates,
     provideIcons({
       lucideArrowDown,
       lucideArrowLeft,
@@ -76,6 +82,8 @@ import { TaskPicker } from './task-picker';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
+    <hl-reconnecting-banner class="mb-3 block" [reconnecting]="reconnecting()" />
+
     @if (session(); as session) {
       <a
         hlmBtn
@@ -112,6 +120,9 @@ import { TaskPicker } from './task-picker';
               Session {{ session.number }} · {{ session.candidateDisplayName }}
             </h1>
             <hl-session-state-badge [state]="session.state" />
+            @if (!finished() && updates.presence(); as presence) {
+              <hl-presence-indicator [presence]="presence" />
+            }
           </div>
           <p class="text-muted-foreground">
             Planned by {{ session.createdByName ?? 'a former user' }} on
@@ -418,6 +429,8 @@ import { TaskPicker } from './task-picker';
             [queueRevision]="session.queueRevision"
             [sessionLive]="live()"
             [sessionFinished]="finished()"
+            [responseUpdate]="updates.responseUpdate()"
+            [resync]="updates.resyncs()"
           />
         }
       </div>
@@ -427,6 +440,7 @@ import { TaskPicker } from './task-picker';
 export class SessionPage {
   private readonly sessionsService = inject(SessionsService);
   private readonly router = inject(Router);
+  protected readonly updates = inject(SessionLiveUpdates);
 
   /** The `:sessionId` route parameter. */
   readonly sessionId = input.required<string>();
@@ -434,6 +448,7 @@ export class SessionPage {
   protected readonly session = signal<InterviewSession | null>(null);
   protected readonly error = signal<string | null>(null);
   protected readonly pending = signal(false);
+  protected readonly reconnecting = computed(() => this.updates.status() === 'reconnecting');
   protected readonly planned = computed(() => this.session()?.state === 'Planned');
   protected readonly live = computed(() => this.session()?.state === 'Live');
   protected readonly finished = computed(() => this.session()?.state === 'Finished');
@@ -475,7 +490,13 @@ export class SessionPage {
   });
 
   constructor() {
-    effect(() => void this.load(this.sessionId()));
+    effect(() => {
+      const sessionId = this.sessionId();
+      untracked(() => {
+        void this.load(sessionId);
+        this.updates.watch(sessionId, () => void this.load(sessionId));
+      });
+    });
   }
 
   protected saveSchedule(): Promise<void> {
