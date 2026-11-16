@@ -47,7 +47,7 @@ test('a manager closes the position, the candidate shows as Candidate #1 and the
   await expect(page.getByRole('heading', { name: 'Candidate #1' })).toBeVisible();
   await expect(page.getByText(/Anonymised on .* by /)).toBeVisible();
   await expect(page.getByText('jane.fakeclosed@example.com')).toBeHidden();
-  await expect(page.getByText('No attachments yet.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Attachments' })).toBeHidden();
   await expect(page.getByRole('link', { name: 'Edit' })).toBeHidden();
 });
 
@@ -61,7 +61,7 @@ test('a manager anonymises one candidate and the position stays open', async ({ 
 
   await expect(page.getByRole('heading', { name: 'Candidate #1' })).toBeVisible();
   await expect(page.getByText(`by ${seededManager.displayName}. Their contact details`)).toBeVisible();
-  await expect(page.getByText('No attachments yet.')).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Attachments' })).toBeHidden();
 
   await page.getByRole('link', { name: title }).click();
   await expect(page.getByRole('button', { name: 'Close position' })).toBeVisible();

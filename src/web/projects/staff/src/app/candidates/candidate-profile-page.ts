@@ -64,7 +64,10 @@ import { CandidatesService } from './candidates.service';
     }
 
     @if (error(); as message) {
-      <div role="alert" class="mt-3 flex items-start gap-2 rounded-md border border-destructive p-2">
+      <div
+        role="alert"
+        class="mt-3 flex items-start gap-2 rounded-md border border-destructive p-2"
+      >
         <ng-icon
           name="lucideCircleAlert"
           size="16"
@@ -80,7 +83,10 @@ import { CandidatesService } from './candidates.service';
         <div class="flex flex-col gap-1">
           <h1 class="text-xl font-semibold">{{ candidate.displayName }}</h1>
           <p class="text-muted-foreground">
-            Candidate #{{ candidate.number }} · Added {{ candidate.createdAt | date: 'mediumDate' }}
+            @if (!candidate.isAnonymised) {
+              Candidate #{{ candidate.number }} ·
+            }
+            Added {{ candidate.createdAt | date: 'mediumDate' }}
           </p>
         </div>
         @if (canEdit()) {
@@ -123,65 +129,73 @@ import { CandidatesService } from './candidates.service';
         </p>
       }
 
-      <section hlmCard class="mt-3" aria-labelledby="contact-details-title">
-        <div hlmCardHeader>
-          <h2 hlmCardTitle id="contact-details-title">Contact details</h2>
-        </div>
-        <div hlmCardContent>
-          <dl class="grid gap-x-4 gap-y-2 sm:grid-cols-[10rem_1fr]">
-            <dt class="text-muted-foreground">Email</dt>
-            <dd>
-              @if (candidate.email; as email) {
-                <a class="text-accent-text underline-offset-4 hover:underline" [href]="'mailto:' + email">
-                  {{ email }}
-                </a>
-              } @else {
-                <span class="text-muted-foreground">Not given</span>
-              }
-            </dd>
-            <dt class="text-muted-foreground">Phone</dt>
-            <dd>
-              @if (candidate.phone; as phone) {
-                <a class="text-accent-text underline-offset-4 hover:underline" [href]="'tel:' + phone">
-                  {{ phone }}
-                </a>
-              } @else {
-                <span class="text-muted-foreground">Not given</span>
-              }
-            </dd>
-            <dt class="text-muted-foreground">Profile links</dt>
-            <dd>
-              @if (candidate.links.length > 0) {
-                <ul class="flex flex-col gap-1">
-                  @for (link of candidate.links; track $index) {
-                    <li>
-                      <a
-                        class="inline-flex items-center gap-1 break-all text-accent-text underline-offset-4 hover:underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        [href]="link"
-                      >
-                        {{ link }}
-                        <ng-icon name="lucideExternalLink" size="14" aria-hidden="true" />
-                        <span class="sr-only">(opens in a new tab)</span>
-                      </a>
-                    </li>
-                  }
-                </ul>
-              } @else {
-                <span class="text-muted-foreground">None</span>
-              }
-            </dd>
-          </dl>
-        </div>
-      </section>
+      @if (!candidate.isAnonymised) {
+        <section hlmCard class="mt-3" aria-labelledby="contact-details-title">
+          <div hlmCardHeader>
+            <h2 hlmCardTitle id="contact-details-title">Contact details</h2>
+          </div>
+          <div hlmCardContent>
+            <dl class="grid gap-x-4 gap-y-2 sm:grid-cols-[10rem_1fr]">
+              <dt class="text-muted-foreground">Email</dt>
+              <dd>
+                @if (candidate.email; as email) {
+                  <a
+                    class="text-accent-text underline-offset-4 hover:underline"
+                    [href]="'mailto:' + email"
+                  >
+                    {{ email }}
+                  </a>
+                } @else {
+                  <span class="text-muted-foreground">Not given</span>
+                }
+              </dd>
+              <dt class="text-muted-foreground">Phone</dt>
+              <dd>
+                @if (candidate.phone; as phone) {
+                  <a
+                    class="text-accent-text underline-offset-4 hover:underline"
+                    [href]="'tel:' + phone"
+                  >
+                    {{ phone }}
+                  </a>
+                } @else {
+                  <span class="text-muted-foreground">Not given</span>
+                }
+              </dd>
+              <dt class="text-muted-foreground">Profile links</dt>
+              <dd>
+                @if (candidate.links.length > 0) {
+                  <ul class="flex flex-col gap-1">
+                    @for (link of candidate.links; track $index) {
+                      <li>
+                        <a
+                          class="inline-flex items-center gap-1 break-all text-accent-text underline-offset-4 hover:underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          [href]="link"
+                        >
+                          {{ link }}
+                          <ng-icon name="lucideExternalLink" size="14" aria-hidden="true" />
+                          <span class="sr-only">(opens in a new tab)</span>
+                        </a>
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <span class="text-muted-foreground">None</span>
+                }
+              </dd>
+            </dl>
+          </div>
+        </section>
 
-      <hl-candidate-attachments
-        class="mt-3 block"
-        [candidateId]="candidate.id"
-        [canChange]="canEdit()"
-        [candidateVersion]="candidate.version"
-      />
+        <hl-candidate-attachments
+          class="mt-3 block"
+          [candidateId]="candidate.id"
+          [canChange]="canEdit()"
+          [candidateVersion]="candidate.version"
+        />
+      }
     }
   `,
 })

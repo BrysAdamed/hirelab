@@ -84,6 +84,9 @@ describe('CandidateProfilePage', () => {
     // Assert
     expect(await screen.findByRole('heading', { name: 'Candidate #3' })).toBeTruthy();
     expect(screen.getByText(/Anonymised on Jan 8, 2026 by Fake Manager/)).toBeTruthy();
+    expect(screen.queryByText(/Candidate #3 ·/)).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Contact details' })).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Attachments' })).toBeNull();
     expect(screen.queryByRole('link', { name: 'Edit' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Anonymise' })).toBeNull();
   });
@@ -104,8 +107,7 @@ describe('CandidateProfilePage', () => {
     expect(await screen.findByRole('heading', { name: 'Candidate #3' })).toBeTruthy();
     const request = fake.requests.find((sent) => sent.method === 'POST');
     expect(await request?.json()).toEqual({ version: 5 });
-    const attachmentReads = fake.requests.filter((sent) => sent.url.endsWith('/attachments'));
-    expect(attachmentReads.length).toBe(2);
+    expect(screen.queryByRole('heading', { name: 'Attachments' })).toBeNull();
   });
 
   it('offers anonymisation to managers only', async () => {

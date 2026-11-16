@@ -45,10 +45,12 @@ export function formatFileSize(bytes: number): string {
       <div hlmCardHeader class="flex flex-row flex-wrap items-center justify-between gap-2">
         <div class="flex flex-col gap-1">
           <h2 hlmCardTitle id="attachments-title">Attachments</h2>
-          <p class="text-muted-foreground">
-            {{ attachments().length }} of {{ maxFiles }} files · PDF, DOCX, TXT, MD, PNG or JPG up
-            to 10 MB
-          </p>
+          @if (canChange()) {
+            <p class="text-muted-foreground">
+              {{ attachments().length }} of {{ maxFiles }} files · PDF, DOCX, TXT, MD, PNG or JPG up
+              to 10 MB
+            </p>
+          }
         </div>
         @if (canChange()) {
           <input
@@ -89,7 +91,7 @@ export function formatFileSize(bytes: number): string {
               class="flex items-center justify-center gap-2 rounded-md border border-dashed p-3 text-muted-foreground"
             >
               <ng-icon name="lucidePaperclip" size="16" aria-hidden="true" />
-              No attachments yet.
+              {{ canChange() ? 'No attachments yet.' : 'No attachments.' }}
             </p>
           } @else {
             <div class="overflow-x-auto rounded-md border">

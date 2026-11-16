@@ -56,6 +56,19 @@ describe('CandidateAttachments', () => {
     expect(await screen.findByRole('button', { name: 'Download Fake CV.pdf' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Upload file' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Delete Fake CV.pdf' })).toBeNull();
+    expect(screen.queryByText(/of 10 files/)).toBeNull();
+  });
+
+  it('says there are no attachments without suggesting more will come when the candidate cannot be changed', async () => {
+    // Arrange
+    listed = [];
+
+    // Act
+    await renderCard(false);
+
+    // Assert
+    expect(await screen.findByText('No attachments.')).toBeTruthy();
+    expect(screen.queryByText('No attachments yet.')).toBeNull();
   });
 
   it('uploads the chosen file as the multipart field "file" and shows it', async () => {
