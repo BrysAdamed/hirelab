@@ -128,7 +128,7 @@ const sectionFields: readonly SectionField[] = [
                   [formControlName]="field.name"
                   [required]="field.required"
                   [attr.maxlength]="sectionMaxLength"
-                  [attr.aria-describedby]="'position-' + field.name + '-hint'"
+                  [aria-describedby]="'position-' + field.name + '-hint'"
                 ></textarea>
                 <p [id]="'position-' + field.name + '-hint'" class="text-muted-foreground">
                   {{ field.hint }}

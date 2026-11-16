@@ -69,6 +69,19 @@ describe('PositionFormPage', () => {
     });
   });
 
+  it('links each section to its hint', async () => {
+    // Arrange
+    await renderPage();
+
+    // Act
+    const requirements = screen.getByLabelText('Requirements');
+
+    // Assert
+    const hintId = requirements.getAttribute('aria-describedby');
+    expect(hintId).toBe('position-requirements-hint');
+    expect(document.getElementById(hintId!)?.textContent?.trim()).toBeTruthy();
+  });
+
   it('asks for the requirements before sending anything', async () => {
     // Arrange
     await renderPage();
