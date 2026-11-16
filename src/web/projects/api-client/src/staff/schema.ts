@@ -468,10 +468,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/positions/{positionId}/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists a job position's candidates by number. */
+        get: operations["ListCandidates"];
+        put?: never;
+        /** Adds a candidate to an open job position. The candidate gets the position's next number. */
+        post: operations["AddCandidate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/candidates/{candidateId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Gets one of the team's candidates with their contact details and version, which an edit sends back. */
+        get: operations["GetCandidate"];
+        /** Edits a candidate's contact details while their position is open (409 JobPosition.Closed otherwise). Send the version it was read with: when someone else changed it since, the edit is refused with 409 Concurrency.ChangedMeanwhile. */
+        put: operations["EditCandidate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AddCandidateRequest: {
+            fullName: string;
+            email: null | string;
+            phone: null | string;
+            links: null | string[];
+        };
+        AddedCandidateResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            number: number;
+        };
+        CandidateResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            positionId: string;
+            positionTitle: string;
+            positionState: components["schemas"]["JobPositionState"];
+            /** Format: int32 */
+            number: number;
+            displayName: string;
+            fullName: null | string;
+            email: null | string;
+            phone: null | string;
+            links: string[];
+            isAnonymised: boolean;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: uint32 */
+            version: number;
+        };
         ChangePasswordRequest: {
             currentPassword: string;
             newPassword: string;
@@ -510,6 +578,14 @@ export interface components {
             /** Format: uuid */
             id: string;
             name: string;
+        };
+        EditCandidateRequest: {
+            fullName: string;
+            email: null | string;
+            phone: null | string;
+            links: null | string[];
+            /** Format: uint32 */
+            version: number;
         };
         EditJobPositionRequest: {
             title: string;
@@ -587,6 +663,18 @@ export interface components {
         };
         /** @enum {unknown} */
         OneTimeLinkState: "Pending" | "Used" | "Revoked" | "Expired";
+        PositionCandidateResponse: {
+            /** Format: uuid */
+            id: string;
+            /** Format: int32 */
+            number: number;
+            displayName: string;
+            email: null | string;
+            phone: null | string;
+            isAnonymised: boolean;
+            /** Format: date-time */
+            createdAt: string;
+        };
         PreviewInviteRequest: {
             token: string;
         };
@@ -1619,6 +1707,136 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListCandidates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                positionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PositionCandidateResponse"][];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    AddCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                positionId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddCandidateRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AddedCandidateResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    GetCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    EditCandidate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                candidateId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EditCandidateRequest"];
+            };
+        };
         responses: {
             /** @description No Content */
             204: {
