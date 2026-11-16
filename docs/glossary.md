@@ -14,12 +14,17 @@ Use these terms in code, API, UI and tickets. When you introduce a new domain te
 | **Anonymise candidate** | Anonymising a single candidate while their position stays open. Manager only, refused while the candidate has an unfinished session (ADR 0026). |
 | **Close position** | The manager ending hiring for a job position: it becomes `Closed` and read-only, who closed it and when is recorded (`ClosedBy`/`ClosedAt`) and all its candidates are anonymised. Refused while any of its candidates has an unfinished session. Irreversible (ADR 0026). |
 | **Unfinished session** | An interview session that isn't `Finished` yet (`Planned` or `Live`). It blocks closing the position and anonymising the candidate. In code: `IUnfinishedSessionsQuery`. |
-| **Task** | One interview exercise, authored in the app. It has an owning team, a visibility, versions, a task type, title, summary, tags, level, estimated minutes, content, reference answer, interviewer notes and rubric. Its UI comes from its task type. |
-| **Task version** | One revision of a task (`v1`, `v2` …). Published versions are immutable; a change means a new version. |
+| **Task** | One interview exercise, authored in the app. It has an owning team, a visibility, versions, a task type, title, summary, tags, level, estimated minutes, content, reference answer, interviewer notes and rubric. Its UI comes from its task type. In code: `InterviewTask` (`Task` clashes with .NET's), table `tasks` (ADR 0029). |
+| **Task version** | One revision of a task (`v1`, `v2` …). Published versions are immutable; a change means a new version. Its state is `Draft` or `Published`. In code: `TaskVersion`. |
 | **Draft** | The one unpublished version a task may have. Editable by the team; can be previewed, but queued only in Development. |
-| **Active version** | The task version the task bank offers. By default the newest published one; the manager can switch it. |
+| **Active version** | The task version the task bank offers. By default the newest published one; the manager can switch it. A draft is never active, and a system task always uses its newest version. In code: `InterviewTask.ActiveVersion`, `IActiveTaskVersionQuery`. |
 | **Visibility** | Whether a task is seen by its owning team only (`Team`) or by every team (`Global`). Only the owning team edits it. |
-| **System task** | A showcase task imported from a seed package in the repo. Global, owned by no team, read-only. |
+| **System task** | A showcase task imported from a seed package in the repo. Global, owned by no team, read-only, identified by its slug. |
+| **Slug** | A system task's external key: its seed package folder name, kebab-case and unique. Seed import matches tasks by slug and version number. |
+| **Archived task** | A task taken out of the task bank for good, because it was queued and so can't be deleted. Sessions keep their snapshots of it. Who archived it and when is recorded. |
+| **Task version details** | What an author writes for a task version: title, summary, level, estimated minutes, tags, reference answer, interviewer notes, rubric and content. They become a version only after the one task version validation (generic rules, then the task type's), which seed import and the editor share. In code: `TaskVersionDetails`, `TaskVersionValidator`, `ValidatedTaskVersion`. |
+| **Content hash** | The SHA-256 of a task version's validated details and content, ignoring JSON formatting. Seed import compares it to detect a changed seed version. |
+| **Task version snapshot** | What a session task copies from the version it pins: content, reference answer, interviewer notes and rubric, with the version's id and title. In code: `TaskVersionSnapshot`. |
 | **Seed package** | A task version stored as a folder in `src/Tasks/` and imported into the database as a system task. |
 | **Duplicate** | A team's draft copy of another task. It remembers its source, which is then hidden from the team's bank. |
 | **Hidden task** | A Global task a team's manager has hidden from that team's bank. Reachable through "Show hidden". |
