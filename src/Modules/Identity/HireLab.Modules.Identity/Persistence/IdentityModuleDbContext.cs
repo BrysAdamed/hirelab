@@ -4,6 +4,7 @@ using HireLab.SharedKernel.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace HireLab.Modules.Identity.Persistence;
 
@@ -14,8 +15,13 @@ internal sealed class IdentityModuleDbContext(DbContextOptions<IdentityModuleDbC
 
     public DbSet<Team> Teams => Set<Team>();
 
-    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder) =>
+    public DbSet<Invite> Invites => Set<Invite>();
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
         configurationBuilder.AddSharedKernelIdConversions();
+        configurationBuilder.Properties<InviteId>().HaveConversion<InviteIdConverter>();
+    }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -39,4 +45,6 @@ internal sealed class IdentityModuleDbContext(DbContextOptions<IdentityModuleDbC
 
         builder.ApplyConfigurationsFromAssembly(typeof(IdentityModuleDbContext).Assembly);
     }
+
+    private sealed class InviteIdConverter() : ValueConverter<InviteId, Guid>(id => id.Value, value => new InviteId(value));
 }

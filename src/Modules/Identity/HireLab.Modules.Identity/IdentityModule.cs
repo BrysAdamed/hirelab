@@ -1,5 +1,6 @@
 using HireLab.Modules.Identity.Auth;
 using HireLab.Modules.Identity.Authentication;
+using HireLab.Modules.Identity.Invites;
 using HireLab.Modules.Identity.Persistence;
 using HireLab.Modules.Identity.Seed;
 using HireLab.SharedKernel.Handlers;
@@ -23,16 +24,22 @@ public sealed class IdentityModule : IModule, IModuleMigrator
         builder.Services.AddModuleDbContext<IdentityModuleDbContext>();
         builder.Services.AddHandlers<IdentityModuleDbContext>(typeof(IdentityModule).Assembly);
         builder.Services.AddStaffIdentityCore().AddStaffSignIn();
+        builder.Services.AddScoped<InviteIssuer>();
     }
 
     /// <inheritdoc />
-    public void MapStaffEndpoints(IEndpointRouteBuilder staff) => staff.MapAuthEndpoints();
+    public void MapStaffEndpoints(IEndpointRouteBuilder staff)
+    {
+        staff.MapAuthEndpoints();
+        staff.MapInviteEndpoints();
+    }
 
     /// <inheritdoc />
     public void AddMigrationServices(IServiceCollection services)
     {
         services.AddModuleDbContext<IdentityModuleDbContext>();
         services.AddStaffIdentityCore();
+        services.AddScoped<InviteIssuer>();
     }
 
     /// <inheritdoc />

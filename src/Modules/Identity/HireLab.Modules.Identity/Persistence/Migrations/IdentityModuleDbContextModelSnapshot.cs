@@ -23,6 +23,105 @@ namespace HireLab.Modules.Identity.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("HireLab.Modules.Identity.Domain.Invite", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("display_name");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("email");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<Guid?>("InvitedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("invited_by");
+
+                    b.Property<string>("NewTeamName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("new_team_name");
+
+                    b.Property<string>("NormalizedEmail")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("normalized_email");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("role");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("team_id");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("token_hash");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<DateTimeOffset?>("UsedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("used_at");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_invites");
+
+                    b.HasIndex("InvitedBy")
+                        .HasDatabaseName("ix_invites_invited_by");
+
+                    b.HasIndex("TeamId")
+                        .HasDatabaseName("ix_invites_team_id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_invites_token_hash");
+
+                    b.HasIndex(new[] { "NormalizedEmail" }, "ix_invites_one_open_per_email")
+                        .IsUnique()
+                        .HasDatabaseName("ix_invites_one_open_per_email")
+                        .HasFilter("used_at IS NULL AND revoked_at IS NULL");
+
+                    b.ToTable("invites", "identity", t =>
+                        {
+                            t.HasCheckConstraint("ck_invites_team_matches_role", "(role = 'Admin' AND team_id IS NULL AND new_team_name IS NULL) OR (role = 'Manager' AND (team_id IS NULL) <> (new_team_name IS NULL)) OR (role = 'Interviewer' AND team_id IS NOT NULL AND new_team_name IS NULL)");
+                        });
+                });
+
             modelBuilder.Entity("HireLab.Modules.Identity.Domain.Team", b =>
                 {
                     b.Property<Guid>("Id")
@@ -282,6 +381,21 @@ namespace HireLab.Modules.Identity.Persistence.Migrations
                         .HasName("pk_user_tokens");
 
                     b.ToTable("user_tokens", "identity");
+                });
+
+            modelBuilder.Entity("HireLab.Modules.Identity.Domain.Invite", b =>
+                {
+                    b.HasOne("HireLab.Modules.Identity.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("InvitedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_invites_users_invited_by");
+
+                    b.HasOne("HireLab.Modules.Identity.Domain.Team", null)
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_invites_teams_team_id");
                 });
 
             modelBuilder.Entity("HireLab.Modules.Identity.Domain.User", b =>

@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -25,7 +26,11 @@ internal sealed record GroupEndpoint(string Method, string Pattern, Uri Uri, IRe
                 endpoint.Metadata.GetMetadata<IAllowAnonymous>() is not null)))
             .ToList();
 
-    public HttpRequestMessage CreateRequest() => new(new HttpMethod(Method), Uri);
+    /// <summary>A request to the endpoint; an unsafe method sends an empty JSON object, so endpoints with a body are reached.</summary>
+    public HttpRequestMessage CreateRequest() => new(new HttpMethod(Method), Uri)
+    {
+        Content = HttpMethods.IsGet(Method) || HttpMethods.IsHead(Method) ? null : JsonContent.Create(new { }),
+    };
 
     public override string ToString() => $"{Method} {Pattern}";
 

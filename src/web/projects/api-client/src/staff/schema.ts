@@ -72,10 +72,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/staff/invites/managers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists manager invites, newest first, until 30 days after they expire. */
+        get: operations["ListManagerInvites"];
+        put?: never;
+        /** Invites a manager into a new team (newTeamName) or an existing team without an active manager (teamId). Revokes any open invite for the same email and returns the link, which is shown only once. */
+        post: operations["CreateManagerInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/invites/managers/{inviteId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revokes an invite that hasn't been used, so its link stops working. */
+        post: operations["RevokeManagerInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/invites/managers/teams-without-manager": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists the teams without an active manager, which a manager invite can hand over. */
+        get: operations["ListTeamsWithoutManager"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/invites/interviewers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lists the interviewer invites of the manager's team, newest first, until 30 days after they expire. */
+        get: operations["ListInterviewerInvites"];
+        put?: never;
+        /** Invites an interviewer into the manager's team. Revokes any open invite for the same email and returns the link, which is shown only once. */
+        post: operations["CreateInterviewerInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/invites/interviewers/{inviteId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Revokes an invite that hasn't been used, so its link stops working. */
+        post: operations["RevokeInterviewerInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/invites/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Returns the invitee, role and team of a pending invite link. */
+        post: operations["PreviewInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/staff/invites/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Redeems an invite link with the invitee's new password: creates the user (and the team of a new-team invite), logs them in with a new XSRF-TOKEN and returns the user. */
+        post: operations["RedeemInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        CreateInterviewerInviteRequest: {
+            email: string;
+            displayName: string;
+        };
+        CreateManagerInviteRequest: {
+            email: string;
+            displayName: string;
+            /** Format: uuid */
+            teamId: null | string;
+            newTeamName: null | string;
+        };
         CurrentUserResponse: {
             /** Format: uuid */
             id: string;
@@ -89,9 +221,44 @@ export interface components {
             id: string;
             name: string;
         };
+        InvitePreviewResponse: {
+            email: string;
+            displayName: string;
+            role: components["schemas"]["StaffRole"];
+            teamName: null | string;
+            isNewTeam: boolean;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        InviteResponse: {
+            /** Format: uuid */
+            id: string;
+            email: string;
+            displayName: string;
+            role: components["schemas"]["StaffRole"];
+            team: null | components["schemas"]["InviteTeamResponse"];
+            /** Format: date-time */
+            expiresAt: string;
+            state: components["schemas"]["OneTimeLinkState"];
+        };
+        InviteTeamResponse: {
+            /** Format: uuid */
+            id: null | string;
+            name: string;
+            isNew: boolean;
+        };
+        IssuedInviteResponse: {
+            invite: components["schemas"]["InviteResponse"];
+            linkPath: string;
+        };
         LoginRequest: {
             email: string;
             password: string;
+        };
+        /** @enum {unknown} */
+        OneTimeLinkState: "Pending" | "Used" | "Revoked" | "Expired";
+        PreviewInviteRequest: {
+            token: string;
         };
         ProblemDetails: {
             type?: null | string;
@@ -101,11 +268,20 @@ export interface components {
             detail?: null | string;
             instance?: null | string;
         };
+        RedeemInviteRequest: {
+            token: string;
+            password: string;
+        };
         /**
          * @description The fixed role of a staff user (ADR 0009, ADR 0020). Sent over the wire by name.
          * @enum {unknown}
          */
         StaffRole: "Admin" | "Manager" | "Interviewer";
+        TeamWithoutManagerResponse: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -210,6 +386,283 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CurrentUserResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListManagerInvites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteResponse"][];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    CreateManagerInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateManagerInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedInviteResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RevokeManagerInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                inviteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListTeamsWithoutManager: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamWithoutManagerResponse"][];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    ListInterviewerInvites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteResponse"][];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    CreateInterviewerInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateInterviewerInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IssuedInviteResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RevokeInterviewerInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                inviteId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    PreviewInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PreviewInviteRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InvitePreviewResponse"];
+                };
+            };
+            /** @description The request failed. The body describes the problem. */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["ProblemDetails"];
+                };
+            };
+        };
+    };
+    RedeemInvite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RedeemInviteRequest"];
+            };
+        };
         responses: {
             /** @description OK */
             200: {

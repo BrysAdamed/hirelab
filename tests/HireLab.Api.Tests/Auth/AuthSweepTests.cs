@@ -14,12 +14,18 @@ public sealed class AuthSweepTests(ApiTestHost host) : IntegrationTest(host)
 {
     private static readonly HttpStatusCode[] _rejected = [HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden];
 
-    private static readonly HashSet<string?> _teamDataExceptions = ["HireLab.Modules.Identity.Domain.User"];
+    private static readonly HashSet<string?> _teamDataExceptions =
+    [
+        "HireLab.Modules.Identity.Domain.User",
+        "HireLab.Modules.Identity.Domain.Invite",
+    ];
 
     private static readonly string[] _anonymousEndpoints =
     [
         "GET /api/staff/auth/antiforgery",
         "POST /api/staff/auth/login",
+        "POST /api/staff/invites/preview",
+        "POST /api/staff/invites/redeem",
     ];
 
     [Theory]

@@ -124,10 +124,387 @@
           }
         }
       }
+    },
+    "/api/staff/invites/managers": {
+      "get": {
+        "tags": [
+          "Invites"
+        ],
+        "summary": "Lists manager invites, newest first, until 30 days after they expire.",
+        "operationId": "ListManagerInvites",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InviteResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Invites"
+        ],
+        "summary": "Invites a manager into a new team (newTeamName) or an existing team without an active manager (teamId). Revokes any open invite for the same email and returns the link, which is shown only once.",
+        "operationId": "CreateManagerInvite",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateManagerInviteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedInviteResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/invites/managers/{inviteId}/revoke": {
+      "post": {
+        "tags": [
+          "Invites"
+        ],
+        "summary": "Revokes an invite that hasn't been used, so its link stops working.",
+        "operationId": "RevokeManagerInvite",
+        "parameters": [
+          {
+            "name": "inviteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/invites/managers/teams-without-manager": {
+      "get": {
+        "tags": [
+          "Invites"
+        ],
+        "summary": "Lists the teams without an active manager, which a manager invite can hand over.",
+        "operationId": "ListTeamsWithoutManager",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TeamWithoutManagerResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/invites/interviewers": {
+      "get": {
+        "tags": [
+          "Invites"
+        ],
+        "summary": "Lists the interviewer invites of the manager's team, newest first, until 30 days after they expire.",
+        "operationId": "ListInterviewerInvites",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InviteResponse"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Invites"
+        ],
+        "summary": "Invites an interviewer into the manager's team. Revokes any open invite for the same email and returns the link, which is shown only once.",
+        "operationId": "CreateInterviewerInvite",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInterviewerInviteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IssuedInviteResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/invites/interviewers/{inviteId}/revoke": {
+      "post": {
+        "tags": [
+          "Invites"
+        ],
+        "summary": "Revokes an invite that hasn't been used, so its link stops working.",
+        "operationId": "RevokeInterviewerInvite",
+        "parameters": [
+          {
+            "name": "inviteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/invites/preview": {
+      "post": {
+        "tags": [
+          "Invites"
+        ],
+        "summary": "Returns the invitee, role and team of a pending invite link.",
+        "operationId": "PreviewInvite",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewInviteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvitePreviewResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/invites/redeem": {
+      "post": {
+        "tags": [
+          "Invites"
+        ],
+        "summary": "Redeems an invite link with the invitee's new password: creates the user (and the team of a new-team invite), logs them in with a new XSRF-TOKEN and returns the user.",
+        "operationId": "RedeemInvite",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemInviteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "The request failed. The body describes the problem.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "CreateInterviewerInviteRequest": {
+        "required": [
+          "email",
+          "displayName"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateManagerInviteRequest": {
+        "required": [
+          "email",
+          "displayName",
+          "teamId",
+          "newTeamName"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "teamId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "newTeamName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CurrentUserResponse": {
         "required": [
           "id",
@@ -179,6 +556,123 @@
           }
         }
       },
+      "InvitePreviewResponse": {
+        "required": [
+          "email",
+          "displayName",
+          "role",
+          "teamName",
+          "isNewTeam",
+          "expiresAt"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/StaffRole"
+          },
+          "teamName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isNewTeam": {
+            "type": "boolean"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "InviteResponse": {
+        "required": [
+          "id",
+          "email",
+          "displayName",
+          "role",
+          "team",
+          "expiresAt",
+          "state"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "$ref": "#/components/schemas/StaffRole"
+          },
+          "team": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/InviteTeamResponse"
+              }
+            ]
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "state": {
+            "$ref": "#/components/schemas/OneTimeLinkState"
+          }
+        }
+      },
+      "InviteTeamResponse": {
+        "required": [
+          "id",
+          "name",
+          "isNew"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isNew": {
+            "type": "boolean"
+          }
+        }
+      },
+      "IssuedInviteResponse": {
+        "required": [
+          "invite",
+          "linkPath"
+        ],
+        "type": "object",
+        "properties": {
+          "invite": {
+            "$ref": "#/components/schemas/InviteResponse"
+          },
+          "linkPath": {
+            "type": "string"
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "email",
@@ -190,6 +684,25 @@
             "type": "string"
           },
           "password": {
+            "type": "string"
+          }
+        }
+      },
+      "OneTimeLinkState": {
+        "enum": [
+          "Pending",
+          "Used",
+          "Revoked",
+          "Expired"
+        ]
+      },
+      "PreviewInviteRequest": {
+        "required": [
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
             "type": "string"
           }
         }
@@ -230,6 +743,21 @@
           }
         }
       },
+      "RedeemInviteRequest": {
+        "required": [
+          "token",
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        }
+      },
       "StaffRole": {
         "enum": [
           "Admin",
@@ -237,12 +765,31 @@
           "Interviewer"
         ],
         "description": "The fixed role of a staff user (ADR 0009, ADR 0020). Sent over the wire by name."
+      },
+      "TeamWithoutManagerResponse": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
       }
     }
   },
   "tags": [
     {
       "name": "Auth"
+    },
+    {
+      "name": "Invites"
     }
   ]
 }
