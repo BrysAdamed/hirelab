@@ -1,5 +1,6 @@
 using HireLab.Modules.Sessions.CandidateAccess.ExchangeCandidateLink;
 using HireLab.Modules.Sessions.CandidateAccess.GetInterview;
+using HireLab.Modules.Sessions.CandidateAccess.SaveResponse;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -15,5 +16,6 @@ internal static class CandidateAccessEndpoints
         var interview = candidate.MapGroup(string.Empty).WithTags(Tag);
         interview.MapCandidateLinkExchange();
         interview.MapGetInterview();
+        interview.MapSaveResponse();
     }
 }

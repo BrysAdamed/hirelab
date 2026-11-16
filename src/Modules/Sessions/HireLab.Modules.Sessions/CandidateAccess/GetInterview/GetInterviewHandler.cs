@@ -28,9 +28,10 @@ internal sealed record InterviewResponse(InterviewStage Stage, CurrentTaskRespon
 
 /// <summary>
 /// The current task as the candidate sees it: its id, its task type key, which picks the type's <c>candidate</c>
-/// component, and its candidate content. Never staff content or the title, which is written for staff.
+/// component, its candidate content, and the response saved so far with its revision (no response and revision 0 before
+/// the first save). Never staff content or the title, which is written for staff.
 /// </summary>
-internal sealed record CurrentTaskResponse(Guid Id, string TaskType, JsonElement Content);
+internal sealed record CurrentTaskResponse(Guid Id, string TaskType, JsonElement Content, JsonElement? Response, int Revision);
 
 /// <summary>Reads the candidate's own session from the cookie's claims (ADR 0008), never from the route.</summary>
 internal sealed class GetInterviewHandler(CandidateSessions sessions) : IQueryHandler<GetInterviewQuery, Result<InterviewResponse>>
@@ -49,7 +50,12 @@ internal sealed class GetInterviewHandler(CandidateSessions sessions) : IQueryHa
             { State: InterviewSessionState.Planned } => new InterviewResponse(InterviewStage.Waiting, null),
             { CurrentTask: { } task } => new InterviewResponse(
                 InterviewStage.CurrentTask,
-                new CurrentTaskResponse(task.Id.Value, task.TaskTypeKey, task.CandidateContent)),
+                new CurrentTaskResponse(
+                    task.Id.Value,
+                    task.TaskTypeKey,
+                    task.CandidateContent,
+                    task.Response?.Content,
+                    task.Response?.Revision ?? 0)),
             _ => new InterviewResponse(InterviewStage.Closing, null),
         };
     }
