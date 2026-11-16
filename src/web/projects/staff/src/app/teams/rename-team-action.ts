@@ -19,7 +19,7 @@ import { UsersService } from '../users/users.service';
   imports: [HlmButton, HlmDialogImports, HlmInput, HlmLabel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <hlm-dialog #dialog="hlmDialog" (stateChanged)="name.set(team().name)">
+    <hlm-dialog #dialog="hlmDialog" (stateChanged)="$event === 'open' && name.set(team().name)">
       <button
         hlmDialogTrigger
         hlmBtn

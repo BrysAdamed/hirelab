@@ -27,7 +27,7 @@ export interface TeamOption {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (otherTeams().length > 0) {
-      <hlm-dialog (stateChanged)="selectedTeamId.set(otherTeams()[0].id)">
+      <hlm-dialog (stateChanged)="$event === 'open' && selectedTeamId.set(otherTeams()[0].id)">
         <button
           hlmDialogTrigger
           hlmBtn

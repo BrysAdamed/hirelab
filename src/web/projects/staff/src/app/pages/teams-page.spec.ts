@@ -9,6 +9,7 @@ describe('TeamsPage', () => {
 
   const alpha = { id: '0190a5c4-7e3d-7b8a-9f21-0000000000a1', name: 'Fake Team Alpha' };
   const beta = { id: '0190a5c4-7e3d-7b8a-9f21-0000000000b1', name: 'Fake Team Beta' };
+  const gamma = { id: '0190a5c4-7e3d-7b8a-9f21-0000000000c1', name: 'Fake Team Gamma' };
 
   const manager: UserSummary = {
     id: '0190a5c4-7e3d-7b8a-9f21-000000000011',
@@ -38,6 +39,7 @@ describe('TeamsPage', () => {
   const teams: TeamSummary[] = [
     { ...alpha, manager, members: [manager, interviewer] },
     { ...beta, manager: null, members: [formerManager] },
+    { ...gamma, manager: null, members: [] },
   ];
 
   function posted(path: string): Request | undefined {
@@ -94,7 +96,7 @@ describe('TeamsPage', () => {
 
     // Act
     fireEvent.click(await screen.findByRole('button', { name: 'Reassign Ivo Interviewer' }));
-    fireEvent.change(await screen.findByLabelText('New team'), { target: { value: beta.id } });
+    fireEvent.change(await screen.findByLabelText('New team'), { target: { value: gamma.id } });
     fireEvent.click(screen.getByRole('button', { name: 'Move to team' }));
 
     // Assert
@@ -102,7 +104,7 @@ describe('TeamsPage', () => {
       expect(posted(`/api/staff/users/${interviewer.id}/reassign`)).toBeDefined(),
     );
     expect(await posted(`/api/staff/users/${interviewer.id}/reassign`)!.json()).toEqual({
-      teamId: beta.id,
+      teamId: gamma.id,
     });
   });
 

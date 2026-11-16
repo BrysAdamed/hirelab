@@ -39,8 +39,10 @@ export class LoginPage implements OnInit {
   protected readonly pending = signal(false);
   protected readonly error = signal<string | null>(null);
 
+  private prepared: Promise<void> = Promise.resolve();
+
   ngOnInit(): void {
-    void this.auth.prepareLogin();
+    this.prepared = this.auth.prepareLogin();
   }
 
   protected async submit(): Promise<void> {
@@ -55,6 +57,7 @@ export class LoginPage implements OnInit {
     this.pending.set(true);
     this.error.set(null);
     const { email, password } = this.form.getRawValue();
+    await this.prepared;
     const result = await this.auth.login(email, password);
     this.pending.set(false);
 

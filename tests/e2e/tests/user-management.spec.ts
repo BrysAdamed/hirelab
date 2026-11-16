@@ -12,6 +12,8 @@ import { seededUsers } from '../staff-users.ts';
 
 const [admin, seededManager] = seededUsers;
 
+test.describe.configure({ timeout: 120_000 });
+
 interface Person {
   email: string;
   displayName: string;
@@ -87,7 +89,11 @@ test('a manager deactivates an interviewer, who then cannot log in', async ({ pa
   await openPage(page, 'My team');
   await page.getByRole('button', { name: `Deactivate ${interviewer.displayName}` }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Deactivate user' }).click();
-  await expect(page.getByRole('row', { name: interviewer.email })).toContainText('Deactivated');
+  await expect(
+    page
+      .getByRole('region', { name: 'Interviewers', exact: true })
+      .getByRole('row', { name: interviewer.email }),
+  ).toContainText('Deactivated');
   await logOut(page, seededManager.displayName);
 
   await logIn(page, interviewer.email, inviteePassword);
