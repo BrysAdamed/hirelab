@@ -14,6 +14,7 @@ A single `.cs` file sent before a screen share doesn't test much now that AI age
 - [Glossary](docs/glossary.md)
 - [Architecture decisions](docs/adr/README.md)
 - [Design system](docs/design-system.md)
+- [Operations](docs/operations.md)
 
 ## Stack
 

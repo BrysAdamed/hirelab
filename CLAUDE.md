@@ -58,5 +58,6 @@ Commands (from the repo root unless noted; Docker must be running):
 - Build: `dotnet build HireLab.slnx`. Run everything locally: `dotnet run --project src/HireLab.AppHost`.
 - Backend tests and E2E: see Testing above.
 - In `src/web`: `npm ci`, `npm run lint`, `npm test`, `npm run build`, `npm run check:contrast`, `npm run api:update` / `npm run api:check`.
+- Operations in Azure (first admin link, `--issue-admin-link`): `docs/operations.md`.
 - Infrastructure: `eng/validate-infra.sh` (generates the Bicep from the AppHost, then builds and lints it and `infra/`; needs the Bicep CLI or `az`).
 - Container images (local Docker, no push): `dotnet publish src/HireLab.Api -c Release -r linux-x64 -t:PublishContainer` (builds the SPAs unless `-p:SkipSpaBuild=true`), and the same for `src/HireLab.MigrationService`.
