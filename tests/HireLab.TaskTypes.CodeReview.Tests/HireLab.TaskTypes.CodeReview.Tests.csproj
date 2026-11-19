@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <PackageReference Include="Shouldly" />
+    <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TaskTypes\HireLab.TaskTypes.Catalog\HireLab.TaskTypes.Catalog.csproj" />
+    <ProjectReference Include="..\..\src\TaskTypes\HireLab.TaskTypes.CodeReview\HireLab.TaskTypes.CodeReview.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Shouldly" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+</Project>

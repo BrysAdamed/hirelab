@@ -3,6 +3,7 @@ using HireLab.Modules.TaskBank.Contracts;
 using HireLab.Modules.TaskBank.Domain;
 using HireLab.Modules.TaskBank.Persistence;
 using HireLab.SharedKernel.Users;
+using HireLab.TaskTypes.Abstractions;
 using HireLab.TaskTypes.Abstractions.Rubrics;
 using HireLab.Testing.TaskTypes;
 using Microsoft.EntityFrameworkCore;
@@ -13,15 +14,43 @@ using Xunit;
 namespace HireLab.Testing.TaskBank;
 
 /// <summary>
-/// Puts <see cref="TestEchoTaskType"/> tasks with obviously fake values into the task bank through the TaskBank domain
-/// and its validation, for test assemblies of modules that only hold a <see cref="TaskId"/>.
+/// Puts tasks with obviously fake values into the task bank through the TaskBank domain and its validation, for test
+/// assemblies of modules that only hold a <see cref="TaskId"/>. Tasks are <see cref="TestEchoTaskType"/> ones unless a
+/// task type and its content are given.
 /// </summary>
 public static class TestBankTasks
 {
     private static int _sequence;
 
     /// <summary>Adds a task owned by <paramref name="teamId"/> with one published version titled <paramref name="title"/>.</summary>
-    public static async Task<TaskId> AddBankTaskAsync(this HireLabTestHost host, TeamId teamId, string? title = null, bool global = false)
+    public static Task<TaskId> AddBankTaskAsync(this HireLabTestHost host, TeamId teamId, string? title = null, bool global = false) =>
+        host.AddBankTaskAsync(teamId, global, services => Validate(services, title));
+
+    /// <summary>
+    /// Adds a team task of the shipped task type <paramref name="taskTypeKey"/> with one published version holding
+    /// <paramref name="candidateContent"/> and <paramref name="staffContent"/>, serialised as the task type reads them.
+    /// </summary>
+    public static Task<TaskId> AddBankTaskAsync<TCandidateContent, TStaffContent>(
+        this HireLabTestHost host,
+        TeamId teamId,
+        string taskTypeKey,
+        TCandidateContent candidateContent,
+        TStaffContent staffContent) =>
+        host.AddBankTaskAsync(
+            teamId,
+            global: false,
+            services => Validate(
+                services,
+                title: null,
+                taskTypeKey,
+                JsonSerializer.SerializeToElement(candidateContent, TaskTypeJson.Options),
+                JsonSerializer.SerializeToElement(staffContent, TaskTypeJson.Options)));
+
+    private static async Task<TaskId> AddBankTaskAsync(
+        this HireLabTestHost host,
+        TeamId teamId,
+        bool global,
+        Func<IServiceProvider, ValidatedTaskVersion> validate)
     {
         ArgumentNullException.ThrowIfNull(host);
         var cancellationToken = TestContext.Current.CancellationToken;
@@ -31,7 +60,7 @@ public static class TestBankTasks
         var task = InterviewTask.CreateForTeam(
             teamId,
             global ? TaskVisibility.Global : TaskVisibility.Team,
-            Validate(scope.ServiceProvider, title),
+            validate(scope.ServiceProvider),
             author);
         task.PublishDraft(makeActive: true, author, host.Time.GetUtcNow()).IsSuccess.ShouldBeTrue();
 
@@ -81,8 +110,23 @@ public static class TestBankTasks
     private static ValidatedTaskVersion Validate(IServiceProvider services, string? title)
     {
         var number = Interlocked.Increment(ref _sequence);
-        var details = new TaskVersionDetails(
+        return Validate(
+            services,
             title ?? $"Fake Bank Task {number}",
+            TestEchoTaskType.TaskTypeKey,
+            JsonSerializer.SerializeToElement(new TestEchoCandidateContent($"Fake phrase {number}"), JsonSerializerOptions.Web),
+            JsonSerializer.SerializeToElement(new TestEchoStaffContent("fake-echo"), JsonSerializerOptions.Web));
+    }
+
+    private static ValidatedTaskVersion Validate(
+        IServiceProvider services,
+        string? title,
+        string taskTypeKey,
+        JsonElement candidateContent,
+        JsonElement staffContent)
+    {
+        var details = new TaskVersionDetails(
+            title ?? $"Fake Bank Task {Interlocked.Increment(ref _sequence)}",
             "A made-up task for tests.",
             TaskLevel.Mid,
             EstimatedMinutes: 30,
@@ -94,9 +138,11 @@ public static class TestBankTasks
                 new ScaleCriterion("fake-quality", "Fake quality", "How convincingly fake it is.", Weight: 2),
                 new CheckCriterion("fake-echo", "Fake echo", "Did the candidate echo the phrase?", CheckAnswer.Yes, Critical: true),
             ]),
-            JsonSerializer.SerializeToElement(new TestEchoCandidateContent($"Fake phrase {number}"), JsonSerializerOptions.Web),
-            JsonSerializer.SerializeToElement(new TestEchoStaffContent("fake-echo"), JsonSerializerOptions.Web));
+            candidateContent,
+            staffContent);
 
-        return services.GetRequiredService<TaskVersionValidator>().Validate(TestEchoTaskType.TaskTypeKey, details).Value;
+        var validated = services.GetRequiredService<TaskVersionValidator>().Validate(taskTypeKey, details);
+        validated.IsSuccess.ShouldBeTrue();
+        return validated.Value;
     }
 }
