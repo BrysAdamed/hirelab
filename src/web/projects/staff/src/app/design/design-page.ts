@@ -23,11 +23,13 @@ import { HlmLabel } from '@hirelab/ui/helm/label';
 import { HlmTextarea } from '@hirelab/ui/helm/textarea';
 import { PresenceIndicator, ReconnectingBanner, type Presence } from '@hirelab/ui/live';
 import { MarkdownViewer } from '@hirelab/ui/markdown';
+import { CodeDemo } from './code-demo';
 
 @Component({
   selector: 'hl-design-page',
   imports: [
     NgIcon,
+    CodeDemo,
     CopyButton,
     HlmBadge,
     HlmButton,
