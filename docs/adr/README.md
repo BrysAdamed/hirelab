@@ -37,3 +37,4 @@ The first records come from epic HLB-1 (Architecture & foundations).
 | [0029](0029-task-storage.md) | Task storage | Accepted |
 | [0030](0030-seed-task-packages.md) | Seed task packages | Accepted |
 | [0031](0031-interview-sessions-and-responses.md) | Interview sessions and responses | Accepted |
+| [0032](0032-code-review-task-type.md) | Code review task type | Accepted |
