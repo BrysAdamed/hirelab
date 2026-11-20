@@ -294,8 +294,8 @@ describe('CodeReviewReview', () => {
       { comments: [], summary: '' },
       { live: true },
     );
-    fireEvent.click(fileButton(/DonationRules\.cs/));
     fireEvent.click(screen.getByRole('button', { name: 'Side by side' }));
+    fireEvent.click(fileButton(/DonationRules\.cs/));
     fireEvent.click(findingsToggle());
     await settle();
 
@@ -309,9 +309,11 @@ describe('CodeReviewReview', () => {
 
     // Assert
     expect(fileButton(/DonationRules\.cs/).getAttribute('aria-current')).toBe('true');
-    expect(diff.options['renderSideBySide']).toBe(true);
     expect(findingsToggle().getAttribute('aria-pressed')).toBe('true');
     expect(diff.modified.widgets).toHaveLength(1);
     expect(screen.getByText('A fake summary.')).toBeTruthy();
+    fireEvent.click(fileButton(/DonationHandler\.cs/));
+    await settle();
+    expect(diff.options['renderSideBySide']).toBe(true);
   });
 });

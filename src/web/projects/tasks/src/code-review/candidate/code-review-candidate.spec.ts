@@ -141,7 +141,6 @@ describe('CodeReviewCandidate', () => {
     await settle();
 
     // Assert
-    expect(diff.models?.original.getValue()).toBe('');
     expect(diff.models?.modified.getValue()).toBe('class Rules { }\n');
     expect(screen.getByRole('heading', { name: 'src/Fake/DonationRules.cs' })).toBeTruthy();
     expect(
@@ -287,22 +286,19 @@ describe('CodeReviewCandidate', () => {
     expect(lastChange(host).comments[0]).toMatchObject({ side: 'original', startLine: 1 });
   });
 
-  it('does not comment on the missing original side of an added file', async () => {
+  it('shows an added file inline, without the side-by-side toggle', async () => {
     // Arrange
-    const { diff, settle, zones } = await setup();
-    fireEvent.click(screen.getByRole('button', { name: /DonationRules\.cs/ }));
+    const { diff, settle } = await setup();
     fireEvent.click(screen.getByRole('button', { name: 'Side by side' }));
     await settle();
 
     // Act
-    diff.original.mouseDown.fire({
-      target: { type: fakeMouseTargetType.GUTTER_GLYPH_MARGIN, position: { lineNumber: 1 } },
-      event: { preventDefault: () => undefined },
-    });
+    fireEvent.click(screen.getByRole('button', { name: /DonationRules\.cs/ }));
     await settle();
 
     // Assert
-    expect(zones()).toHaveLength(0);
+    expect(screen.queryByRole('button', { name: 'Side by side' })).toBeNull();
+    expect(diff.options['renderSideBySide']).toBe(false);
   });
 
   it('previews a comment as Markdown before adding it', async () => {

@@ -39,7 +39,7 @@ import { fakeMouseTargetType, provideFakeMonaco } from './testing/fake-monaco';
 class TestHost {
   readonly diff = viewChild.required<CodeDiff>('diff');
   readonly original = signal<string | undefined>('var a = 1;');
-  readonly modified = signal('var a = 2;');
+  readonly modified = signal<string | undefined>('var a = 2;');
   readonly sideBySide = signal(false);
   readonly decorations = signal<readonly CodeLineDecoration[]>([]);
   readonly zones = signal<readonly CodeViewZone<string>[]>([]);
@@ -77,20 +77,47 @@ describe('CodeDiff', () => {
     expect(appliedThemes).toContain('light');
   });
 
-  it('shows an added file against an empty original and follows input changes', async () => {
+  it('shows an added file inline as one editor with every line marked as added', async () => {
     // Arrange
     const { host, diff, settle } = await setup();
 
     // Act
     host.original.set(undefined);
-    host.modified.set('var b = 3;');
+    host.modified.set('var b = 3;\nvar c = 4;');
     host.sideBySide.set(true);
     await settle();
 
     // Assert
-    expect(diff.models?.original.getValue()).toBe('');
-    expect(diff.models?.modified.getValue()).toBe('var b = 3;');
-    expect(diff.options['renderSideBySide']).toBe(true);
+    expect(diff.models?.original.getValue()).toBe('var b = 3;\nvar c = 4;');
+    expect(diff.models?.modified.getValue()).toBe('var b = 3;\nvar c = 4;');
+    expect(diff.options['renderSideBySide']).toBe(false);
+    expect(diff.modified.decorations).toHaveLength(1);
+    expect(diff.modified.decorations[0].range.startLineNumber).toBe(1);
+    expect(diff.modified.decorations[0].range.endLineNumber).toBe(2);
+    expect(diff.modified.decorations[0].options['className']).toBe('hl-code-added-line');
+  });
+
+  it('shows a deleted file as one editor and reports its lines on the original side', async () => {
+    // Arrange
+    const { host, diff, settle } = await setup();
+    host.gutterButton.set('Add a comment');
+
+    // Act
+    host.modified.set(undefined);
+    host.decorations.set([{ side: 'original', startLine: 1, endLine: 1, kind: 'comment' }]);
+    await settle();
+    diff.modified.mouseDown.fire({
+      target: { type: fakeMouseTargetType.GUTTER_GLYPH_MARGIN, position: { lineNumber: 1 } },
+      event: { preventDefault: () => undefined },
+    });
+
+    // Assert
+    expect(diff.models?.modified.getValue()).toBe('var a = 1;');
+    expect(diff.modified.decorations.map((d) => d.options['className'])).toEqual([
+      'hl-code-removed-line',
+      'hl-code-comment-line',
+    ]);
+    expect(host.clicks).toEqual([{ side: 'original', line: 1 }]);
   });
 
   it('follows theme switches', async () => {

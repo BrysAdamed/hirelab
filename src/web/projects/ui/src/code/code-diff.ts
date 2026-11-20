@@ -74,7 +74,12 @@ const decorationStyles: Record<
   },
 };
 
-const gutterButtonClass = 'codicon codicon-add hl-code-gutter-button';
+const wholeFileStyles: Record<DiffSide, { className: string; marker: string }> = {
+  modified: { className: 'hl-code-added-line', marker: 'hl-code-added-marker' },
+  original: { className: 'hl-code-removed-line', marker: 'hl-code-removed-marker' },
+};
+
+const gutterButtonClass ='codicon codicon-add hl-code-gutter-button';
 const zoneOrdinal = 10_000;
 
 /**
@@ -94,6 +99,22 @@ const zoneOrdinal = 10_000;
     }
     .hl-code-finding-line {
       background-color: color-mix(in oklab, var(--warning) 25%, transparent);
+    }
+    .hl-code-added-line {
+      background-color: color-mix(in oklab, var(--success) 12%, transparent);
+    }
+    .hl-code-removed-line {
+      background-color: color-mix(in oklab, var(--destructive) 12%, transparent);
+    }
+    .hl-code-added-marker {
+      background-color: var(--success);
+    }
+    .hl-code-removed-marker {
+      background-color: var(--destructive);
+    }
+    .hl-code-added-marker,
+    .hl-code-removed-marker {
+      width: 3px !important;
     }
     .hl-code-comment-marker,
     .hl-code-finding-marker {
@@ -122,7 +143,8 @@ export class CodeDiff {
 
   /** The file before the change; absent for an added file. */
   readonly original = input<string | null | undefined>(undefined);
-  readonly modified = input.required<string>();
+  /** The file after the change; absent for a deleted file. */
+  readonly modified = input<string | null | undefined>(undefined);
   readonly language = input<CodeLanguage>('plaintext');
   readonly renderSideBySide = input(false);
   readonly readOnly = input(true);
@@ -152,6 +174,28 @@ export class CodeDiff {
   /** True once Monaco has loaded and the diff is shown. */
   readonly loaded = computed(() => this.state() !== null);
 
+  /**
+   * The only side an added (`modified`) or deleted (`original`) file has, or `null` when it has both. A one-sided file
+   * is shown inline as one editor with the whole file marked, instead of a diff against an empty file.
+   */
+  private readonly onlySide = computed<DiffSide | null>(() => {
+    if (this.original() == null) {
+      return 'modified';
+    }
+    return this.modified() == null ? 'original' : null;
+  });
+
+  private readonly sideBySide = computed(() => this.renderSideBySide() && this.onlySide() === null);
+
+  private readonly modelValues = computed<Record<DiffSide, string>>(() => {
+    const onlySide = this.onlySide();
+    if (onlySide !== null) {
+      const text = (onlySide === 'original' ? this.original() : this.modified()) ?? '';
+      return { original: text, modified: text };
+    }
+    return { original: this.original() ?? '', modified: this.modified() ?? '' };
+  });
+
   constructor() {
     afterNextRender(() => void this.init());
     inject(DestroyRef).onDestroy(() => this.dispose());
@@ -165,12 +209,11 @@ export class CodeDiff {
     });
     effect(() => {
       const state = this.state();
-      const original = this.original() ?? '';
-      const modified = this.modified();
+      const values = this.modelValues();
       if (state) {
         untracked(() => {
-          setModelValue(state.models.original, original);
-          setModelValue(state.models.modified, modified);
+          setModelValue(state.models.original, values.original);
+          setModelValue(state.models.modified, values.modified);
         });
       }
     });
@@ -195,17 +238,19 @@ export class CodeDiff {
     effect(() => {
       const state = this.state();
       const decorations = this.decorations();
-      const inline = !this.renderSideBySide();
+      const inline = !this.sideBySide();
+      const onlySide = this.onlySide();
+      this.modelValues();
       this.diffRevision();
       if (state) {
-        untracked(() => this.renderDecorations(state, decorations, inline));
+        untracked(() => this.renderDecorations(state, decorations, inline, onlySide));
       }
     });
     effect(() => {
       const state = this.state();
       const template = this.zoneTemplate();
       const zones = template?.zones() ?? [];
-      const inline = !this.renderSideBySide();
+      const inline = !this.sideBySide();
       this.diffRevision();
       if (state) {
         untracked(() => this.renderZones(state, template, zones, inline));
@@ -261,7 +306,7 @@ export class CodeDiff {
     const place = placeLine(
       target.side,
       target.line,
-      !this.renderSideBySide(),
+      !this.sideBySide(),
       this.lineChanges(state),
     );
     state.editors[place.editor].revealLineInCenter(place.line);
@@ -270,7 +315,7 @@ export class CodeDiff {
   private readonly diffOptions = computed<editor.IDiffEditorOptions>(() => {
     const label = this.ariaLabel();
     return {
-      renderSideBySide: this.renderSideBySide(),
+      renderSideBySide: this.sideBySide(),
       readOnly: this.readOnly(),
       glyphMargin: this.gutterButton() !== null,
       originalAriaLabel: `${label}, original`,
@@ -293,9 +338,10 @@ export class CodeDiff {
       renderGutterMenu: false,
       ignoreTrimWhitespace: false,
     });
+    const values = this.modelValues();
     const models = {
-      original: monaco.editor.createModel(this.original() ?? '', this.language()),
-      modified: monaco.editor.createModel(this.modified(), this.language()),
+      original: monaco.editor.createModel(values.original, this.language()),
+      modified: monaco.editor.createModel(values.modified, this.language()),
     };
     diff.setModel(models);
     const editors = { original: diff.getOriginalEditor(), modified: diff.getModifiedEditor() };
@@ -369,7 +415,7 @@ export class CodeDiff {
         } else if (
           target.type === MouseTargetType.GUTTER_VIEW_ZONE &&
           side === 'modified' &&
-          !this.renderSideBySide()
+          !this.sideBySide()
         ) {
           const line = this.deletedLineUnder(
             state,
@@ -429,9 +475,17 @@ export class CodeDiff {
     state: DiffState,
     decorations: readonly CodeLineDecoration[],
     inline: boolean,
+    onlySide: DiffSide | null,
   ): void {
     const changes = this.lineChanges(state);
     const bySide: Record<DiffSide, editor.IModelDeltaDecoration[]> = { original: [], modified: [] };
+    if (onlySide !== null) {
+      const style = wholeFileStyles[onlySide];
+      bySide.modified.push({
+        range: lineRange(1, state.models.modified.getLineCount()),
+        options: { isWholeLine: true, className: style.className, linesDecorationsClassName: style.marker },
+      });
+    }
     for (const decoration of decorations) {
       const start = placeLine(decoration.side, decoration.startLine, inline, changes);
       const end = placeLine(decoration.side, decoration.endLine, inline, changes);
@@ -589,17 +643,18 @@ export class CodeDiff {
   }
 
   private toLine(editorSide: DiffSide, line: number): DiffLine {
-    return { side: this.renderSideBySide() ? editorSide : 'modified', line };
+    return { side: this.sideOf(editorSide), line };
   }
 
   private toRange(
     editorSide: DiffSide,
     selection: { startLineNumber: number; endLineNumber: number; endColumn: number },
   ): DiffLineRange {
-    return {
-      side: this.renderSideBySide() ? editorSide : 'modified',
-      ...selectionLines(selection),
-    };
+    return { side: this.sideOf(editorSide), ...selectionLines(selection) };
+  }
+
+  private sideOf(editorSide: DiffSide): DiffSide {
+    return this.sideBySide() ? editorSide : (this.onlySide() ?? 'modified');
   }
 
   private lineChanges(state: DiffState): readonly LineChange[] {

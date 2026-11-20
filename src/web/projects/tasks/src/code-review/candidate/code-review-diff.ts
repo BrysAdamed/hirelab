@@ -57,7 +57,7 @@ export class ReviewThreadTemplate {
     <hl-code-diff
       class="h-full"
       [original]="file().original"
-      [modified]="file().modified ?? ''"
+      [modified]="file().modified"
       [language]="file().language"
       [renderSideBySide]="sideBySide()"
       [ariaLabel]="'Diff of ' + file().path"

@@ -26,7 +26,7 @@ import type {
 import { CodeReviewDiff } from '../candidate/code-review-diff';
 import { PullRequestHeader } from '../candidate/pull-request-header';
 import { ReviewCommentView } from '../candidate/review-comment';
-import { isAnchored, lineRangeLabel } from '../candidate/review-threads';
+import { changedFileStatus, isAnchored, lineRangeLabel } from '../candidate/review-threads';
 import { verdictLabels } from '../candidate/verdict';
 import { findingDecorations, severityBadgeVariants, sortFindings } from './expected-findings';
 
@@ -119,16 +119,18 @@ let nextId = 0;
               >
                 Show expected findings
               </button>
-              <button
-                hlmBtn
-                type="button"
-                variant="outline"
-                size="sm"
-                [attr.aria-pressed]="sideBySide()"
-                (click)="sideBySide.set(!sideBySide())"
-              >
-                Side by side
-              </button>
+              @if (changedFileStatus(file) === 'Modified') {
+                <button
+                  hlmBtn
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  [attr.aria-pressed]="sideBySide()"
+                  (click)="sideBySide.set(!sideBySide())"
+                >
+                  Side by side
+                </button>
+              }
             </div>
           </div>
           @if (!comments().length) {
@@ -242,6 +244,7 @@ export class CodeReviewReview implements ReviewTaskComponent<
     () => this.files().find((file) => file.path === this.selectedPath()) ?? null,
   );
   protected readonly sideBySide = signal(false);
+  protected readonly changedFileStatus = changedFileStatus;
 
   /** The interviewer's own choice; until they make one, the findings are hidden while the session is live. */
   protected readonly findingsChoice = signal<boolean | null>(null);

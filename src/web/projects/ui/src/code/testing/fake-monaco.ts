@@ -67,6 +67,10 @@ export class FakeModel {
     this.contentChanged.fire();
   }
 
+  getLineCount(): number {
+    return this.value.split(/\r\n|\r|\n/).length;
+  }
+
   dispose(): void {
     this.disposed = true;
   }

@@ -28,7 +28,7 @@ import { FinishReviewPanel } from './finish-review-panel';
 import { PullRequestHeader } from './pull-request-header';
 import { ReviewCommentView } from './review-comment';
 import { ReviewCommentForm } from './review-comment-form';
-import { lineRangeLabel } from './review-threads';
+import { changedFileStatus, lineRangeLabel } from './review-threads';
 
 interface Draft {
   readonly file: string;
@@ -76,16 +76,18 @@ const commentAction: CodeKeyAction = {
           <div class="flex flex-wrap items-center justify-between gap-2">
             <h3 class="min-w-0 truncate font-mono font-semibold">{{ file.path }}</h3>
             <div class="flex items-center gap-2">
-              <button
-                hlmBtn
-                type="button"
-                variant="outline"
-                size="sm"
-                [attr.aria-pressed]="sideBySide()"
-                (click)="sideBySide.set(!sideBySide())"
-              >
-                Side by side
-              </button>
+              @if (changedFileStatus(file) === 'Modified') {
+                <button
+                  hlmBtn
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  [attr.aria-pressed]="sideBySide()"
+                  (click)="sideBySide.set(!sideBySide())"
+                >
+                  Side by side
+                </button>
+              }
               <button
                 hlmBtn
                 type="button"
@@ -197,6 +199,7 @@ export class CodeReviewCandidate implements CandidateTaskComponent<
     () => this.content().files.find((file) => file.path === this.selectedPath()) ?? null,
   );
   protected readonly sideBySide = signal(false);
+  protected readonly changedFileStatus = changedFileStatus;
   protected readonly draft = signal<Draft | null>(null);
   protected readonly draftRange = computed(() => {
     const draft = this.draft();
