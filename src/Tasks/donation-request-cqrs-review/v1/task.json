@@ -145,7 +145,7 @@
         "side": "modified",
         "startLine": 18,
         "endLine": 18,
-        "title": "`new Guid()` is `Guid.Empty`",
+        "title": "new Guid() is Guid.Empty",
         "description": "Every request gets the same empty id, so the second insert fails on the primary key. Use `Guid.NewGuid()` or `Guid.CreateVersion7()`, or let the database generate the key.",
         "severity": "Critical"
       },
@@ -165,7 +165,7 @@
         "side": "modified",
         "startLine": 9,
         "endLine": 10,
-        "title": "Money in `double`, currency as a free string",
+        "title": "Money in double, currency as a free string",
         "description": "`double` can't represent decimal amounts exactly; use `decimal` (here, for the approved amount and in both commands) with a configured precision. The currency is any string; use ISO 4217 codes, ideally a `Money` value object.",
         "severity": "Major"
       },
@@ -185,7 +185,7 @@
         "side": "modified",
         "startLine": 25,
         "endLine": 25,
-        "title": "Synchronous `SaveChanges` in an async method",
+        "title": "Synchronous SaveChanges in an async method",
         "description": "`SaveChanges` blocks a thread, and the method is `async` without any `await` (warning CS1998). Use `SaveChangesAsync` and pass a `CancellationToken` from the controller down.",
         "severity": "Major"
       },
@@ -195,7 +195,7 @@
         "side": "modified",
         "startLine": 16,
         "endLine": 16,
-        "title": "Synchronous `Find` and `SaveChanges` when processing",
+        "title": "Synchronous Find and SaveChanges when processing",
         "description": "`Find` here and `SaveChanges` on line 31 block a thread in an async method with no `CancellationToken`. Use `FindAsync` and `SaveChangesAsync` with the request's token.",
         "severity": "Major"
       },
@@ -215,7 +215,7 @@
         "side": "modified",
         "startLine": 20,
         "endLine": 20,
-        "title": "`DateTime.Now` is local time",
+        "title": "DateTime.Now is local time",
         "description": "The server's local time is ambiguous across time zones and daylight saving, and it can't be faked in tests. Use UTC `DateTimeOffset` from an injected `TimeProvider`, here and for the decision date in the process handler.",
         "severity": "Major"
       },
@@ -235,7 +235,7 @@
         "side": "modified",
         "startLine": 12,
         "endLine": 12,
-        "title": "`bool?` as a status",
+        "title": "bool? as a status",
         "description": "Pending, accepted and rejected are hidden in a nullable flag. An enum status is clearer and leaves room for more states.",
         "severity": "Minor"
       },
@@ -255,7 +255,7 @@
         "side": "modified",
         "startLine": 6,
         "endLine": 6,
-        "title": "No `[ApiController]` or `[Route]`",
+        "title": "No [ApiController] or [Route]",
         "description": "Without `[ApiController]` the commands aren't bound from the JSON body and invalid input gets no automatic 400. Without `[Route]` the URLs depend on the action names only.",
         "severity": "Minor"
       },
@@ -275,7 +275,7 @@
         "side": "modified",
         "startLine": 19,
         "endLine": 19,
-        "title": "`Ok(id)` instead of 201 Created",
+        "title": "Ok(id) instead of 201 Created",
         "description": "Creating a request should return `201 Created` with the location of the new request (`CreatedAtAction`).",
         "severity": "Minor"
       },
@@ -295,7 +295,7 @@
         "side": "modified",
         "startLine": 14,
         "endLine": 14,
-        "title": "Typo: `ApprovedAmmount`",
+        "title": "Typo: ApprovedAmmount",
         "description": "Should be `ApprovedAmount`, as in the command. Cheap to fix now, a migration later.",
         "severity": "Nit"
       },
@@ -305,7 +305,7 @@
         "side": "modified",
         "startLine": 8,
         "endLine": 8,
-        "title": "Injected fields aren't `readonly`",
+        "title": "Injected fields aren't readonly",
         "description": "Here and in both handlers. Mark them `readonly` or use primary constructors.",
         "severity": "Nit"
       },
