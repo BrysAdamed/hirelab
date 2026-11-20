@@ -8,6 +8,10 @@ export const editorTaskTypes = new TaskTypeRegistry<AnyEditorTaskComponent>({
     loadComponent: () =>
       import('../open-question/editor/open-question-editor').then((m) => m.OpenQuestionEditor),
   },
+  'code-review': {
+    loadComponent: () =>
+      import('../code-review/editor/code-review-editor').then((m) => m.CodeReviewEditor),
+  },
 });
 
 export const EDITOR_TASK_TYPES = new InjectionToken<TaskTypeRegistry<AnyEditorTaskComponent>>(

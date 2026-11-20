@@ -24,9 +24,9 @@ class StubEditorTask implements EditorTaskComponent<StubContent, StubStaffConten
 }
 
 describe('editor task types', () => {
-  it('ship the open question type', () => {
+  it('ship the open question and code review types', () => {
     // Assert
-    expect(editorTaskTypes.keys).toEqual(['open-question']);
+    expect(editorTaskTypes.keys).toEqual(['open-question', 'code-review']);
   });
 
   it('are injected from the shipped registry', () => {
