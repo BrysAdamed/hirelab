@@ -38,6 +38,7 @@
   <Folder Name="/src/TaskTypes/">
     <Project Path="src/TaskTypes/HireLab.TaskTypes.Abstractions/HireLab.TaskTypes.Abstractions.csproj" />
     <Project Path="src/TaskTypes/HireLab.TaskTypes.Catalog/HireLab.TaskTypes.Catalog.csproj" />
+    <Project Path="src/TaskTypes/HireLab.TaskTypes.CodeReview/HireLab.TaskTypes.CodeReview.csproj" />
     <Project Path="src/TaskTypes/HireLab.TaskTypes.OpenQuestion/HireLab.TaskTypes.OpenQuestion.csproj" />
   </Folder>
   <Folder Name="/src/Tasks/">
@@ -54,6 +55,7 @@
     <Project Path="tests/HireLab.SharedKernel.Tests/HireLab.SharedKernel.Tests.csproj" />
     <Project Path="tests/HireLab.Tasks.Tests/HireLab.Tasks.Tests.csproj" />
     <Project Path="tests/HireLab.TaskTypes.Abstractions.Tests/HireLab.TaskTypes.Abstractions.Tests.csproj" />
+    <Project Path="tests/HireLab.TaskTypes.CodeReview.Tests/HireLab.TaskTypes.CodeReview.Tests.csproj" />
     <Project Path="tests/HireLab.TaskTypes.OpenQuestion.Tests/HireLab.TaskTypes.OpenQuestion.Tests.csproj" />
     <Project Path="tests/HireLab.Testing/HireLab.Testing.csproj" />
   </Folder>
