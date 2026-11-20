@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <Compile Remove="*/v*/**" />
     <EmbeddedResource Include="*/v*/**" Exclude="bin/**;obj/**" LogicalName="seed/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 

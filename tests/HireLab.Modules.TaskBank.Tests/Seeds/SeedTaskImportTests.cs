@@ -3,6 +3,7 @@ using HireLab.Modules.TaskBank.Persistence;
 using HireLab.Modules.TaskBank.Seeds;
 using HireLab.Modules.TaskBank.Tests.Tasks;
 using HireLab.Tasks;
+using HireLab.TaskTypes.CodeReview;
 using HireLab.TaskTypes.OpenQuestion;
 using HireLab.Testing.TaskTypes;
 using Microsoft.EntityFrameworkCore;
@@ -203,6 +204,14 @@ public sealed class SeedTaskImportTests(HireLabTestHost host) : IntegrationTest(
         openQuestion.TaskTypeKey.ShouldBe(OpenQuestionTaskType.TaskTypeKey);
         openQuestion.ActiveVersion!.CandidateContent.GetProperty("prompt").GetString().ShouldStartWith("## Dependency injection");
         openQuestion.ActiveVersion.StaffContent.EnumerateObject().ShouldBeEmpty();
+
+        var codeReview = tasks.Single(task => task.Slug == "donation-request-cqrs-review");
+        codeReview.TaskTypeKey.ShouldBe(CodeReviewTaskType.TaskTypeKey);
+        var candidateContent = codeReview.ActiveVersion!.CandidateContent;
+        candidateContent.GetProperty("files").GetArrayLength().ShouldBe(7);
+        candidateContent.GetProperty("description").GetString()!.ShouldContain("If anything is unclear, ask.");
+        codeReview.ActiveVersion.StaffContent.GetProperty("expectedFindings").EnumerateArray()
+            .ShouldContain(finding => finding.GetProperty("id").GetString() == "identity-from-request-body");
     }
 
     private static string HashOf(FakeSeedPackages packages, string name)

@@ -1,0 +1,334 @@
+{
+  "taskType": "code-review",
+  "title": "Review a donation request pull request",
+  "summary": "Review a small CQRS pull request that adds endpoints to file and process donation requests.",
+  "level": "Mid",
+  "estimatedMinutes": 30,
+  "tags": ["csharp", "cqrs", "aspnetcore", "security", "code-review"],
+  "referenceAnswer": { "$file": "reference-answer.md" },
+  "interviewerNotes": { "$file": "interviewer-notes.md" },
+  "rubric": {
+    "criteria": [
+      {
+        "type": "scale",
+        "id": "security",
+        "title": "Security",
+        "description": "Finds the identity and authorisation problems and explains what an attacker could do.",
+        "weight": 3,
+        "levels": [
+          { "score": 0, "description": "Misses both the identity taken from the body and the missing authorisation." },
+          { "score": 1, "description": "Notices one of them only after a hint." },
+          { "score": 2, "description": "Finds one of them unprompted, but can't say what it allows or how to fix it." },
+          { "score": 3, "description": "Finds both, explains the impact and that the user must come from the authenticated principal." },
+          { "score": 4, "description": "Finds both with a concrete fix, and raises who may process a request (a policy, not the requester)." }
+        ]
+      },
+      {
+        "type": "scale",
+        "id": "correctness",
+        "title": "Correctness",
+        "description": "Finds the bugs: the empty Guid, repeated processing, money in double, missing validation, sync calls in async code, the 500 for a missing request and local time.",
+        "weight": 3,
+        "levels": [
+          { "score": 0, "description": "Finds none of the bugs." },
+          { "score": 1, "description": "Finds one or two, mostly with hints." },
+          { "score": 2, "description": "Finds about half, including at least one of the empty Guid and repeated processing." },
+          { "score": 3, "description": "Finds the empty Guid, repeated processing and most of the Major items, with fixes." },
+          { "score": 4, "description": "Finds all of them unprompted and explains the consequence of each (for example the second insert failing on the primary key)." }
+        ]
+      },
+      {
+        "type": "scale",
+        "id": "design-and-cqrs",
+        "title": "Design and CQRS",
+        "description": "Comments on the domain model, the command and handler split, the API shape and the persistence change.",
+        "weight": 2,
+        "levels": [
+          { "score": 0, "description": "No design comments." },
+          { "score": 1, "description": "Style remarks only (naming, formatting)." },
+          { "score": 2, "description": "Notices one design issue, such as the anaemic entity or the RPC-style routes." },
+          { "score": 3, "description": "Suggests behaviour on the entity, a status instead of bool?, REST routes with 201, and asks about the migration." },
+          { "score": 4, "description": "Proposes a coherent design: invariants in the entity, the decider recorded, validation in the pipeline, the API contract and tests." }
+        ]
+      },
+      {
+        "type": "scale",
+        "id": "communication",
+        "title": "Communication",
+        "description": "How the comments are phrased: clear, kind, specific, and with the important things marked as important.",
+        "weight": 2,
+        "levels": [
+          { "score": 0, "description": "Blunt or vague comments (\"wrong\", \"bad\") with no reason." },
+          { "score": 1, "description": "Understandable, but no reasons or suggestions, and nits mixed with blockers." },
+          { "score": 2, "description": "Mostly explains why, sometimes suggests a fix; priorities are unclear." },
+          { "score": 3, "description": "Explains why and suggests fixes, asks questions where unsure, and the summary names the blockers." },
+          { "score": 4, "description": "Reads like a review a teammate would welcome: prioritised, concrete, respectful, with a clear verdict and summary." }
+        ]
+      },
+      {
+        "type": "check",
+        "id": "spots-identity-from-body",
+        "title": "Spots the identity taken from the body",
+        "description": "Notices without a hint that UserLogin comes from the request body, so the caller can act as any user.",
+        "expected": "yes",
+        "critical": true
+      }
+    ]
+  },
+  "candidateContent": {
+    "title": "Add donation request endpoints",
+    "description": { "$file": "description.md" },
+    "files": [
+      {
+        "path": "src/Api/Controllers/DonationRequestController.cs",
+        "language": "csharp",
+        "modified": { "$file": "files/DonationRequestController.cs" }
+      },
+      {
+        "path": "src/Domain/DonationRequest.cs",
+        "language": "csharp",
+        "modified": { "$file": "files/DonationRequest.cs" }
+      },
+      {
+        "path": "src/Application/CreateRequestCommand.cs",
+        "language": "csharp",
+        "modified": { "$file": "files/CreateRequestCommand.cs" }
+      },
+      {
+        "path": "src/Application/CreateRequestCommandHandler.cs",
+        "language": "csharp",
+        "modified": { "$file": "files/CreateRequestCommandHandler.cs" }
+      },
+      {
+        "path": "src/Application/ProcessRequestCommand.cs",
+        "language": "csharp",
+        "modified": { "$file": "files/ProcessRequestCommand.cs" }
+      },
+      {
+        "path": "src/Application/ProcessRequestCommandHandler.cs",
+        "language": "csharp",
+        "modified": { "$file": "files/ProcessRequestCommandHandler.cs" }
+      },
+      {
+        "path": "src/Infrastructure/ApplicationDbContext.cs",
+        "language": "csharp",
+        "original": { "$file": "files/ApplicationDbContext.original.cs" },
+        "modified": { "$file": "files/ApplicationDbContext.modified.cs" }
+      }
+    ]
+  },
+  "staffContent": {
+    "expectedFindings": [
+      {
+        "id": "identity-from-request-body",
+        "file": "src/Application/CreateRequestCommand.cs",
+        "side": "modified",
+        "startLine": 5,
+        "endLine": 5,
+        "title": "The user comes from the request body",
+        "description": "`UserLogin` is sent by the client, so anyone can file a request as any user. Take the user from the authenticated principal (for example an `ICurrentUser` service) and drop the property from the command.",
+        "severity": "Critical"
+      },
+      {
+        "id": "no-authorization",
+        "file": "src/Api/Controllers/DonationRequestController.cs",
+        "side": "modified",
+        "startLine": 6,
+        "endLine": 6,
+        "title": "No authorisation on either endpoint",
+        "description": "There is no `[Authorize]` and no policy, so an anonymous caller, or the requester, can process a request and approve their own donation with any amount. Processing needs a role or policy, and the decider shouldn't be the requester.",
+        "severity": "Critical"
+      },
+      {
+        "id": "empty-guid",
+        "file": "src/Application/CreateRequestCommandHandler.cs",
+        "side": "modified",
+        "startLine": 18,
+        "endLine": 18,
+        "title": "`new Guid()` is `Guid.Empty`",
+        "description": "Every request gets the same empty id, so the second insert fails on the primary key. Use `Guid.NewGuid()` or `Guid.CreateVersion7()`, or let the database generate the key.",
+        "severity": "Critical"
+      },
+      {
+        "id": "reprocessing-overwrites-decision",
+        "file": "src/Application/ProcessRequestCommandHandler.cs",
+        "side": "modified",
+        "startLine": 22,
+        "endLine": 29,
+        "title": "Processing again overwrites the decision",
+        "description": "Nothing checks whether the request is already decided, so a second call replaces the decision and its date. Rejecting an accepted request also keeps the old approved amount and currency. Reject processing a decided request (409) or make it explicitly idempotent.",
+        "severity": "Critical"
+      },
+      {
+        "id": "double-for-money",
+        "file": "src/Domain/DonationRequest.cs",
+        "side": "modified",
+        "startLine": 9,
+        "endLine": 10,
+        "title": "Money in `double`, currency as a free string",
+        "description": "`double` can't represent decimal amounts exactly; use `decimal` (here, for the approved amount and in both commands) with a configured precision. The currency is any string; use ISO 4217 codes, ideally a `Money` value object.",
+        "severity": "Major"
+      },
+      {
+        "id": "missing-validation",
+        "file": "src/Application/ProcessRequestCommand.cs",
+        "side": "modified",
+        "startLine": 6,
+        "endLine": 8,
+        "title": "No validation of the commands",
+        "description": "An accepted request can have no approved amount, a negative one, more than was requested or another currency. The create command accepts zero or negative amounts and an empty currency. Validate the commands and keep the invariants in the entity.",
+        "severity": "Major"
+      },
+      {
+        "id": "sync-save-changes-in-create",
+        "file": "src/Application/CreateRequestCommandHandler.cs",
+        "side": "modified",
+        "startLine": 25,
+        "endLine": 25,
+        "title": "Synchronous `SaveChanges` in an async method",
+        "description": "`SaveChanges` blocks a thread, and the method is `async` without any `await` (warning CS1998). Use `SaveChangesAsync` and pass a `CancellationToken` from the controller down.",
+        "severity": "Major"
+      },
+      {
+        "id": "sync-find-in-process",
+        "file": "src/Application/ProcessRequestCommandHandler.cs",
+        "side": "modified",
+        "startLine": 16,
+        "endLine": 16,
+        "title": "Synchronous `Find` and `SaveChanges` when processing",
+        "description": "`Find` here and `SaveChanges` on line 31 block a thread in an async method with no `CancellationToken`. Use `FindAsync` and `SaveChangesAsync` with the request's token.",
+        "severity": "Major"
+      },
+      {
+        "id": "generic-exception-for-not-found",
+        "file": "src/Application/ProcessRequestCommandHandler.cs",
+        "side": "modified",
+        "startLine": 17,
+        "endLine": 20,
+        "title": "A missing request is a 500",
+        "description": "`throw new Exception(...)` reaches the client as an internal server error. A missing request is expected: return a not-found result (404), through a domain exception the API maps or a result type.",
+        "severity": "Major"
+      },
+      {
+        "id": "local-time",
+        "file": "src/Application/CreateRequestCommandHandler.cs",
+        "side": "modified",
+        "startLine": 20,
+        "endLine": 20,
+        "title": "`DateTime.Now` is local time",
+        "description": "The server's local time is ambiguous across time zones and daylight saving, and it can't be faked in tests. Use UTC `DateTimeOffset` from an injected `TimeProvider`, here and for the decision date in the process handler.",
+        "severity": "Major"
+      },
+      {
+        "id": "anaemic-entity",
+        "file": "src/Domain/DonationRequest.cs",
+        "side": "modified",
+        "startLine": 3,
+        "endLine": 16,
+        "title": "Anaemic entity",
+        "description": "Every property has a public setter and the handlers set fields one by one. Methods such as `Create`, `Accept` and `Reject` would keep the rules (amounts, one decision only) in the entity.",
+        "severity": "Minor"
+      },
+      {
+        "id": "nullable-bool-status",
+        "file": "src/Domain/DonationRequest.cs",
+        "side": "modified",
+        "startLine": 12,
+        "endLine": 12,
+        "title": "`bool?` as a status",
+        "description": "Pending, accepted and rejected are hidden in a nullable flag. An enum status is clearer and leaves room for more states.",
+        "severity": "Minor"
+      },
+      {
+        "id": "decider-not-recorded",
+        "file": "src/Application/ProcessRequestCommandHandler.cs",
+        "side": "modified",
+        "startLine": 22,
+        "endLine": 23,
+        "title": "Who decided isn't recorded",
+        "description": "The story asks for a history of requests, but the decision doesn't store who made it.",
+        "severity": "Minor"
+      },
+      {
+        "id": "missing-api-controller-and-route",
+        "file": "src/Api/Controllers/DonationRequestController.cs",
+        "side": "modified",
+        "startLine": 6,
+        "endLine": 6,
+        "title": "No `[ApiController]` or `[Route]`",
+        "description": "Without `[ApiController]` the commands aren't bound from the JSON body and invalid input gets no automatic 400. Without `[Route]` the URLs depend on the action names only.",
+        "severity": "Minor"
+      },
+      {
+        "id": "rpc-style-routes",
+        "file": "src/Api/Controllers/DonationRequestController.cs",
+        "side": "modified",
+        "startLine": 15,
+        "endLine": 15,
+        "title": "RPC-style routes",
+        "description": "`CreateDonationRequest` and `ProcessDonationRequest` put verbs in the URL. Prefer resources: `POST /donation-requests` and `POST /donation-requests/{id}/decision`.",
+        "severity": "Minor"
+      },
+      {
+        "id": "ok-instead-of-created",
+        "file": "src/Api/Controllers/DonationRequestController.cs",
+        "side": "modified",
+        "startLine": 19,
+        "endLine": 19,
+        "title": "`Ok(id)` instead of 201 Created",
+        "description": "Creating a request should return `201 Created` with the location of the new request (`CreatedAtAction`).",
+        "severity": "Minor"
+      },
+      {
+        "id": "dbset-without-configuration-or-migration",
+        "file": "src/Infrastructure/ApplicationDbContext.cs",
+        "side": "modified",
+        "startLine": 15,
+        "endLine": 15,
+        "title": "New DbSet without configuration or migration",
+        "description": "The PR adds the table to the model but no entity configuration (precision for amounts, length and required for strings) and no migration. `Requests` is also a vague name next to `Donors`; `DonationRequests` says more.",
+        "severity": "Minor"
+      },
+      {
+        "id": "approved-amount-typo",
+        "file": "src/Domain/DonationRequest.cs",
+        "side": "modified",
+        "startLine": 14,
+        "endLine": 14,
+        "title": "Typo: `ApprovedAmmount`",
+        "description": "Should be `ApprovedAmount`, as in the command. Cheap to fix now, a migration later.",
+        "severity": "Nit"
+      },
+      {
+        "id": "non-readonly-fields",
+        "file": "src/Api/Controllers/DonationRequestController.cs",
+        "side": "modified",
+        "startLine": 8,
+        "endLine": 8,
+        "title": "Injected fields aren't `readonly`",
+        "description": "Here and in both handlers. Mark them `readonly` or use primary constructors.",
+        "severity": "Nit"
+      },
+      {
+        "id": "nullable-warnings",
+        "file": "src/Domain/DonationRequest.cs",
+        "side": "modified",
+        "startLine": 7,
+        "endLine": 10,
+        "title": "Nullable warnings",
+        "description": "Non-nullable strings without an initialiser produce CS8618 here and in the create command. Use `required` or a constructor.",
+        "severity": "Nit"
+      },
+      {
+        "id": "no-tests",
+        "file": "src/Application/ProcessRequestCommandHandler.cs",
+        "side": "modified",
+        "startLine": 14,
+        "endLine": 14,
+        "title": "No tests",
+        "description": "The PR adds no tests. At least: processing an already processed request, a missing request, and creating a request.",
+        "severity": "Nit"
+      }
+    ]
+  }
+}
