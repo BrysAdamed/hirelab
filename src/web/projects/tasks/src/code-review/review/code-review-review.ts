@@ -89,7 +89,7 @@ let nextId = 0;
                         </span>
                         <span class="font-medium">{{ finding.title }}</span>
                       </span>
-                      <span class="font-mono text-xs text-muted-foreground">
+                      <span class="font-mono text-xs break-all text-muted-foreground">
                         {{ finding.file }}, {{ linesOf(finding) }}
                       </span>
                     </button>
