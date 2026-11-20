@@ -14,6 +14,8 @@
     "module": "preserve",
     "paths": {
       "@hirelab/ui": ["./projects/ui/src/index.ts"],
+      "@hirelab/ui/code": ["./projects/ui/src/code/index.ts"],
+      "@hirelab/ui/code/testing": ["./projects/ui/src/code/testing/index.ts"],
       "@hirelab/ui/copy": ["./projects/ui/src/copy/index.ts"],
       "@hirelab/ui/markdown": ["./projects/ui/src/markdown/index.ts"],
       "@hirelab/ui/live": ["./projects/ui/src/live/index.ts"],

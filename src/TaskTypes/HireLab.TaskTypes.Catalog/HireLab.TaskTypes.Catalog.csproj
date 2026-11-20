@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HireLab.TaskTypes.Abstractions\HireLab.TaskTypes.Abstractions.csproj" />
+    <ProjectReference Include="..\HireLab.TaskTypes.CodeReview\HireLab.TaskTypes.CodeReview.csproj" />
     <ProjectReference Include="..\HireLab.TaskTypes.OpenQuestion\HireLab.TaskTypes.OpenQuestion.csproj" />
   </ItemGroup>
 

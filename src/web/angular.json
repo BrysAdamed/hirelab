@@ -23,6 +23,9 @@
           "options": {
             "browser": "projects/staff/src/main.ts",
             "tsConfig": "projects/staff/tsconfig.app.json",
+            "loader": {
+              ".css": "empty"
+            },
             "assets": [
               {
                 "glob": "**/*",
@@ -34,7 +37,12 @@
               "@fontsource/inter/500.css",
               "@fontsource/inter/600.css",
               "@fontsource/jetbrains-mono/400.css",
-              "projects/staff/src/styles.css"
+              "projects/staff/src/styles.css",
+              {
+                "input": "node_modules/monaco-editor/min/vs/editor/editor.main.css",
+                "bundleName": "monaco",
+                "inject": false
+              }
             ]
           },
           "configurations": {
@@ -103,6 +111,9 @@
           "options": {
             "browser": "projects/candidate/src/main.ts",
             "tsConfig": "projects/candidate/tsconfig.app.json",
+            "loader": {
+              ".css": "empty"
+            },
             "assets": [
               {
                 "glob": "**/*",
@@ -114,7 +125,12 @@
               "@fontsource/inter/500.css",
               "@fontsource/inter/600.css",
               "@fontsource/jetbrains-mono/400.css",
-              "projects/candidate/src/styles.css"
+              "projects/candidate/src/styles.css",
+              {
+                "input": "node_modules/monaco-editor/min/vs/editor/editor.main.css",
+                "bundleName": "monaco",
+                "inject": false
+              }
             ],
             "baseHref": "/s/"
           },
@@ -123,7 +139,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
+                  "maximumWarning": "550kB",
                   "maximumError": "1MB"
                 },
                 {

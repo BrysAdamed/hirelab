@@ -10,6 +10,10 @@ export const candidateTaskTypes = new TaskTypeRegistry<AnyCandidateTaskComponent
         (m) => m.OpenQuestionCandidate,
       ),
   },
+  'code-review': {
+    loadComponent: () =>
+      import('../code-review/candidate/code-review-candidate').then((m) => m.CodeReviewCandidate),
+  },
 });
 
 export const CANDIDATE_TASK_TYPES = new InjectionToken<TaskTypeRegistry<AnyCandidateTaskComponent>>(
