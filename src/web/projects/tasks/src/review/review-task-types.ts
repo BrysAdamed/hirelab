@@ -8,6 +8,10 @@ export const reviewTaskTypes = new TaskTypeRegistry<AnyReviewTaskComponent>({
     loadComponent: () =>
       import('../open-question/review/open-question-review').then((m) => m.OpenQuestionReview),
   },
+  'code-review': {
+    loadComponent: () =>
+      import('../code-review/review/code-review-review').then((m) => m.CodeReviewReview),
+  },
 });
 
 export const REVIEW_TASK_TYPES = new InjectionToken<TaskTypeRegistry<AnyReviewTaskComponent>>(

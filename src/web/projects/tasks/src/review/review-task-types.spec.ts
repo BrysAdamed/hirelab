@@ -26,9 +26,9 @@ class StubReviewTask implements ReviewTaskComponent<StubContent, StubStaffConten
 }
 
 describe('review task types', () => {
-  it('ship the open question type', () => {
+  it('ship the open question and code review types', () => {
     // Assert
-    expect(reviewTaskTypes.keys).toEqual(['open-question']);
+    expect(reviewTaskTypes.keys).toEqual(['open-question', 'code-review']);
   });
 
   it('are injected from the shipped registry', () => {
